@@ -1,0 +1,24 @@
+date_utc: 2026-11-11T18:27:19Z
+note: the in-script kubectl check failed because kubectl was not on PATH; this is the post-run check against the run window 2026-11-11T18:24:28Z..18:25:43Z
+pods_on_node_now (with GPU requests and start times):
+  ceph-csi-cephfs      (pod name redacted) Running    gpu=0 started=2026-09-29T12:42:42Z
+  ceph-csi-rbd         (pod name redacted) Running    gpu=0 started=2026-09-29T12:42:42Z
+  inference-bench      (pod name redacted) Running    gpu=0 started=2026-10-09T01:01:05Z
+  kube-system          (pod name redacted) Running    gpu=0 started=2026-09-29T12:42:20Z
+  monitoring           (pod name redacted) Running    gpu=0 started=2026-09-29T12:42:20Z
+  monitoring           (pod name redacted) Running    gpu=0 started=2026-10-07T09:03:31Z
+  nvidia               (pod name redacted) Running    gpu=0 started=2026-10-02T15:15:01Z
+  nvidia               (pod name redacted) Running    gpu=0 started=2026-10-02T15:14:55Z
+  nvidia               (pod name redacted) Running    gpu=0 started=2026-10-01T14:18:09Z
+  nvidia               (pod name redacted) Running    gpu=0 started=2026-10-07T16:50:03Z
+  nvidia               (pod name redacted) Running    gpu=0 started=2026-10-01T14:18:06Z
+  nvidia               (pod name redacted) Running    gpu=0 started=2026-10-02T14:12:12Z
+  nvsentinel           (pod name redacted) Running    gpu=0 started=2026-10-20T14:01:06Z
+  nvsentinel           (pod name redacted) Running    gpu=0 started=2026-10-20T14:01:20Z
+  nvsentinel           (pod name redacted) Running    gpu=0 started=2026-10-20T11:29:08Z
+  nvsentinel           (pod name redacted) Running    gpu=0 started=2026-10-20T14:02:53Z
+  nvsentinel           (pod name redacted) Running    gpu=0 started=2026-10-20T14:02:42Z
+events_on_node_last_hour:
+Error from server (Forbidden): events is forbidden: User "system:serviceaccount:inference-wideep:wideep-session" cannot list resource "events" in API group "" at the cluster scope
+node_allocated_gpus_now:
+  Resource                   Requests     Limits
