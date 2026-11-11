@@ -52,13 +52,20 @@ case $MODE in
            --setenv HTTPS_PROXY http://127.0.0.1:3128 --setenv HTTP_PROXY http://127.0.0.1:3128
            --setenv https_proxy http://127.0.0.1:3128 --setenv http_proxy http://127.0.0.1:3128
            --setenv NO_PROXY localhost,127.0.0.1 --setenv no_proxy localhost,127.0.0.1)
-    for v in CLAUDE_CODE_OAUTH_TOKEN CLAUDE_CODE_SUBAGENT_MODEL DISABLE_AUTOUPDATER \
+    # The OAuth token must not appear on a command line (any user can read argv with ps), so it
+    # goes in as a read-only file through a file descriptor and is exported inside the sandbox.
+    if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+      exec 3<<<"$CLAUDE_CODE_OAUTH_TOKEN"
+      args+=(--perms 0400 --ro-bind-data 3 /goalbox/token)
+    fi
+    for v in CLAUDE_CODE_SUBAGENT_MODEL DISABLE_AUTOUPDATER \
              CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC ENABLE_CLAUDEAI_MCP_SERVERS COLORTERM; do
       [ -n "${!v:-}" ] && args+=(--setenv "$v" "${!v}")
     done
     # The proxy socket is only reachable as a unix socket; bridge it to 127.0.0.1:3128.
     exec bwrap "${args[@]}" bash -c \
-      'socat TCP-LISTEN:3128,bind=127.0.0.1,fork,reuseaddr UNIX-CONNECT:/goalbox/sock/net.sock 2>/dev/null & exec "$@"' \
+      '[ -r /goalbox/token ] && export CLAUDE_CODE_OAUTH_TOKEN=$(cat /goalbox/token)
+       socat TCP-LISTEN:3128,bind=127.0.0.1,fork,reuseaddr UNIX-CONNECT:/goalbox/sock/net.sock 2>/dev/null & exec "$@"' \
       goalbox "$@"
     ;;
   gpu)
