@@ -23,7 +23,7 @@ GB = Path(__file__).resolve().parents[1]  # the sandbox/ directory
 NAME = RUN.name
 SPOOL = RUN / "home/.gpu"
 import shlex, shutil, signal
-PARTITION = os.environ.get("GOALBOX_PARTITION", "main")
+PARTITION = os.environ.get("GOALBOX_PARTITION") or None  # None: the cluster's default partition
 MAX_MIN, MAX_GPUS = int(os.environ.get("GOALBOX_MAX_MIN", 120)), int(os.environ.get("GOALBOX_MAX_GPUS", 8))
 MODE = os.environ.get("GOALBOX_GPU_MODE", "slurm" if shutil.which("sbatch") else "local")
 LOCAL_GPUS = [g for g in os.environ.get("GOALBOX_LOCAL_GPUS", "").split(",") if g]
@@ -75,7 +75,7 @@ def submit(rid):
         "#!/bin/bash\n"
         f"export GOALBOX_CWD='{cwd}'\n"
         f"exec '{GB}/lib/sandbox.sh' gpu '{RUN}' -- bash '/home/agent/.gpu/req/{rid}.sh'\n")
-    cmd = ["sbatch", "--parsable", "-p", PARTITION, f"--gres=gpu:{gpus}", f"--time={minutes}",
+    cmd = ["sbatch", "--parsable", *(["-p", PARTITION] if PARTITION else []), f"--gres=gpu:{gpus}", f"--time={minutes}",
            "-J", f"gb-{NAME}", "-o", str(SPOOL / "out" / f"{rid}.log"),
            *shlex.split(os.environ.get("GOALBOX_SBATCH_ARGS", "")), str(script)]
     r = subprocess.run(cmd, capture_output=True, text=True)
@@ -85,8 +85,8 @@ def submit(rid):
         status(rid, f"sbatch failed: {msg}"); status(rid, "done 2 SUBMIT_FAILED"); log(f"{rid} sbatch failed: {msg}")
         return None
     jobid = m.group(1)
-    status(rid, f"submitted job {jobid} on {PARTITION}, {gpus} GPU, {minutes} min")
-    log(f"{rid} -> job {jobid} ({PARTITION}, {gpus} GPU, {minutes} min, cwd {cwd})")
+    status(rid, f"submitted job {jobid} on {PARTITION or 'the default partition'}, {gpus} GPU, {minutes} min")
+    log(f"{rid} -> job {jobid} ({PARTITION or 'default partition'}, {gpus} GPU, {minutes} min, cwd {cwd})")
     return jobid
 
 
@@ -117,7 +117,7 @@ def local_state(rid):
 
 
 def main():
-    log(f"broker start mode={MODE} partition={PARTITION} max_min={MAX_MIN} max_gpus={MAX_GPUS}")
+    log(f"broker start mode={MODE} partition={PARTITION or 'default'} max_min={MAX_MIN} max_gpus={MAX_GPUS}")
     active = None  # (rid, jobid, last)
     seen = {p.name for p in (SPOOL / "status").iterdir()}
     while True:

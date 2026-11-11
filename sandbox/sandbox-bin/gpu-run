@@ -4,7 +4,7 @@
 #
 #   gpu-run [-t MINUTES] [-g GPUS] [-d] -- CMD [ARGS...]
 #       -t  time limit in minutes (default 20, max 120); keep it honest and short
-#       -g  GPUs (default 1, max 8)
+#       -g  GPUs (default 1; at most the GPUs of one node: 4 on a GB300 tray, 8 on a DGX B300)
 #       -d  detach: print the request id and return at once
 #   gpu-run --wait ID     wait for a detached request, then print its output
 #   gpu-run --status [ID] show the state of one request (default: the latest 10)

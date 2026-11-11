@@ -65,15 +65,22 @@ def _kimi(id: str, batch: int, *, layers: int = 93, gpus: int = 8,
 
 
 CASES: tuple[Case, ...] = (
-    # Graded: the full 93-layer model with the real checkpoint, TP8 on 8 GPUs.
+    # Graded: the full 93-layer model with the real checkpoint, TP8 on 8 GPUs (one DGX B300;
+    # two GB300 NVL72 trays would need a multi-node launcher, which the harness does not have).
     _kimi("kimi-k3-tp8-b1-s8192", 1, note="Real weights, latency regime."),
     _kimi("kimi-k3-tp8-b8-s8192", 8, note="Real weights, small serving batch."),
     _kimi("kimi-k3-tp8-b64-s8192", 64, note="Real weights, the largest batch the vLLM latency path serves."),
     # Graded: fresh synthetic weights on every trial, 8 layers at full width (anti-caching).
-    _kimi("kimi-k3-syn-l8-tp8-b1-s8192", 1, layers=8, checkpoint=False, suite="p1",
+    # TP4, so that the cases run on the 4 GPUs of one GB300 NVL72 tray.
+    _kimi("kimi-k3-syn-l8-tp4-b1-s8192", 1, layers=8, gpus=4, checkpoint=False, suite="p1",
           note="Synthetic weights; one MLA block every 4 layers as in the full model."),
-    _kimi("kimi-k3-syn-l8-tp8-b8-s8192", 8, layers=8, checkpoint=False, suite="p1"),
-    _kimi("kimi-k3-syn-l8-tp8-b64-s8192", 64, layers=8, checkpoint=False, suite="p1"),
+    _kimi("kimi-k3-syn-l8-tp4-b8-s8192", 8, layers=8, gpus=4, checkpoint=False, suite="p1"),
+    _kimi("kimi-k3-syn-l8-tp4-b64-s8192", 64, layers=8, gpus=4, checkpoint=False, suite="p1"),
+    # Synthetic at TP8: the same cases for an 8-GPU node (DGX B300). Not graded.
+    _kimi("kimi-k3-syn-l8-tp8-b1-s8192", 1, layers=8, checkpoint=False, suite="p2",
+          note="Synthetic weights at TP8; needs an 8-GPU node."),
+    _kimi("kimi-k3-syn-l8-tp8-b8-s8192", 8, layers=8, checkpoint=False, suite="p2"),
+    _kimi("kimi-k3-syn-l8-tp8-b64-s8192", 64, layers=8, checkpoint=False, suite="p2"),
     # Development only (not graded): one GPU, 4 layers, no communication.
     _kimi("kimi-k3-dev-l4-tp1-b8-s8192", 8, layers=4, gpus=1, checkpoint=False, suite="p2",
           note="Development slice: dense layer 0, KDA layers 1-2, MLA layer 3."),

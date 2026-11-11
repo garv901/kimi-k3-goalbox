@@ -21,7 +21,8 @@ CMD=("$REPO/sandbox/lib/sandbox.sh" gpu "$T" -- /goalbox/venv/bin/python -c \
   'import torch; n=torch.cuda.device_count(); cap=torch.cuda.get_device_capability(0); print("ok: GPUs", n, torch.cuda.get_device_name(0), cap); print("ok: sm_103 (B300)" if cap==(10,3) else "WARNING: expected B300 (sm_103), got sm_%d%d" % cap); x=torch.randn(4096,4096,device="cuda"); print("ok: matmul", float((x@x).norm())>0); import os; print("ok: /dev/shm", os.access("/dev/shm", os.W_OK))')
 MODE=${GOALBOX_GPU_MODE:-$(command -v sbatch >/dev/null && echo slurm || echo local)}
 if [ "$MODE" = slurm ]; then
-  srun -p "${GOALBOX_PARTITION:-main}" --gres=gpu:1 -t 5 ${GOALBOX_SBATCH_ARGS:-} "${CMD[@]}"
+  PART=(); if [ -n "${GOALBOX_PARTITION:-}" ]; then PART=(-p "$GOALBOX_PARTITION"); fi
+  srun "${PART[@]}" --gres=gpu:1 -t 5 ${GOALBOX_SBATCH_ARGS:-} "${CMD[@]}"
 else
   "${CMD[@]}"
 fi

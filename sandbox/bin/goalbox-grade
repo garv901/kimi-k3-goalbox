@@ -2,7 +2,8 @@
 # Official grade of a run's current submission, outside the agent's control.
 #
 #   sandbox/bin/goalbox-grade NAME [CASE ...]     (default: every graded case)
-#   GOALBOX_GPU_MODE=slurm|local  GOALBOX_PARTITION=main  MINUTES=120  REPS=20  TRIALS=3
+#   GOALBOX_GPU_MODE=slurm|local  GOALBOX_PARTITION=<partition> (default: the cluster default)
+#   MINUTES=120  REPS=20  TRIALS=3
 #
 # 1. Snapshots RUN/work to RUN/grades/<ts>/work (the agent cannot see or change it).
 # 2. Runs `megabench evaluate` for each case in the gpu sandbox (no network) with the
@@ -18,6 +19,8 @@ RUN=${GOALBOX_RUNS:-$REPO/runs}/$NAME
 VENV=${GOALBOX_VENV:-$REPO/.venv}
 CASES=("$@")
 [ ${#CASES[@]} -gt 0 ] || mapfile -t CASES < <(PYTHONPATH=$REPO "$VENV/bin/python" -s -c 'from megabench.cases import GRADED; print("\n".join(GRADED))')
+# The Slurm job needs as many GPUs as the largest case (4 on a GB300 NVL72 tray, 8 on a DGX B300).
+GPUS=$(PYTHONPATH=$REPO "$VENV/bin/python" -s -c 'import sys; from megabench.cases import select_cases; print(max(c.gpus for c in select_cases(ids=sys.argv[1:])))' "${CASES[@]}")
 TS=$(date +%Y%m%d-%H%M%S) G=$RUN/grades/$TS
 mkdir -p "$G"/{home,tmp,sock}
 rsync -a --exclude reports --exclude .git "$RUN/work/" "$G/work/"
@@ -36,7 +39,8 @@ EOF
 chmod +x "$G/grade.sh"
 MODE=${GOALBOX_GPU_MODE:-$(command -v sbatch >/dev/null && echo slurm || echo local)}
 if [ "$MODE" = slurm ]; then
-  sbatch -p "${GOALBOX_PARTITION:-main}" --gres=gpu:8 --time="${MINUTES:-120}" -J "gbgrade-$NAME" \
+  PART=(); if [ -n "${GOALBOX_PARTITION:-}" ]; then PART=(-p "$GOALBOX_PARTITION"); fi
+  sbatch "${PART[@]}" --gres=gpu:"$GPUS" --time="${MINUTES:-120}" -J "gbgrade-$NAME" \
     ${GOALBOX_SBATCH_ARGS:-} -o "$G/grade.log" "$G/grade.sh"
 else
   "$G/grade.sh" > "$G/grade.log" 2>&1 &

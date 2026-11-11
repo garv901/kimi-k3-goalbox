@@ -108,6 +108,18 @@ class KimiReferenceTests(unittest.TestCase):
         bad = kimi.reference(case, values, serial=True, fp32=True, routes=worst)
         self.assertGreater(float(bad['route_shortfall'].max()), kimi.ROUTE_FLOOR)
 
+    def test_every_case_shards_at_its_tp_and_has_a_floor(self):
+        from .. import sol
+        from ..cases import CASES, GRADED
+        for case in CASES:
+            shapes = kimi.weight_shapes(case)   # raises if heads, vocab or FFN do not divide the TP degree
+            self.assertTrue(all(all(n > 0 for n in shape) for shape, _, _, _ in shapes.values()), case.id)
+            self.assertGreater(sol.estimate_case(case)['hbm_floor_ms'], 0, case.id)
+        tp4 = [c for c in CASES if '-tp4-' in c.id]
+        self.assertEqual({(c.gpus, c.tp, c.params['layers']) for c in tp4}, {(4, 4, 8)})
+        self.assertTrue({c.id for c in tp4} <= set(GRADED))
+        self.assertFalse(any('-syn-l8-tp8-' in i for i in GRADED))
+
 
 if __name__ == '__main__':
     unittest.main()
