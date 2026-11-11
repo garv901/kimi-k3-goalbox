@@ -42,3 +42,23 @@ Findings that changed the plan:
 
 - Conditional GO was given for Step 1 only; Step 2 (TP2 dev case) and the TP4 synthetic cases wait for review of the Step 1 evidence. No PR until then.
 - No autonomous agent and no agent-generated code is executed while the sandbox is unavailable.
+
+## 7. Step 1 and Step 2 approvals and execution (2026-11-11)
+
+Chat history, condensed and redacted. Speakers: the operator (Kevin), the repo owner (Garv, relayed), and this session.
+
+- Operator: shared the draft test plan. Session: audited the repo and the racks, reported the 4-GPU-per-tray mismatch and the sandbox prerequisites.
+- Operator: asked for a branch name. Session: proposed `gb300-tp4-synthetic`.
+- Operator: asked whether only TP8 is run. Session: graded cases were TP8 only; dev cases TP1 and TP2; TP4 would be an addition.
+- Repo owner (relayed 09:39): "A tp4 layout on synthetic configs should work." Session: implemented commit `7f3820e`, verified on CPU, pushed after write access was granted.
+- Operator: asked whether rack 10 can be used. Session: yes for host-level evaluator tests; proposed a 3-step matrix with the oracle as candidate and asked for a go.
+- Operator: conditional GO for Step 1 only, with requirements: dev TP1 case, reviewed oracle submission, host level as `dc`, no agent, no methodology changes, explicit timeout, dedicated caches, version and occupancy evidence, separate verdicts per evaluator component, `PROGRESS.md` and `AGENT_TRAJECTORY.md`, redaction before pushing, stop gate before TP2.
+- Session: ran Step 1 (75 s), reported PASS-as-expected with three observations, committed `4a83f5f`, proposed Step 2 with acceptance criteria.
+- Operator: GO for Step 2 with requirements: distinct physical GPUs, NCCL logging, same three trials, per-rank results, communication kernels in the audit, kubectl PATH fix, 10 s GPU and Kubernetes occupancy monitoring, dedicated caches, timeout cleanup of the whole process group, 1500/1800 s timeouts, evidence under `reports/gb300/step2-dev-l8-tp2-<ts>/`, push without PR, stop gate before TP4.
+- Session: wrote `step2.sh` (PATH fix, NCCL_DEBUG to files, 30 s Kubernetes polling, `timeout -k 30`, leftover-process cleanup), ran Step 2 (99 s), reported PASS-as-expected.
+
+Technical trajectory of Step 2: read `megabench/harness/distributed.py` and `runner.py` to confirm per-rank records exist (`ranks[]` with correctness, audit, timing, peak memory) and that the evaluator's own timeout kills the worker's process group; chose NCCL_DEBUG_FILE per process to keep stderr clean; pre-launch checks of both GPUs and the node's GPU-pod requests; post-run NCCL log summary (32 P2P/CUMEM channels, 0 warnings); result analysis by a small script (`result-summary.txt`).
+
+Failures and fixes in this step: the pull of the branch into the runner clone was blocked by its untracked raw Step 1 copy (moved aside to a directory outside the repo); the copy of the report to the committing clone was slow because the two-rank result record carries every kernel name, so it is committed gzip-compressed. IP addresses in NCCL logs were redacted.
+
+Deviations from Step 1: listed in the Step 2 report.

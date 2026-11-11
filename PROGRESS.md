@@ -17,3 +17,11 @@ Development log of the `gb300-tp4-synthetic` branch: validating the kimi-k3-goal
 - Infrastructure: no other GPU process and no GPU pod on the node during the run; run classified as completed, not interrupted.
 - Observations to review: CUDA-graph capture of the oracle fails on this case (`cudaErrorStreamCaptureInvalidated`), so the graph baseline is unavailable; the advisory oracle-import hint does not match `from megabench.tasks import kimi`.
 - Next (needs approval): Step 2, `kimi-k3-dev-l8-tp2-b8-s8192` on 2 GPUs with the same candidate, then the three TP4 synthetic cases.
+
+## 2026-11-11: Step 2, distributed evaluator smoke test at TP2 (PASS as expected)
+
+- Run: `kimi-k3-dev-l8-tp2-b8-s8192`, candidate = the oracle, rack 10 tray14 GPUs 0 and 1, host level, 99 s. Code at commit `7f3820e` (no code change since). Report: `reports/gb300/step2-dev-l8-tp2-20261111T231321Z/REPORT.md`.
+- Result: both ranks `pass` on all three shared-seed trials (band ratios 0.44 to 0.49, next_token inside the tie margin, expert sets identical to the oracle, cache_length exact, inputs unchanged). Launch audit fails on both ranks with 58533 GPU events against 1, including 26 NCCL all-reduce device kernels per rank; status `non_megakernel`, exit code 1. Timing recorded (889 ms candidate, 884 ms eager reference, slowest rank), not a baseline. Peak 66.2 GB allocated per GPU.
+- Infrastructure: ranks on distinct GPUs (UUIDs and PCI ids recorded), NCCL 2.30.7 over NVLink P2P with 0 warnings, no other GPU process and 0 GPU-pod requests on the node before, during (30 s polling) and after. Not interrupted. No leftover processes.
+- Observation: each NCCL collective appears twice in `gpu_kernel_count` (device kernel plus `nccl:all_reduce` record). The distributed evaluator does not attempt a CUDA-graph baseline by design.
+- Next (needs approval): `kimi-k3-syn-l8-tp4-b1-s8192` on 4 GPUs with the same candidate, then B8 and B64 after separate approvals.

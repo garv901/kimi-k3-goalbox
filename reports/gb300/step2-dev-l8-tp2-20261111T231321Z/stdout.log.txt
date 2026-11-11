@@ -1,0 +1,2 @@
+kimi-k3-dev-l8-tp2-b8-s8192: non_megakernel (0.99x GPU-event vs best available baseline)
+{"results": "/mnt/shared/home/dc/workspace/kimi-k3-goalbox/reports/gb300/step2-dev-l8-tp2-20261111T231321Z/result.jsonl", "provisional_geomean_speedup": null, "passed": 0, "total": 1}
