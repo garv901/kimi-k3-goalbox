@@ -62,3 +62,16 @@ Technical trajectory of Step 2: read `megabench/harness/distributed.py` and `run
 Failures and fixes in this step: the pull of the branch into the runner clone was blocked by its untracked raw Step 1 copy (moved aside to a directory outside the repo); the copy of the report to the committing clone was slow because the two-rank result record carries every kernel name, so it is committed gzip-compressed. IP addresses in NCCL logs were redacted.
 
 Deviations from Step 1: listed in the Step 2 report.
+
+## 8. Step 3 approval and execution (2026-11-11)
+
+Chat history, condensed and redacted.
+
+- Operator: reviewed Step 2 (commit `31fed7a`) as a successful TP2 evaluator smoke test. Two findings: (A) the launch audit double-counts NCCL communication (device kernel plus `nccl:all_reduce` record), which must be resolved before a near-budget candidate is graded, and (B) TP2 correctness establishes evaluator consistency, not independent validation of the oracle's tensor-parallel math; independent fidelity validation belongs before real-weight performance claims.
+- Operator: GO for TP4 B1 only, with requirements: four distinct GPU UUIDs, NCCL init and an explicit check that all ranks complete the same collective sequence, three shared-seed trials with per-rank results, no methodology changes, launch accounting split (total events vs actual kernel launches vs NCCL device kernels vs collective records) without fixing the audit, all Step 2 monitoring and timeout controls, evidence under `reports/gb300/step3-syn-l8-tp4-b1-<ts>/`, a non-blocking issue note for the repo owner, push without PR, stop before B8. Also recommended a corrupted-output negative control after the TP4 series.
+- Session: derived `step3.sh` from `step2.sh` (case, GPUs 0 to 3, step3 paths) with one logging-only addition, `NCCL_DEBUG_SUBSYS=INIT,ENV,COLL`, so each process logs every collective with its opCount and the four sequences can be compared. Checked all four GPUs and the node's GPU-pod requests by hand immediately before launch, fast-forwarded the runner clone to `31fed7a` (moving its raw Step 2 copy outside the repo), ran Step 3 (86 s).
+- Session: analysis with `analyze_step3.py` (kept next to the report): per-rank verdicts, the accounting split by kernel-name class, the cross-rank equality of the audited NCCL kernel sequence, and the cross-process equality of the 603-collective trace. Wrote `reports/gb300/ISSUES.md`.
+
+Technical notes: the accounting split classifies profiler event names (`nccl:` prefix = collective record, `ncclDevKernel` = NCCL kernel, `Memcpy`/`Memset` = copies, otherwise compute kernel); it reads the raw record and changes nothing in the evaluator. The `COLL` trace regex parses `AllReduce: opCount … count … datatype … op …` lines; the 22 AllGather and 8 Broadcast calls are the evaluator's own `shared_seed`/`agree` helpers, not oracle work.
+
+Failures and fixes: none in this step. The report copy to the committing clone again went through the laptop and was slow (33 MB record), so the record is committed compressed.

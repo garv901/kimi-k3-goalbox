@@ -25,3 +25,12 @@ Development log of the `gb300-tp4-synthetic` branch: validating the kimi-k3-goal
 - Infrastructure: ranks on distinct GPUs (UUIDs and PCI ids recorded), NCCL 2.30.7 over NVLink P2P with 0 warnings, no other GPU process and 0 GPU-pod requests on the node before, during (30 s polling) and after. Not interrupted. No leftover processes.
 - Observation: each NCCL collective appears twice in `gpu_kernel_count` (device kernel plus `nccl:all_reduce` record). The distributed evaluator does not attempt a CUDA-graph baseline by design.
 - Next (needs approval): `kimi-k3-syn-l8-tp4-b1-s8192` on 4 GPUs with the same candidate, then B8 and B64 after separate approvals.
+
+## 2026-11-11: Step 3, TP4 batch 1, first graded synthetic case (PASS as expected)
+
+- Run: `kimi-k3-syn-l8-tp4-b1-s8192`, candidate = the oracle, rack 10 tray14 GPUs 0 to 3, host level, 86 s, runner at `31fed7a`. Report: `reports/gb300/step3-syn-l8-tp4-b1-20261111T234011Z/REPORT.md`.
+- Result: all four ranks `pass` on three shared-seed trials; worst band ratio 0.481 on every rank; next_token exact against the FP32 argmax; expert sets identical to the oracle; cache_length exact; inputs unchanged. Launch audit fails on all ranks: 9089 profiler device events per rank = 8189 compute kernels + 26 NCCL device kernels + 848 memcpy events + 26 collective records; status `non_megakernel`. Timing recorded (162 ms candidate, 174 ms eager reference, same code: noise), not a baseline. Peak 33.96 GB allocated per GPU.
+- NCCL: 603 collectives per process (573 AllReduce, 22 AllGather, 8 Broadcast), identical sequence on all four processes, 0 warnings; the audited step has the same 26 NCCL device kernels in the same order on every rank.
+- Infrastructure: four distinct GPUs by UUID and PCI id, no other GPU process, 0 GPU-pod requests before, during (30 s polling) and after, no leftover processes. Not interrupted.
+- New: `reports/gb300/ISSUES.md` with non-blocking notes for the repo owner, first of all the launch-audit accounting semantics (collectives counted twice, copies counted as launches).
+- Next (needs approval): `kimi-k3-syn-l8-tp4-b8-s8192`, then B64; then a deliberately corrupted-output negative control before any TP8 or real-weight work.
