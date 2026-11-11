@@ -1,0 +1,12 @@
+#!/bin/bash
+# Stop a goalbox run: kill its tmux session (agent, proxy, broker) and cancel its GPU jobs.
+#   sandbox/bin/goalbox-stop NAME
+NAME=${1:?usage: goalbox-stop NAME}
+tmux kill-session -t "=gb-$NAME" 2>/dev/null && echo "killed tmux session gb-$NAME"
+pkill -f "lib/(broker|netproxy).py .*/$NAME\$" && echo "stopped broker/proxy"
+if command -v squeue >/dev/null; then
+  jobs=$(squeue -h -u "$USER" -n "gb-$NAME" -o %i)
+  [ -n "$jobs" ] && scancel $jobs && echo "cancelled jobs: $jobs"
+fi
+pkill -f "sandbox.sh gpu .*/$NAME " && echo "killed local GPU jobs"
+exit 0

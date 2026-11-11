@@ -1,0 +1,9 @@
+.venv*/
+runs/
+__pycache__/
+*.pyc
+weights/
+baseline/BASELINES.json
+baseline/results/
+*.ncu-rep
+*.log

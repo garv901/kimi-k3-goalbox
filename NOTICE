@@ -1,0 +1,9 @@
+The megabench/ directory started as a copy of MegaBench from
+https://github.com/kamahori/vibe-megakernel (commit 7dfc6d42b0e486ef4b99333015472646bf88e20e).
+That repository has no license file. Its authors keep all rights to the original code.
+This repository changes the code for the Kimi K3 task: the oracle (tasks/kimi.py),
+the checkpoint converter (tasks/kimi_checkpoint.py), the cases, the HBM model (sol.py),
+the band grader and the workspace generator.
+
+Kimi K3 is from Moonshot AI (https://huggingface.co/moonshotai/Kimi-K3). This repository
+contains no model weights. setup/download_weights.sh downloads them under their own license.

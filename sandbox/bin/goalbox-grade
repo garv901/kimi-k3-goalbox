@@ -1,0 +1,44 @@
+#!/bin/bash
+# Official grade of a run's current submission, outside the agent's control.
+#
+#   sandbox/bin/goalbox-grade NAME [CASE ...]     (default: every graded case)
+#   GOALBOX_GPU_MODE=slurm|local  GOALBOX_PARTITION=main  MINUTES=120  REPS=20  TRIALS=3
+#
+# 1. Snapshots RUN/work to RUN/grades/<ts>/work (the agent cannot see or change it).
+# 2. Runs `megabench evaluate` for each case in the gpu sandbox (no network) with the
+#    clean read-only environment and the read-only benchmark, on fresh inputs.
+# Results: RUN/grades/<ts>/tmp/<case>.jsonl, log: RUN/grades/<ts>/grade.log.
+# The candidate runs inside the evaluator process, so a source and trace review is
+# still needed before a result counts.
+set -euo pipefail
+GB=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
+REPO=$(cd "$GB/.." && pwd)
+NAME=${1:?usage: goalbox-grade NAME [CASE ...]}; shift
+RUN=${GOALBOX_RUNS:-$REPO/runs}/$NAME
+VENV=${GOALBOX_VENV:-$REPO/.venv}
+CASES=("$@")
+[ ${#CASES[@]} -gt 0 ] || mapfile -t CASES < <(PYTHONPATH=$REPO "$VENV/bin/python" -s -c 'from megabench.cases import GRADED; print("\n".join(GRADED))')
+TS=$(date +%Y%m%d-%H%M%S) G=$RUN/grades/$TS
+mkdir -p "$G"/{home,tmp,sock}
+rsync -a --exclude reports --exclude .git "$RUN/work/" "$G/work/"
+(cd "$RUN/work" && git rev-parse HEAD 2>/dev/null; git status --short 2>/dev/null) > "$G/work-git.txt" || true
+cat > "$G/grade.sh" <<EOF
+#!/bin/bash
+rc=0
+for c in ${CASES[*]}; do
+  '$GB/lib/sandbox.sh' gpu '$G' -- bash -c "cd /goalbox/bench && /goalbox/venv/bin/python -s -E -m megabench evaluate \
+    --case \$c --submission /work/submission.py --method goalbox --session-id $NAME-$TS \
+    --device cuda:0 --trials ${TRIALS:-3} --reps ${REPS:-20} --timeout 3600 --output /tmp/\$c.jsonl" || rc=1
+  echo "== \$c"; cat '$G/tmp/'\$c.jsonl 2>/dev/null | head -c 2000; echo
+done
+exit \$rc
+EOF
+chmod +x "$G/grade.sh"
+MODE=${GOALBOX_GPU_MODE:-$(command -v sbatch >/dev/null && echo slurm || echo local)}
+if [ "$MODE" = slurm ]; then
+  sbatch -p "${GOALBOX_PARTITION:-main}" --gres=gpu:8 --time="${MINUTES:-120}" -J "gbgrade-$NAME" \
+    ${GOALBOX_SBATCH_ARGS:-} -o "$G/grade.log" "$G/grade.sh"
+else
+  "$G/grade.sh" > "$G/grade.log" 2>&1 &
+fi
+echo "grading $NAME (${CASES[*]}) snapshot $G — results: $G/tmp/*.jsonl, log: $G/grade.log"

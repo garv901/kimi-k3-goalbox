@@ -1,0 +1,51 @@
+#!/bin/bash
+# Run a command on a GPU. The sandbox has no GPU; the host broker runs the command as a
+# Slurm job, in this same filesystem view (same paths), with no network.
+#
+#   gpu-run [-t MINUTES] [-g GPUS] [-d] -- CMD [ARGS...]
+#       -t  time limit in minutes (default 20, max 120); keep it honest and short
+#       -g  GPUs (default 1, max 8)
+#       -d  detach: print the request id and return at once
+#   gpu-run --wait ID     wait for a detached request, then print its output
+#   gpu-run --status [ID] show the state of one request (default: the latest 10)
+#
+# The command runs with the current directory as its working directory.
+# Output also stays in ~/.gpu/out/ID.log. Exit code = the command's exit code.
+set -uo pipefail
+SP=$HOME/.gpu; mkdir -p "$SP"/{req,status,out}
+MIN=20 GPUS=1 DETACH=0
+
+wait_for() {
+  local id=$1 last=""
+  while :; do
+    local cur; cur=$(tail -n1 "$SP/status/$id" 2>/dev/null)
+    if [ -n "$cur" ] && [ "$cur" != "$last" ]; then echo "[gpu-run $id] $cur" >&2; last=$cur; fi
+    case $cur in *" done "*) break ;; esac
+    sleep 5
+  done
+  cat "$SP/out/$id.log" 2>/dev/null
+  local code; code=$(awk '{print $3}' <<< "$cur")
+  [[ $code =~ ^[0-9]+$ ]] && exit "$code" || exit 1
+}
+
+case ${1:-} in
+  --wait) wait_for "$2" ;;
+  --status)
+    if [ -n "${2:-}" ]; then cat "$SP/status/$2"; else
+      for f in $(ls -t "$SP/status" 2>/dev/null | head -10); do echo "$f: $(tail -n1 "$SP/status/$f")"; done; fi
+    exit 0 ;;
+esac
+
+while getopts "t:g:d" o; do
+  case $o in t) MIN=$OPTARG ;; g) GPUS=$OPTARG ;; d) DETACH=1 ;; *) exit 2 ;; esac
+done
+shift $((OPTIND - 1)); [ "${1:-}" = "--" ] && shift
+[ $# -gt 0 ] || { sed -n '2,15p' "$0"; exit 2; }
+
+id=$(date +%Y%m%d-%H%M%S)-$$
+{ printf 'cd %q || exit 1\n' "$PWD"; printf '%q ' "$@"; echo; } > "$SP/req/$id.sh"
+printf '{"minutes": %d, "gpus": %d, "cwd": "%s"}\n' "$MIN" "$GPUS" "$PWD" > "$SP/req/.$id.tmp"
+mv "$SP/req/.$id.tmp" "$SP/req/$id.json"
+echo "[gpu-run $id] queued (${GPUS} GPU, ${MIN} min)" >&2
+[ $DETACH = 1 ] && { echo "$id"; exit 0; }
+wait_for "$id"

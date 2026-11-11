@@ -1,0 +1,50 @@
+#!/bin/bash
+# Create a fresh goalbox run for the Kimi K3 megakernel task.
+#
+#   sandbox/bin/goalbox-new NAME
+#
+# Creates $GOALBOX_RUNS/NAME (default REPO/runs/NAME) with:
+#   work/  the agent workspace (TASK.md, cases.json, PyTorch oracle snapshot, submission.py,
+#          check_candidate / profile_candidate / sol_info, ENVIRONMENT.md), git-initialised
+#   home/  a fresh $HOME for the agent: its own .claude (no memory, chats, skills or MCP)
+#          and a venv layered on the clean read-only environment REPO/.venv
+#   tmp/ sock/ gpu/  sandbox scratch, the proxy socket, GPU job scripts
+set -euo pipefail
+GB=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
+REPO=$(cd "$GB/.." && pwd)
+NAME=${1:?usage: goalbox-new NAME}
+[[ $NAME =~ ^[A-Za-z0-9_-]+$ ]] || { echo "bad name"; exit 2; }
+RUNS=${GOALBOX_RUNS:-$REPO/runs}
+RUN=$RUNS/$NAME
+[ -e "$RUN" ] && { echo "$RUN already exists; use a new name"; exit 1; }
+VENV=${GOALBOX_VENV:-$REPO/.venv}
+[ -x "$VENV/bin/python" ] || { echo "no environment at $VENV; run setup/install.sh first"; exit 1; }
+mkdir -p "$RUN"/{home/.claude,tmp,sock,gpu}
+
+# 1. Workspace (the tools inside call the read-only benchmark at /goalbox/bench).
+PYTHONPATH=$REPO "$VENV/bin/python" -s -m megabench.integrations.make_kimi_workspace --output "$RUN/work" >/dev/null
+cp "$GB/lib/ENVIRONMENT.md" "$RUN/work/ENVIRONMENT.md"
+printf '%s\n' 'Read TASK.md (the task) and ENVIRONMENT.md (the sandbox, and how to run on GPUs with gpu-run) before you start.' > "$RUN/work/CLAUDE.md"
+(cd "$RUN/work" && git add -A && git -c user.name=goalbox -c user.email=goalbox@invalid commit -qm "goalbox environment")
+
+# 2. Fresh Claude home: no memory, history, skills, plugins or claude.ai connectors.
+cat > "$RUN/home/.claude/settings.json" <<'EOF'
+{
+  "env": { "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet" },
+  "permissions": { "deny": ["WebSearch", "WebFetch"] },
+  "autoUpdates": false
+}
+EOF
+cat > "$RUN/home/.claude.json" <<'EOF'
+{ "hasCompletedOnboarding": true, "theme": "dark", "autoUpdates": false,
+  "projects": { "/work": { "hasTrustDialogAccepted": true, "hasCompletedProjectOnboarding": true } } }
+EOF
+
+# 3. Per-run writable venv (pip installs go through the filtered index) on top of the clean env.
+"$GB/lib/sandbox.sh" gpu "$RUN" -- bash -c '
+  /goalbox/venv/bin/python -m venv /home/agent/venv &&
+  sp=$(/home/agent/venv/bin/python -c "import site; print(site.getsitepackages()[0])") &&
+  base=$(/goalbox/venv/bin/python -c "import site; print(site.getsitepackages()[0])") &&
+  echo "$base" > "$sp/goalbox-base.pth" &&
+  /home/agent/venv/bin/python -c "import torch, numpy; print(\"venv ok: torch\", torch.__version__)"'
+echo "created $RUN"

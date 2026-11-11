@@ -1,0 +1,61 @@
+#!/bin/bash
+# Start the goal agent of a goalbox run in tmux.
+#
+#   sandbox/bin/goalbox-start NAME TOKEN_FILE [GOAL_FILE]
+#     NAME        a run made by goalbox-new
+#     TOKEN_FILE  file with a Claude Code OAuth token (make one with: claude setup-token)
+#     GOAL_FILE   goal prompt (default goals/kimi-k3-tp8.txt); "-" starts without a goal
+#   MODEL=claude-opus-5-5 EFFORT=high (defaults)   GOALBOX_GPU_MODE=slurm|local   GOALBOX_PARTITION=...
+#
+# tmux session gb-NAME:  window agent  = sandboxed Claude Code
+#                        window proxy  = network allowlist proxy  (log: RUN/net.log)
+#                        window broker = GPU broker               (log: RUN/broker.log)
+# Watch: tmux attach -t gb-NAME      Stop: sandbox/bin/goalbox-stop NAME
+set -euo pipefail
+GB=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
+REPO=$(cd "$GB/.." && pwd)
+NAME=${1:?usage: goalbox-start NAME TOKEN_FILE [GOAL_FILE]} TOK=${2:?token file}
+GOAL=${3:-$REPO/goals/kimi-k3-tp8.txt}
+RUN=${GOALBOX_RUNS:-$REPO/runs}/$NAME S=gb-$NAME
+[ -d "$RUN/work" ] || { echo "no run $RUN; create it with goalbox-new"; exit 1; }
+[ -s "$TOK" ] || { echo "token file empty or missing: $TOK"; exit 1; }
+TOK=$(realpath "$TOK")
+[ "$GOAL" = - ] && GOAL=
+[ -z "$GOAL" ] || GOAL=$(realpath "$GOAL")
+[ -z "$GOAL" ] || [ -s "$GOAL" ] || { echo "goal file empty or missing: $GOAL"; exit 1; }
+tmux has-session -t "=$S" 2>/dev/null && { echo "tmux session $S already exists"; exit 1; }
+pgrep -f "lib/broker.py $RUN\$" >/dev/null && { echo "a broker for $NAME is already running"; exit 1; }
+
+tmux new-session -d -s "$S" -n proxy -c "$GB" -x 220 -y 50 "python3 lib/netproxy.py '$RUN'; exec bash"
+tmux new-window -d -t "$S" -n broker -c "$GB" "python3 lib/broker.py '$RUN'; exec bash"
+for _ in $(seq 20); do [ -S "$RUN/sock/net.sock" ] && break; sleep 0.5; done
+tmux new-window -t "$S" -n agent -c "$GB" \
+  "CLAUDE_CODE_OAUTH_TOKEN=\$(cat '$TOK') DISABLE_AUTOUPDATER=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 \
+   ENABLE_CLAUDEAI_MCP_SERVERS=false CLAUDE_CODE_SUBAGENT_MODEL=sonnet \
+   lib/sandbox.sh agent '$RUN' -- /goalbox/claude --model ${MODEL:-claude-opus-5-5} --effort ${EFFORT:-high} \
+   --permission-mode auto -n '$NAME'; exec bash"
+T=$S:agent
+
+ready=0
+for _ in $(seq 90); do
+  sleep 1
+  pane=$(tmux capture-pane -p -t "$T")
+  if grep -q "trust this folder" <<< "$pane"; then
+    tmux send-keys -t "$T" Down; sleep 0.5
+    tmux capture-pane -p -t "$T" | grep -q "❯ Yes, I trust" && tmux send-keys -t "$T" Enter
+    sleep 2; continue
+  fi
+  if grep -q "mode on (shift+tab" <<< "$pane"; then ready=1; break; fi
+done
+[ $ready = 1 ] || { echo "agent did not reach the input box; check: tmux attach -t $S"; exit 1; }
+if [ -n "$GOAL" ]; then
+  sleep 1
+  tmux send-keys -t "$T" -l "/goal "
+  tmux load-buffer -b "goal-$S" "$GOAL"
+  tmux paste-buffer -p -d -b "goal-$S" -t "$T"
+  sleep 1
+  tmux send-keys -t "$T" Enter
+  sleep 3
+  tmux capture-pane -p -t "$T" | grep -q "Goal set" && echo "goal set" || echo "WARNING: did not see 'Goal set'; check: tmux attach -t $S"
+fi
+echo "started $NAME — attach: tmux attach -t $S · transcripts: $RUN/home/.claude/projects · net: $RUN/net.log · gpu: $RUN/broker.log"
