@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Allowlist proxy for one goalbox run. Listens on RUN_DIR/sock/net.sock (host side).
 
-- CONNECT host:443 is tunneled only for hosts in ALLOW_CONNECT.
+- CONNECT host:443 is tunneled only for hosts in ALLOW_CONNECT or ALLOW_PATTERNS (Hugging Face).
 - http://pypi.goalbox/simple/<name>/ is served from https://pypi.org/simple/<name>/
   unless <name> matches a pattern in goalbox/blocked-packages.txt (then 403).
   Wheel files come from files.pythonhosted.org through CONNECT; pypi.org itself is not
@@ -14,6 +14,8 @@ from pathlib import Path
 RUN = Path(sys.argv[1]).resolve()
 GB = Path(__file__).resolve().parents[1]
 ALLOW_CONNECT = {"api.anthropic.com", "files.pythonhosted.org"}
+# Hugging Face: model cards, configs, modeling code and weights (hub API, LFS and Xet storage).
+ALLOW_PATTERNS = ("huggingface.co", "*.huggingface.co", "hf.co", "*.hf.co")
 BLOCKED = [l.split("#")[0].strip() for l in (GB / "blocked-packages.txt").read_text().splitlines()]
 BLOCKED = [p for p in BLOCKED if p]
 LOG = (RUN / "net.log").open("a", buffering=1)
@@ -65,7 +67,7 @@ async def handle(cr, cw):
     headers = {k.lower(): v.strip() for k, _, v in (l.partition(":") for l in lines[1:] if l)}
     if method == "CONNECT":
         host, _, port = target.rpartition(":")
-        if host in ALLOW_CONNECT and port == "443":
+        if (host in ALLOW_CONNECT or any(fnmatch.fnmatch(host.lower(), p) for p in ALLOW_PATTERNS)) and port == "443":
             try:
                 ur, uw = await asyncio.open_connection(host, 443)
             except OSError as e:
@@ -107,7 +109,7 @@ async def main():
     sock = RUN / "sock/net.sock"
     sock.unlink(missing_ok=True)
     server = await asyncio.start_unix_server(handle, path=str(sock))
-    log("start", f"allow={sorted(ALLOW_CONNECT)} blocked={len(BLOCKED)} patterns")
+    log("start", f"allow={sorted(ALLOW_CONNECT)}+{ALLOW_PATTERNS} blocked={len(BLOCKED)} patterns")
     async with server:
         await server.serve_forever()
 

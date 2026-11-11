@@ -19,7 +19,7 @@ from pathlib import Path
 from ..cases import CASES, GRADED
 
 ROOT = Path(__file__).resolve().parents[2]
-REFERENCE = ("kimi.py", "common.py", "quantization.py", "distributed.py", "parallel.py")
+REFERENCE = ("kimi.py", "kimi_checkpoint.py", "common.py", "quantization.py", "distributed.py", "parallel.py")
 DEV_CASE = "kimi-k3-dev-l4-tp1-b8-s8192"
 
 TASK = """# Kimi K3 decode-step megakernel
@@ -62,7 +62,8 @@ activations) when the result stays in the band.
 - Compute from the runtime inputs on every call. Weights (synthetic cases), tokens,
   reset flags and states change between trials. Do not mutate inputs, cache answers,
   call the oracle, replay a multi-kernel CUDA graph, or move model work to the CPU.
-- The real-weight cases load the converted checkpoint. The synthetic cases make fresh
+- The real-weight cases load the converted checkpoint (read-only at `/weights` in GPU jobs; layout in
+  `reference/megabench/tasks/kimi_checkpoint.py`). The synthetic cases make fresh
   random weights for every trial, so a submission that depends on fixed weights fails.
 
 ## Tools

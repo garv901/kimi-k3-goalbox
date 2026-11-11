@@ -9,7 +9,7 @@ The target is one node of 8 NVIDIA B300 GPUs with tensor parallel 8 (TP8).
 The harness has four parts:
 
 1. **Sandbox.** The agent runs in a bubblewrap (`bwrap`) sandbox. The agent can see only its workspace, its home, the CUDA toolkit and a read-only copy of the benchmark.
-2. **Network filter.** A proxy lets the agent reach only the Claude API and a filtered package index. The index does not supply packages that contain LLM kernels, for example vLLM, FlashInfer and CUTLASS.
+2. **Network filter.** A proxy lets the agent reach only the Claude API, Hugging Face and a filtered package index. The index does not supply packages that contain LLM kernels, for example vLLM, FlashInfer and CUTLASS.
 3. **GPU broker.** The sandbox has no GPU. The agent sends GPU work with `gpu-run`. The host broker runs the work as a Slurm job or on local GPUs, in a different sandbox with no network.
 4. **Benchmark (MegaBench).** A PyTorch oracle gives the math of one Kimi K3 decode step. The benchmark does a check of correctness, counts the GPU kernel launches and measures the latency.
 
