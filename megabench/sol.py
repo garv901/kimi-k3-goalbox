@@ -15,8 +15,8 @@ import math
 
 from .cases import Case
 
-DEFAULT_B200_BANDWIDTH_TB_S = 8.0   # B200 and B300 HBM3e peak per GPU
-DEFAULT_B200_BANDWIDTH_SOURCE = "https://www.nvidia.com/en-us/data-center/dgx-b300/"
+DEFAULT_HBM_BANDWIDTH_TB_S = 8.0   # B300 HBM3e peak per GPU (DGX B300: 64 TB/s over 8 GPUs)
+DEFAULT_HBM_BANDWIDTH_SOURCE = "https://www.nvidia.com/en-us/data-center/dgx-b300/"
 BF16, FP32, INT64 = 2, 4, 8
 
 
@@ -24,7 +24,7 @@ def _mxfp4_bytes(rows: int, cols: int) -> int:
     return rows*cols//2+rows*cols//32
 
 
-def estimate_case(case: Case, bandwidth_tb_s: float = DEFAULT_B200_BANDWIDTH_TB_S,
+def estimate_case(case: Case, bandwidth_tb_s: float = DEFAULT_HBM_BANDWIDTH_TB_S,
                   measured_ms: float | None = None) -> dict:
     if not math.isfinite(bandwidth_tb_s) or bandwidth_tb_s <= 0:
         raise ValueError("bandwidth_tb_s must be finite and positive")

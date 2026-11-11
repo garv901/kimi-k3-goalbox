@@ -154,7 +154,7 @@ With Slurm, set `GOALBOX_PARTITION` (default `main`) and, if necessary, `GOALBOX
 
 ## Requirements
 
-- One node with 8 B300 GPUs (B200 also works) and approximately 2 TB of free disk.
+- One node with 8 B300 GPUs (sm_103a, 288 GB each) and approximately 2 TB of free disk. Each rank holds approximately 200 GB of weights, so the real-weight cases do not fit on B200 (180 GB). The harness was developed and its synthetic cases were tested on B200 (see `tools/VERIFY_KIMI.md`).
 - Linux with `bwrap` (bubblewrap) and the CUDA 13 toolkit.
 - Slurm, or local GPUs with `GOALBOX_GPU_MODE=local`.
 - Claude Code (`claude` on `PATH`, or `GOALBOX_CLAUDE_BIN`) and an OAuth token.

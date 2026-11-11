@@ -22,8 +22,8 @@ from pathlib import Path
 from typing import Callable
 
 from ..cases import Case, select_cases
-from ..sol import (DEFAULT_B200_BANDWIDTH_SOURCE,
-                   DEFAULT_B200_BANDWIDTH_TB_S, estimate_case)
+from ..sol import (DEFAULT_HBM_BANDWIDTH_SOURCE,
+                   DEFAULT_HBM_BANDWIDTH_TB_S, estimate_case)
 from ..workloads import make_inputs, reference
 from .benchmark import _audit_launches, _measure
 from .correctness import check_trials
@@ -370,8 +370,8 @@ def main(argv: list[str] | None = None) -> int:
                      default="core")
     sol.add_argument("--case", help="show one case, regardless of suite")
     sol.add_argument("--bandwidth-tb-s", type=float,
-                     default=DEFAULT_B200_BANDWIDTH_TB_S,
-                     help="assumed peak HBM TB/s per GPU (default: B200 8.0)")
+                     default=DEFAULT_HBM_BANDWIDTH_TB_S,
+                     help="assumed peak HBM TB/s per GPU (default: B300 8.0)")
     sol.add_argument("--measured-ms", type=float,
                      help="candidate CUDA-event median in ms; requires --case")
     sol.add_argument("--result", type=Path,
@@ -447,7 +447,7 @@ def main(argv: list[str] | None = None) -> int:
         report = {
             "method": "optimistic_one_read_hbm_floor",
             "assumed_bandwidth_tb_s_per_gpu": args.bandwidth_tb_s,
-            "default_b200_bandwidth_source": DEFAULT_B200_BANDWIDTH_SOURCE,
+            "default_bandwidth_source": DEFAULT_HBM_BANDWIDTH_SOURCE,
             "assumptions": [
                 "Per slowest rank: each weight byte the rank holds and needs, read once.",
                 "Routed experts: expected distinct experts under uniform routing; MLA cache replicated per rank.",
