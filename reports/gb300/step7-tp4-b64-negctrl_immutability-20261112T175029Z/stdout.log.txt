@@ -1,0 +1,2 @@
+kimi-k3-syn-l8-tp4-b64-s8192: incorrect
+{"results": "/mnt/shared/home/dc/workspace/kimi-k3-goalbox/reports/gb300/step7-tp4-b64-negctrl_immutability-20261112T175029Z/result.jsonl", "provisional_geomean_speedup": null, "passed": 0, "total": 1}

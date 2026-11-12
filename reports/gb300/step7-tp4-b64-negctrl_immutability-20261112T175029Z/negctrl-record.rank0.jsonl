@@ -1,0 +1,1 @@
+{"control": "immutability", "tensor": "l3_kv_cache", "index": [0, 0, 0], "delta": 1.0, "value_before": 0.039306640625, "value_after": 1.0390625, "changed": true, "tensor_bytes": 536870912, "snapshot_path": "device checksums"}

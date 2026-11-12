@@ -1,4 +1,4 @@
-# Negative controls for the evaluator (prepared 2026-11-12; CPU review, then Step 6 on one GPU the same day)
+# Negative controls for the evaluator (prepared 2026-11-12; CPU review, Step 6 on one GPU, Step 7 on four GPUs the same day)
 
 Every GB300 run so far (Steps 1 to 5) used the oracle itself as the candidate and showed the evaluator *accepting* a correct candidate. These three submissions show it *rejecting* an incorrect one, each through exactly one check. They wrap the unmodified oracle; the oracle, grader, launch audit, benchmark methodology and the positive control are unchanged (no file under `megabench/`, `setup/` or `sandbox/` differs from commit `52f8d8c`).
 
@@ -44,3 +44,16 @@ Four separate clean evaluator invocations on `kimi-k3-dev-l4-tp1-b8-s8192`, rack
 | immutability | `incorrect` | `AssertionError: candidate mutated input l3_kv_cache` (from `check_unchanged`, before `compare`) | `l3_kv_cache[0,0,0]` -0.2246 to 0.7734, 64 MB, host-copy path |
 
 All four exit with code 1; the `reason` string carries the exception type before the grader's message (ISSUES.md item 12). Wall clock 53 to 73 s per run, 63.7 GB sampled GPU memory, host memory growth 3 to 6 GB per run, no foreign GPU process, 0 GPU-pod requests, no leftover processes, stderr empty. TP4 replication (per-rank `ranks[].status`/`reason` must each carry the failure) is a separate decision.
+
+## TP4 (Step 7, 2026-11-12): CPU preflight, the B64 immutability run, rank-local candidates
+
+Files added: `step7-tp4-control.sh <control> <b1|b8|b64>` (Step 5's script plus the record file and a per-rank summary), `step7_analyze.py` (per-rank verdict, record, NCCL-trace and monitor checks), `tp4_preflight.py` and `tp4_preflight_driver.sh` (CPU-only: snapshot-path proof on `[B, 8192, 512]` BF16 tensors with the evaluator's own `snapshot()`/`check_unchanged()`, tiny TP4 geometry through `evaluate_distributed()` on gloo for every control, and the real B64 case through the CLI on the CPU), and three rank-local candidates `negctrl_ranklocal_{immutability,routing,logits}.py` (target rank 2; docstrings describe the evaluator behaviour each one hits). Evidence: `tp4-preflight-20261112T173953Z/` (CPU) and `../step7-tp4-b64-negctrl_immutability-20261112T175029Z/` (GPU); report `../step7-tp4-REPORT.md`.
+
+| Run | Result |
+|---|---|
+| CPU, snapshot path | B1 8 MB and B8 64 MB: host copy; B64 512 MB: two int64 checksums, single-element mutation detected at the first element, in the second 256 MB chunk and at the last element; revert passes |
+| CPU, tiny TP4 gloo, all seven controls | positive `correctness_only` 4 ranks `pass`; immutability, logits, routing (all ranks): 4 ranks `incorrect` with their own grader message; rank-local immutability: reason `rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache` on every rank; rank-local routing: identical `expert_ids: ... different between ranks` on every rank (route-consistency check, before the forced references); rank-local logits: identical `logits:` failure on every rank (band computed on all-reduced sums, rel-L2 0.28). No run exceeded 4 s; no hang |
+| CPU, real B64 case, immutability | 4 ranks `incorrect`, each reason naming all four ranks, records on the checksum path; 3 min 22 s, host peak 296 GB used |
+| GPU, `step7-tp4-control.sh negctrl_immutability b64` | aggregate `incorrect`; 4 ranks `incorrect`, identical reason naming all four ranks; records `tensor_bytes 536870912`, `device checksums`; NCCL 60 collectives per process, identical sequence, 0 warnings; 77 s; 37.6 GB sampled per GPU; host +28 GB; no stop condition |
+
+Rank-local limitation (details in the report): the evaluator grades routes and outputs as one TP group (route checksums all-reduced before the forced references, band sums all-reduced), so a corruption on one rank produces the same error on every rank and never reaches the near-top-k rule; only a rank's own local error (candidate exception, failed `check_unchanged()`) is attributed with a "rank N:" prefix. A forced rerun on one rank would be a collective mismatch and was not written. Two setup mistakes of the preflight itself (an invalid tiny geometry: `intermediate/tp` must be a multiple of 32 for the MXFP4 shards; a missing `--session-id` in the CLI command) were fixed before the committed run; the two aborted directories were removed.

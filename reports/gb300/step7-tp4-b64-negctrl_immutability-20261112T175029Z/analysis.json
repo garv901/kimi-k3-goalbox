@@ -1,0 +1,293 @@
+{
+ "dir": "step7-tp4-b64-negctrl_immutability-20261112T175029Z",
+ "case": "kimi-k3-syn-l8-tp4-b64-s8192",
+ "control": "negctrl_immutability",
+ "commit": "c7773c13a774d09d208d7838889524991d2316b4",
+ "worktree_status": "?? reports/gb300/step7-tp4-b64-negctrl_immutability-20261112T175029Z/ ",
+ "submission_sha256": "c9375eb89f9d2007bddedcd34a189e8146a4248c9a79e72248207d4572cf8952",
+ "result_submission_sha256": "c9375eb89f9d2007bddedcd34a189e8146a4248c9a79e72248207d4572cf8952",
+ "host": "pod4-gb300-10-tray14-f3",
+ "exit_code": "1",
+ "status": "incorrect",
+ "reason": "AssertionError: rank 0: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 1: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 3: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+ "result_keys": [
+  "case",
+  "contract_sha256",
+  "hardware",
+  "ranks",
+  "reason",
+  "session",
+  "source_hints_advisory",
+  "status",
+  "submission",
+  "submission_sha256",
+  "timestamp_utc"
+ ],
+ "wall_s": 77.0,
+ "per_rank": [
+  {
+   "rank": 0,
+   "device": "cuda:0",
+   "status": "incorrect",
+   "reason": "AssertionError: rank 0: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 1: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 3: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+   "trials_recorded": 0,
+   "ranks_named_in_reason": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "status_as_expected": true,
+   "reason_as_expected": true,
+   "attribution_as_expected": true
+  },
+  {
+   "rank": 1,
+   "device": "cuda:1",
+   "status": "incorrect",
+   "reason": "AssertionError: rank 0: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 1: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 3: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+   "trials_recorded": 0,
+   "ranks_named_in_reason": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "status_as_expected": true,
+   "reason_as_expected": true,
+   "attribution_as_expected": true
+  },
+  {
+   "rank": 2,
+   "device": "cuda:2",
+   "status": "incorrect",
+   "reason": "AssertionError: rank 0: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 1: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 3: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+   "trials_recorded": 0,
+   "ranks_named_in_reason": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "status_as_expected": true,
+   "reason_as_expected": true,
+   "attribution_as_expected": true
+  },
+  {
+   "rank": 3,
+   "device": "cuda:3",
+   "status": "incorrect",
+   "reason": "AssertionError: rank 0: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 1: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 3: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+   "trials_recorded": 0,
+   "ranks_named_in_reason": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "status_as_expected": true,
+   "reason_as_expected": true,
+   "attribution_as_expected": true
+  }
+ ],
+ "records": {
+  "rank0": [
+   {
+    "control": "immutability",
+    "tensor": "l3_kv_cache",
+    "index": [
+     0,
+     0,
+     0
+    ],
+    "delta": 1.0,
+    "value_before": 0.039306640625,
+    "value_after": 1.0390625,
+    "changed": true,
+    "tensor_bytes": 536870912,
+    "snapshot_path": "device checksums"
+   }
+  ],
+  "rank1": [
+   {
+    "control": "immutability",
+    "tensor": "l3_kv_cache",
+    "index": [
+     0,
+     0,
+     0
+    ],
+    "delta": 1.0,
+    "value_before": 0.039306640625,
+    "value_after": 1.0390625,
+    "changed": true,
+    "tensor_bytes": 536870912,
+    "snapshot_path": "device checksums"
+   }
+  ],
+  "rank2": [
+   {
+    "control": "immutability",
+    "tensor": "l3_kv_cache",
+    "index": [
+     0,
+     0,
+     0
+    ],
+    "delta": 1.0,
+    "value_before": 0.039306640625,
+    "value_after": 1.0390625,
+    "changed": true,
+    "tensor_bytes": 536870912,
+    "snapshot_path": "device checksums"
+   }
+  ],
+  "rank3": [
+   {
+    "control": "immutability",
+    "tensor": "l3_kv_cache",
+    "index": [
+     0,
+     0,
+     0
+    ],
+    "delta": 1.0,
+    "value_before": 0.039306640625,
+    "value_after": 1.0390625,
+    "changed": true,
+    "tensor_bytes": 536870912,
+    "snapshot_path": "device checksums"
+   }
+  ]
+ },
+ "nccl": [
+  {
+   "file": "nccl-pod4-gb300-10-tray14-f3-29010.log.txt",
+   "cuda_dev": [
+    "0"
+   ],
+   "collectives": 60,
+   "kinds": {
+    "AllGather": 6,
+    "Broadcast": 2,
+    "AllReduce": 52
+   },
+   "warn": 0,
+   "error_lines": 0,
+   "init_complete": 3,
+   "ip_redacted": 4
+  },
+  {
+   "file": "nccl-pod4-gb300-10-tray14-f3-29011.log.txt",
+   "cuda_dev": [
+    "1"
+   ],
+   "collectives": 60,
+   "kinds": {
+    "AllGather": 6,
+    "Broadcast": 2,
+    "AllReduce": 52
+   },
+   "warn": 0,
+   "error_lines": 0,
+   "init_complete": 3,
+   "ip_redacted": 4
+  },
+  {
+   "file": "nccl-pod4-gb300-10-tray14-f3-29012.log.txt",
+   "cuda_dev": [
+    "2"
+   ],
+   "collectives": 60,
+   "kinds": {
+    "AllGather": 6,
+    "Broadcast": 2,
+    "AllReduce": 52
+   },
+   "warn": 0,
+   "error_lines": 0,
+   "init_complete": 3,
+   "ip_redacted": 4
+  },
+  {
+   "file": "nccl-pod4-gb300-10-tray14-f3-29013.log.txt",
+   "cuda_dev": [
+    "3"
+   ],
+   "collectives": 60,
+   "kinds": {
+    "AllGather": 6,
+    "Broadcast": 2,
+    "AllReduce": 52
+   },
+   "warn": 0,
+   "error_lines": 0,
+   "init_complete": 3,
+   "ip_redacted": 4
+  }
+ ],
+ "nccl_histogram": {
+  "AllGather/4/0": 3,
+  "AllGather/1/0": 3,
+  "Broadcast/4/0": 1,
+  "Broadcast/1/0": 1,
+  "AllReduce/7/0": 48,
+  "AllReduce/7/2": 2,
+  "AllReduce/4/3": 2
+ },
+ "nccl_run_length": "AG64 AG8 BC64 BC8 AG64 AG8 Fx24 fmax tokmin Fx24 fmax tokmin AG64 AG8",
+ "gpu_peak_used_mb": 37620,
+ "gpu_pids": {
+  "GPU-2305f466-c3f2-22d8-138d-f36d3a9711d5": [
+   "29010"
+  ],
+  "GPU-4db89045-c3dd-b6c1-bf5e-3d6fd5609698": [
+   "29011"
+  ],
+  "GPU-651ce205-dd28-d635-7272-d8f59bad1647": [
+   "29012"
+  ],
+  "GPU-a7a707cd-65b4-bd7c-5f59-1d4e12a484b8": [
+   "29013"
+  ]
+ },
+ "host_mem": {
+  "samples": 8,
+  "used_mb_first": 138717,
+  "used_mb_max": 166875,
+  "growth_mb_max": 28158,
+  "available_mb_min": 814214,
+  "swap_used_mb_max": 0
+ },
+ "k8s_samples": 3,
+ "expected": {
+  "fragment": "candidate mutated input l3_kv_cache",
+  "attributed_to": [
+   0,
+   1,
+   2,
+   3
+  ]
+ },
+ "checks": {
+  "four_ranks_reported": true,
+  "every_rank_status_incorrect": true,
+  "every_rank_reason_as_expected": true,
+  "every_rank_attribution_as_expected": true,
+  "aggregate_status_incorrect": true,
+  "aggregate_reason_is_rank0_reason": true,
+  "distinct_devices": true,
+  "exit_code_1": true,
+  "record_from_every_rank": true,
+  "record_checksum_path_on_every_rank": true,
+  "nccl_four_logs": true,
+  "nccl_no_warnings_or_errors": true,
+  "nccl_sequence_identical_across_processes": true,
+  "one_pid_per_gpu_and_no_foreign_process": true,
+  "no_gpu_pod_during_run": true,
+  "gpus_idle_after": true,
+  "no_leftover_processes": true,
+  "stderr_empty": true
+ },
+ "all_checks_met": true
+}
