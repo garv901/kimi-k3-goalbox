@@ -87,3 +87,14 @@ Chat history, condensed and redacted.
 Technical notes: the oracle step's collectives are 17 all-reduces of the hidden state (7168×B), 7 of the latent (3584×B), one float32 max and one int64 min for greedy decoding; element counts scale with B (57344 and 28672 at B8). Compute-kernel and memcpy counts grow about 6.5x from B1 to B8 because the eager oracle's routing is host-driven per row; NCCL kernel count is batch-independent.
 
 Failures and fixes: the analyzer label swap above (caught by cross-checking against the audit's kernel names); no infrastructure or evaluator failures.
+
+## 10. Step 5 approval and execution (2026-11-12)
+
+Chat history, condensed and redacted.
+
+- Operator: accepted Step 4 (commit `76c3e01`) and the B64 memory and runtime projections. GO for TP4 B64 only, same submission and controls. Requirements: 12/12 passes with band ratios per output class, tie-margin details, routing, cache length and immutability; four UUIDs; clean NCCL init and cross-rank comparison of the ordered collective sequence; check for 26 NCCL kernels in the audited step and record differences from B1 and B8; raw NCCL and profiler evidence preserved; event breakdown and actual launches reported separately without modifying the audit; peak allocated and sampled memory per GPU, host RAM monitored throughout, comparison with the 37 GB and 41 GB projections; timing distributions with outliers as diagnostics only; same timeouts; stop on OOM, memory pressure, hangs or contention without retry; evidence under `reports/gb300/step5-syn-l8-tp4-b64-<ts>/`; preserve the corrected analyzer with its SHA; update the three documents; push without PR.
+- Session: derived `step5.sh` from `step4.sh` (case, names, plus a 10 s `free -m` monitor), moved the runner's raw Step 4 copy outside the repo, fast-forwarded the runner to `76c3e01`, checked GPUs, GPU pods and host RAM by hand, ran Step 5 (239 s). Analyzer: `analyze_step5.py`, sha256 `af2efdef0134794e0a8df0f444b1cddde7c08218b1e9535e3c8381a4ce632a92` (identical content to the corrected Step 4 analyzer).
+
+Technical notes: both memory projections held (37.25 GB allocated, 41.5 GB process memory per GPU). Host RAM grew by 78 GB during the run because the evaluator snapshots each rank's inputs, including the synthetic weights, to host memory for the immutability check; this scales with the number of ranks and weight size, not with batch, and would be about 200 GB per rank for the real checkpoint. The near-tie next_token observation was added to ISSUES.md.
+
+Failures and fixes: none in this step. Transfer of the 1.1 GB raw record to the committing clone was done compressed in transit.

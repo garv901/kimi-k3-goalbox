@@ -1,0 +1,2 @@
+kimi-k3-syn-l8-tp4-b64-s8192: non_megakernel (1.10x GPU-event vs best available baseline)
+{"results": "/mnt/shared/home/dc/workspace/kimi-k3-goalbox/reports/gb300/step5-syn-l8-tp4-b64-20261112T071257Z/result.jsonl", "provisional_geomean_speedup": null, "passed": 0, "total": 1}

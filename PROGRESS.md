@@ -44,3 +44,13 @@ Development log of the `gb300-tp4-synthetic` branch: validating the kimi-k3-goal
 - Infrastructure: four distinct GPUs, no other GPU process, 0 GPU-pod requests before, during and after, no leftover processes. Not interrupted.
 - ISSUES.md updated (B1 vs B8 accounting table, collective coverage, reserved memory, timing noise).
 - Next (needs approval): `kimi-k3-syn-l8-tp4-b64-s8192` with the memory feasibility assessment in the Step 4 report message; then the corrupted-output negative control before any TP8 or real-weight work.
+
+## 2026-11-12: Step 5, TP4 batch 64, last graded synthetic case (PASS as expected)
+
+- Run: `kimi-k3-syn-l8-tp4-b64-s8192`, candidate = the oracle, rack 10 tray14 GPUs 0 to 3, host level, 239 s, runner at `76c3e01`. Report: `reports/gb300/step5-syn-l8-tp4-b64-20261112T071257Z/REPORT.md`.
+- Result: 12 of 12 rank-trial combinations pass; worst band ratios logits 0.489, cache writes 0.479, KDA recurrent 0.453, conv 0.455; next_token 0 rows outside the tie margin (4 to 9 of 64 rows per trial differ from the FP32 argmax inside the margin); expert sets identical; cache_length exact; inputs unchanged. Launch audit fails on all ranks: 286253 profiler events per rank = 256893 compute + 26 NCCL device kernels + 29308 memcpy + 26 collective records (256919 actual launches). Status `non_megakernel`.
+- NCCL: 603 collectives per process, identical sequence on all four processes, 0 warnings; the audited step has the same 26 NCCL kernels as B1 and B8; only element counts scale with batch.
+- Memory: 37.25 GB allocated per GPU (projection about 37), 41506 MiB sampled (projection about 41); host RAM used 135.5 to 213.5 GB with 767 GB still available. Timing recorded, not a baseline (4264 ms candidate, 4707 ms eager reference).
+- Infrastructure: four distinct GPUs, no foreign GPU process, 0 GPU-pod requests before, during and after, no leftover processes. No stop condition triggered. Not interrupted.
+- ISSUES.md updated (B64 column, near-tie next_token note). The TP4 synthetic series (B1, B8, B64) is complete.
+- Next (needs approval): the corrupted-output negative control (a candidate that returns the oracle output with a deliberate perturbation) to show the grader rejects an incorrect candidate independently, before any TP8 or real-weight work.
