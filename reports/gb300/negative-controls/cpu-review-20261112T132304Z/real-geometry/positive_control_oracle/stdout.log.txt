@@ -1,0 +1,2 @@
+kimi-k3-dev-l4-tp1-b8-s8192: correctness_only
+{"results": "/mnt/shared/home/kevin/workspace/kimi-k3-goalbox/reports/gb300/negative-controls/cpu-review-20261112T132304Z/real-geometry/positive_control_oracle/result.jsonl", "provisional_geomean_speedup": null, "passed": 0, "total": 1}

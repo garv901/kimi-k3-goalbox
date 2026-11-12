@@ -1,0 +1,53 @@
+tiny geometry: layers 5, experts 128, topk 8, batch 3; torch 2.14.1+cu130 on pod4-gb300-3-tray09-f3, CUDA_VISIBLE_DEVICES=''
+
+=== positive_control_oracle.py  sha256 6f9e8a848ef76fcf234473950f0beedeccdeb163641ce6ee405234c74161c906
+  build(case) -> callable: True (tiny, real dev contract, with execution key)
+  check_trials: pass; failure classes []; as expected: True
+  seed 101: classes []; oracle-identical outputs True; as expected True; {'logits': 0.492, 'kv_write': 0.488, 'pe_write': 0.488, 'recurrent_state': 0.442, 'conv_state': 0.425}
+  seed 102: classes []; oracle-identical outputs True; as expected True; {'logits': 0.492, 'kv_write': 0.486, 'pe_write': 0.486, 'recurrent_state': 0.428, 'conv_state': 0.391}
+  seed 103: classes []; oracle-identical outputs True; as expected True; {'logits': 0.481, 'kv_write': 0.47, 'pe_write': 0.47, 'recurrent_state': 0.418, 'conv_state': 0.399}
+  seed 104: classes []; oracle-identical outputs True; as expected True; {'logits': 0.493, 'kv_write': 0.473, 'pe_write': 0.469, 'recurrent_state': 0.428, 'conv_state': 0.4}
+  seed 105: classes []; oracle-identical outputs True; as expected True; {'logits': 0.486, 'kv_write': 0.471, 'pe_write': 0.471, 'recurrent_state': 0.426, 'conv_state': 0.393}
+
+=== negctrl_logits.py  sha256 b122e3fb548a80921a0cf66e092460f39a147a0ea149345cc727b12113c0fcaf
+  build(case) -> callable: True (tiny, real dev contract, with execution key)
+  check_trials: incorrect (AssertionError); failure classes ['logits']; as expected: True
+    message: logits: {'candidate_rel_l2_max': 0.4975966672375048, 'oracle_rel_l2_max': 0.02104011801974333, 'worst_ratio': 11.92423354398488}
+  seed 101: classes ['logits']; oracle-identical outputs False; as expected True
+    logits: {'candidate_rel_l2_max': 0.50029780062312, 'oracle_rel_l2_max': 0.058280773542068245, 'worst_ratio': 18.665262182246288}
+  seed 102: classes ['logits']; oracle-identical outputs False; as expected True
+    logits: {'candidate_rel_l2_max': 0.5022297153070745, 'oracle_rel_l2_max': 0.0651682625253874, 'worst_ratio': 8.83196974826101}
+  seed 103: classes ['logits']; oracle-identical outputs False; as expected True
+    logits: {'candidate_rel_l2_max': 0.49851360596300487, 'oracle_rel_l2_max': 0.025406322449285198, 'worst_ratio': 9.439284984125067}
+  seed 104: classes ['logits']; oracle-identical outputs False; as expected True
+    logits: {'candidate_rel_l2_max': 0.5123085952413311, 'oracle_rel_l2_max': 0.07048399579717807, 'worst_ratio': 3.5833796749058844}
+  seed 105: classes ['logits']; oracle-identical outputs False; as expected True
+    logits: {'candidate_rel_l2_max': 0.5023611232441877, 'oracle_rel_l2_max': 0.03408683821796489, 'worst_ratio': 13.660639595473956}
+
+=== negctrl_routing.py  sha256 94c984657d7bd67bb1fc2cc1411be13587b08483504ffa6fbb1c9b777f8a6a84
+  build(case) -> callable: True (tiny, real dev contract, with execution key)
+  check_trials: error; failure classes []; as expected: False
+    message: RuntimeError: negative control inconclusive: replacement expert 1 is within 0.0291 of the k-th best score (near-tie); rerun with another seed
+  seed 101: classes ['expert_ids']; oracle-identical outputs False; as expected True
+    expert_ids: {'candidate_max_shortfall': 0.25692468881607056, 'oracle_max_shortfall': 0.0, 'allowed': 0.001, 'sets_differing_from_oracle': 1}
+  seed 102: classes ['expert_ids']; oracle-identical outputs False; as expected True
+    expert_ids: {'candidate_max_shortfall': 0.45519641041755676, 'oracle_max_shortfall': 0.003320038318634033, 'allowed': 0.007640076637268066, 'sets_differing_from_oracle': 1}
+  seed 103: classes ['expert_ids']; oracle-identical outputs False; as expected True
+    expert_ids: {'candidate_max_shortfall': 0.37398552894592285, 'oracle_max_shortfall': 0.0005941987037658691, 'allowed': 0.0021883974075317383, 'sets_differing_from_oracle': 1}
+  seed 104: classes ['expert_ids']; oracle-identical outputs False; as expected True
+    expert_ids: {'candidate_max_shortfall': 0.44485995173454285, 'oracle_max_shortfall': 0.0005152225494384766, 'allowed': 0.002030445098876953, 'sets_differing_from_oracle': 1}
+  seed 105: classes ['expert_ids']; oracle-identical outputs False; as expected True
+    expert_ids: {'candidate_max_shortfall': 0.19713938236236572, 'oracle_max_shortfall': 0.007738709449768066, 'allowed': 0.016477418899536134, 'sets_differing_from_oracle': 1}
+
+=== negctrl_immutability.py  sha256 c9375eb89f9d2007bddedcd34a189e8146a4248c9a79e72248207d4572cf8952
+  build(case) -> callable: True (tiny, real dev contract, with execution key)
+  check_trials: incorrect (AssertionError); failure classes ['candidate mutated input']; as expected: True
+    message: candidate mutated input l3_kv_cache
+  seed 101: classes ['candidate mutated input']; oracle-identical outputs True; as expected True
+  seed 102: classes ['candidate mutated input']; oracle-identical outputs True; as expected True
+  seed 103: classes ['candidate mutated input']; oracle-identical outputs True; as expected True
+  seed 104: classes ['candidate mutated input']; oracle-identical outputs True; as expected True
+  seed 105: classes ['candidate mutated input']; oracle-identical outputs True; as expected True
+
+ALL EXPECTATIONS MET: False
+exit 1

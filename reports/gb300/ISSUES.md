@@ -1,6 +1,6 @@
 # Issue notes for the repository owner (non-blocking)
 
-Observations from the GB300 smoke-test series (oracle as the candidate, TP1 dev, TP2 dev, TP4 B1/B8/B64, 2026-11-11/12). None of them blocked the tests, and none of the harness code was changed for them.
+Observations from the GB300 smoke-test series (oracle as the candidate, TP1 dev, TP2 dev, TP4 B1/B8/B64, 2026-11-11/12) and from preparing the negative controls (`negative-controls/`, 2026-11-12). None of them blocked the tests, and none of the harness code was changed for them.
 
 ## 1. Launch-audit accounting semantics (Steps 2 to 5)
 
@@ -44,3 +44,17 @@ The per-rank record has `hardware.peak_allocated_bytes` (`torch.cuda.max_memory_
 ## 8. Evaluator exit code (Step 1)
 
 `megabench evaluate` exits 1 for a correct submission with status `non_megakernel`, the same as for an error. Automation should read `result.jsonl`.
+
+## 9. The candidate's stdout and stderr are not preserved (negative-control preparation)
+
+`_run_local_worker` pipes the worker's stdout and stderr and keeps only a 4000-character `stderr_tail` when the worker exits without writing a result; the distributed ranks inherit the same pipes. A candidate therefore has no supported way to leave a diagnostic trace in the evidence. The negative controls work around this by appending JSON lines to a file named by `GOALBOX_NEGCTRL_RECORD`. A `candidate_log` field in the record (or keeping the worker's stderr beside `result.jsonl`) would make reviews of real candidates easier too.
+
+## 10. Host memory of a distributed evaluation, and what it means for real-weight TP8 (Step 5, corrected 2026-11-12)
+
+The Step 5 report attributed the 78 GB growth of host memory during the TP4 B64 run to the immutability snapshots. That was an over-attribution: `snapshot()` copies only tensors of at most 64 MB to the host, which is 2.84 GiB per rank for that case (163 of 218 input tensors; the 55 larger ones, 28.6 GiB, are checksummed on the device), so about 11 GiB for four ranks. The 10 s `free -m` timeline (`step5-…/host-mem-monitor.log.txt`) shows three phases: +22 GB in the first 20 s (four processes starting, CUDA contexts and libraries), about +40 GB spread over the three correctness trials (the per-trial snapshots are part of it; the rest, the eager oracle's host-side work and allocator behaviour, was not measured separately), and +33 GB in the final minute, which is the timing phase and the profiler-based launch audit (286253 events per rank held in host memory until the record is written). Peak 213.5 GB used with 767 GB available; nothing was close to a limit.
+
+Implication for the real-weight TP8 cases (`kimi-k3-tp8-*`), computed from `weight_shapes` and `make_state`: 2510 input tensors per rank, 2208 of them at most 64 MB, so the host snapshot is 36.8 GiB per rank and about 147 GiB per tray at 4 ranks per tray (the other 302 tensors, 171 GiB per rank of weights, stay on the GPU and are checksummed there). The 956 GB Grace hosts can hold that, but the snapshot is taken for every trial and lives next to whatever else runs on the tray, and the profiler phase grows with the candidate's launch count (negligible for a real megakernel, 33 GB for the eager oracle at B64). The real checkpoint itself is loaded straight to the device by `safetensors.load_file(device=…)`, so it does not add host memory. A host-memory monitor should stay part of any real-weight run.
+
+## 11. A failing single-GPU evaluation drops the record's provenance fields (negative-control CPU review)
+
+When `evaluate_case` raises (for example `compare()` rejecting the candidate), `_worker` writes a fresh record with only `case`, `submission`, `status`, `reason` and `traceback` (the runner adds `contract_sha256` and `session`). The `submission_sha256`, `hardware` (hostname, torch, CUDA, GPU) and `timestamp_utc` fields that `evaluate_case` had already computed are lost. For a graded run this means an `incorrect` verdict cannot be tied to the exact submission bytes from the record alone. The Step 6 script records the sha256 of the submission in `env.txt` to compensate. Observed on `negative-controls/cpu-review-<ts>/real-geometry/negctrl_logits/result.jsonl`.

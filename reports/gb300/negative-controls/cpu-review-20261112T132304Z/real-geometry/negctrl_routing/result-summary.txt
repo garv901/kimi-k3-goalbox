@@ -1,0 +1,5 @@
+status: incorrect
+reason: AssertionError: expert_ids: {'candidate_max_shortfall': 0.7105818390846252, 'oracle_max_shortfall': 0.002979874610900879, 'allowed': 0.006959749221801758, 'sets_differing_from_oracle': 1}
+submission_sha256: None
+correctness: None
+launch_audit: None

@@ -1,0 +1,5 @@
+status: incorrect
+reason: AssertionError: logits: {'candidate_rel_l2_max': 0.5002194888782403, 'oracle_rel_l2_max': 0.02903338065348188, 'worst_ratio': 14.758671060880333}
+submission_sha256: None
+correctness: None
+launch_audit: None
