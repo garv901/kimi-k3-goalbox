@@ -1,4 +1,4 @@
-"""Step 7 analyzer (read only): one reports/gb300/step7-tp4-<bN>-<control>-<ts>/ directory of a distributed
+"""Step 7/8 analyzer (read only): one reports/gb300/step7-tp4-<bN>-<control>-<ts>/ (or step8-tp4-ranklocal-immutability-<ts>/) directory of a distributed
 negative-control run. Checks every rank's own status and reason against the control's expected failure (not only
 the aggregate), the controls' per-rank records, the NCCL collective trace (sequence identical across the four
 processes, no warnings), and the infrastructure monitors. Writes analysis.json beside the evidence and prints it.
@@ -27,7 +27,10 @@ def read(p, default=''):
 
 def main(d):
     d = d.rstrip('/')
-    m = re.match(r'.*step7-tp4-(b\d+)-(.+)-\d{8}T\d{6}Z$', d); batch, ctrl = m.group(1), m.group(2)
+    m = re.match(r'.*step7-tp4-(b\d+)-(.+)-\d{8}T\d{6}Z$', d)
+    if m: batch, ctrl = m.group(1), m.group(2)
+    elif re.match(r'.*step8-tp4-ranklocal-immutability-\d{8}T\d{6}Z$', d): batch, ctrl = 'b1', 'negctrl_ranklocal_immutability'  # Step 8 directory name fixed by its GO
+    else: raise SystemExit(f'unrecognized evidence directory name: {d}')
     exp = EXPECT.get(ctrl)
     rp = os.path.join(d, 'result.jsonl')
     lines = (gzip.open(rp + '.gz', 'rt').read() if not os.path.exists(rp) and os.path.exists(rp + '.gz') else read(rp)).strip().splitlines()

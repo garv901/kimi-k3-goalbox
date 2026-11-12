@@ -1,0 +1,294 @@
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclOsDlopen(libnccl-env.so) failed: libnccl-env.so: cannot open shared object file: No such file or directory
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO cudaDriverVersion 13020
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO NCCL version 2.30.7+cuda13.3
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO NCCL git version HEAD a5187fa2e
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Comm config Blocking set to 1
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Comm config Comm name set to default_pg:0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclOsDlopen(libnccl-net.so) failed: libnccl-net.so: cannot open shared object file: No such file or directory
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO NET/IB : Using [0]mlx5_bond_0:1/RoCE [RO]; OOB bond0:<ip-redacted><0>
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Initialized NET plugin IB
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Assigned NET plugin IB to comm
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclOsDlopen(libnccl-rma.so) failed: libnccl-rma.so: cannot open shared object file: No such file or directory
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO RMA/Plugin: Could not find: libnccl-rma.so
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO RMA/Plugin: Failed to load external plugin libnccl-rma.so, dlHandle: (nil), ncclRma: (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO RMA/Plugin: Assigned plugin RMA_IB_PROXY to comm
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclOsDlopen(libnccl-gin.so) failed: libnccl-gin.so: cannot open shared object file: No such file or directory
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO GIN/Plugin: Could not find: libnccl-gin.so
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO GIN/Plugin: Failed to load external plugin libnccl-gin.so, dlHandle: (nil), ncclGin: (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO GIN/Plugin: Assigned plugin GIN_IB_GDAKI type 3 to comm
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Using network IB
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Loaded NVML from libnvidia-ml.so.1
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO DMA-BUF is available on GPU device 2
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO [Rank 2] ncclCommInitRankConfig comm 0x2a750d10 rank 2 nranks 4 cudaDev 2 nvmlDev 2 busId 1806000 commId 0x6b1ebee847f47b86 - Init START
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Socket handshake magic 0x564ab9f2fc4b9d6c (built-in default)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO RAS client listening socket at ::1<28028>
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO MNNVL busId 0x1806000 fabric UUID e74cad10be01e10a.2ee6b41664390487 cliqueId 0x4bb2 state 3 healthMask 0x1aa
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 2 is 72-143. (GPU affinity = 72-143 ; CPU affinity = 0-143).
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO NVLS multicast support is available on dev 2
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Rank 2: 1 Net devices
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Rank 2: 0 CollNet devices
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO comm 0x2a750d10 rank 2 nRanks 4 nNodes 1 localRanks 4 localRank 2 MNNVL 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO NVLS tuning: nChannels 24 chunkSize 131072 treeMaxChunkSize 131072
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Trees [0] 3/-1/-1->2->1 [1] 3/-1/-1->2->1 [2] 3/-1/-1->2->1 [3] 3/-1/-1->2->1 [4] 3/-1/-1->2->1 [5] 3/-1/-1->2->1 [6] 3/-1/-1->2->1 [7] 3/-1/-1->2->1 [8] 3/-1/-1->2->1 [9] 3/-1/-1->2->1 [10] 3/-1/-1->2->1 [11] 3/-1/-1->2->1 [12] 3/-1/-1->2->-1 [13] 3/-1/-1->2->-1 [14] -1/-1/-1->2->1 [15] -1/-1/-1->2->1 [16] 3/-1/-1->2->1 [17] 3/-1/-1->2->1 [18] 3/-1/-1->2->1 [19] 3/-1/-1->2->1 [20] 3/-1/-1->2->1 [21] 3/-1/-1->2->1 [22] 3/-1/-1->2->1 [23] 3/-1/-1->2->1 [24] 3/-1/-1->2->1 [25] 3/-1/-1->2->1 [26] 3/-1/-1->2->1 [27] 3/-1/-1->2->1 [28] 3/-1/-1->2->-1 [29] 3/-1/-1->2->-1 [30] -1/-1/-1->2->1 [31] -1/-1/-1->2->1
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO P2P Chunksize set to 524288
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclOsDlopen(libnccl-profiler.so) failed: libnccl-profiler.so: cannot open shared object file: No such file or directory
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+pod4-gb300-10-tray14-f3:52960:53259 [0] NCCL INFO [Proxy Service] Device 2 CPU core 73
+pod4-gb300-10-tray14-f3:52960:53259 [2] NCCL INFO proxy listening socket at <ip-redacted><54469>
+pod4-gb300-10-tray14-f3:52960:53260 [0] NCCL INFO [Proxy Service UDS] Device 2 CPU core 75
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclOsDlopen(libnccl-tuner.so) failed: libnccl-tuner.so: cannot open shared object file: No such file or directory
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO 32 coll channels, 32 collnet channels, 24 nvls channels, 32 p2p channels, 32 p2p channels per peer
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclCommInitRankConfig comm 0x2a750d10 rank 2 nranks 4 cudaDev 2 nvmlDev 2 busId 1806000 commId 0x6b1ebee847f47b86 - Init COMPLETE
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Init timings - ncclCommInitRankConfig: rank 2 nranks 4 total 0.77 (kernels 0.27, alloc 0.17, bootstrap 0.01, allgathers 0.00, topo 0.06, graphs 0.01, connections 0.25, rest 0.00)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Comm config Blocking set to 1
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Comm config Comm name set to undefined:1
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Initialized NET plugin IB
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Assigned NET plugin IB to comm
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO RMA/Plugin: Assigned plugin RMA_IB_PROXY to comm
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO GIN/Plugin: Assigned plugin GIN_IB_GDAKI type 3 to comm
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Using network IB
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO DMA-BUF is available on GPU device 2
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclCommSplit comm 0x34d11f70 rank 2 nranks 4 cudaDev 2 nvmlDev 2 busId 1806000 parent 0x2a750d10 childCount 1 color 2003953581 key 2- Init START
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO MNNVL busId 0x1806000 fabric UUID e74cad10be01e10a.2ee6b41664390487 cliqueId 0x4bb2 state 3 healthMask 0x1aa
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 2 is 72-143. (GPU affinity = 72-143 ; CPU affinity = 0-143).
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO NVLS multicast support is available on dev 2
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Rank 2: 1 Net devices
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Rank 2: 0 CollNet devices
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO comm 0x34d11f70 rank 2 nRanks 4 nNodes 1 localRanks 4 localRank 2 MNNVL 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO NVLS tuning: nChannels 24 chunkSize 131072 treeMaxChunkSize 131072
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Trees [0] 3/-1/-1->2->1 [1] 3/-1/-1->2->1 [2] 3/-1/-1->2->1 [3] 3/-1/-1->2->1 [4] 3/-1/-1->2->1 [5] 3/-1/-1->2->1 [6] 3/-1/-1->2->1 [7] 3/-1/-1->2->1 [8] 3/-1/-1->2->1 [9] 3/-1/-1->2->1 [10] 3/-1/-1->2->1 [11] 3/-1/-1->2->1 [12] 3/-1/-1->2->-1 [13] 3/-1/-1->2->-1 [14] -1/-1/-1->2->1 [15] -1/-1/-1->2->1 [16] 3/-1/-1->2->1 [17] 3/-1/-1->2->1 [18] 3/-1/-1->2->1 [19] 3/-1/-1->2->1 [20] 3/-1/-1->2->1 [21] 3/-1/-1->2->1 [22] 3/-1/-1->2->1 [23] 3/-1/-1->2->1 [24] 3/-1/-1->2->1 [25] 3/-1/-1->2->1 [26] 3/-1/-1->2->1 [27] 3/-1/-1->2->1 [28] 3/-1/-1->2->-1 [29] 3/-1/-1->2->-1 [30] -1/-1/-1->2->1 [31] -1/-1/-1->2->1
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO P2P Chunksize set to 524288
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+pod4-gb300-10-tray14-f3:52960:53277 [0] NCCL INFO [Proxy Service UDS] Device 2 CPU core 75
+pod4-gb300-10-tray14-f3:52960:53273 [0] NCCL INFO [Proxy Service] Device 2 CPU core 76
+pod4-gb300-10-tray14-f3:52960:53273 [2] NCCL INFO proxy listening socket at <ip-redacted><47429>
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO 32 coll channels, 32 collnet channels, 24 nvls channels, 32 p2p channels, 32 p2p channels per peer
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclCommSplit comm 0x34d11f70 rank 2 nranks 4 cudaDev 2 nvmlDev 2 busId 1806000 parent 0x2a750d10 childCount 1 color 2003953581 key 2 - Init COMPLETE
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Init timings - ncclCommSplit: rank 2 nranks 4 total 0.49 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.00, topo 0.08, graphs 0.01, connections 0.40, rest 0.00)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Rank 2 has color with NCCL_SPLIT_NOCOLOR, not creating a new communicator
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Rank 2 has color with NCCL_SPLIT_NOCOLOR, not creating a new communicator
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Comm config Blocking set to 1
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Comm config Comm name set to undefined:4
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Initialized NET plugin IB
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Assigned NET plugin IB to comm
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO RMA/Plugin: Assigned plugin RMA_IB_PROXY to comm
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO GIN/Plugin: Assigned plugin GIN_IB_GDAKI type 3 to comm
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Using network IB
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO DMA-BUF is available on GPU device 2
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclCommSplit comm 0x35ff5750 rank 0 nranks 1 cudaDev 2 nvmlDev 2 busId 1806000 parent 0x2a750d10 childCount 4 color 1227022723 key 0- Init START
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO MNNVL busId 0x1806000 fabric UUID e74cad10be01e10a.2ee6b41664390487 cliqueId 0x4bb2 state 3 healthMask 0x1aa
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 2 is 72-143. (GPU affinity = 72-143 ; CPU affinity = 0-143).
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Rank 0: 1 Net devices
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Rank 0: 0 CollNet devices
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Local Net device counts across ranks: min 1 max 1
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Local CollNet device counts across ranks: min 0 max 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO comm 0x35ff5750 rank 0 nRanks 1 nNodes 1 localRanks 1 localRank 0 MNNVL 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 00/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 01/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 02/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 03/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 04/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 05/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 06/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 07/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 08/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 09/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 10/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 11/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 12/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 13/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 14/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 15/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 16/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 17/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 18/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 19/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 20/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 21/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 22/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 23/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 24/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 25/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 26/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 27/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 28/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 29/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 30/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 31/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 32/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 33/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 34/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 35/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 36/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 37/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 38/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 39/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 40/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 41/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 42/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 43/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 44/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 45/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 46/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 47/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 48/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 49/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 50/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 51/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 52/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 53/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 54/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 55/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 56/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 57/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 58/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 59/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 60/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 61/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 62/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 63/64 : 0
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Trees [0] -1/-1/-1->0->-1 [1] -1/-1/-1->0->-1 [2] -1/-1/-1->0->-1 [3] -1/-1/-1->0->-1 [4] -1/-1/-1->0->-1 [5] -1/-1/-1->0->-1 [6] -1/-1/-1->0->-1 [7] -1/-1/-1->0->-1 [8] -1/-1/-1->0->-1 [9] -1/-1/-1->0->-1 [10] -1/-1/-1->0->-1 [11] -1/-1/-1->0->-1 [12] -1/-1/-1->0->-1 [13] -1/-1/-1->0->-1 [14] -1/-1/-1->0->-1 [15] -1/-1/-1->0->-1 [16] -1/-1/-1->0->-1 [17] -1/-1/-1->0->-1 [18] -1/-1/-1->0->-1 [19] -1/-1/-1->0->-1 [20] -1/-1/-1->0->-1 [21] -1/-1/-1->0->-1 [22] -1/-1/-1->0->-1 [23] -1/-1/-1->0->-1 [24] -1/-1/-1->0->-1 [25] -1/-1/-1->0->-1 [26] -1/-1/-1->0->-1 [27] -1/-1/-1->0->-1 [28] -1/-1/-1->0->-1 [29] -1/-1/-1->0->-1 [30] -1/-1/-1->0->-1 [31] -1/-1/-1->0->-1 [32] -1/-1/-1->0->-1 [33] -1/-1/-1->0->-1 [34] -1/-1/-1->0->-1 [35] -1/-1/-1->0->-1 [36] -1/-1/-1->0->-1 [37] -1/-1/-1->0->-1 [38] -1/-1/-1->0->-1 [39] -1/-1/-1->0->-1 [40] -1/-1/-1->0->-1 [41] -1/-1/-1->0->-1 [42] -1/-1/-1->0->-1 [43] -1/-1/-1->0->-1 [44] -1/-1/-1->0->-1 [45] -1/-1/-1->0->-1 [46] -1/-1/-1->0->-1 [47] -1/-1/-1->0->-1 [48] -1/-1/-1->0->-1 [4
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO P2P Chunksize set to 524288
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+pod4-gb300-10-tray14-f3:52960:53293 [0] NCCL INFO [Proxy Service] Device 2 CPU core 74
+pod4-gb300-10-tray14-f3:52960:53293 [2] NCCL INFO proxy listening socket at <ip-redacted><53249>
+pod4-gb300-10-tray14-f3:52960:53294 [0] NCCL INFO [Proxy Service UDS] Device 2 CPU core 79
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO 64 coll channels, 64 collnet channels, 0 nvls channels, 64 p2p channels, 64 p2p channels per peer
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO CC Off, workFifoBytes 1048576
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO ncclCommSplit comm 0x35ff5750 rank 0 nranks 1 cudaDev 2 nvmlDev 2 busId 1806000 parent 0x2a750d10 childCount 4 color 1227022723 key 0 - Init COMPLETE
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Init timings - ncclCommSplit: rank 0 nranks 1 total 0.24 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.19, rest 0.03)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Rank 2 has color with NCCL_SPLIT_NOCOLOR, not creating a new communicator
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllGather: opCount 0 sendbuff 0x637800200 recvbuff 0x637800600 count 1 datatype 4 op 0 root 0 comm 0x2a750d10 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Symmetric VA size=280GB
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 00/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 01/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 02/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 03/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 04/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 05/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 06/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 07/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 08/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 09/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 10/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 11/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 12/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 13/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 14/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 15/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 16/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 17/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 18/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 19/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 20/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 21/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 22/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 23/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 24/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 25/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 26/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 27/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 28/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 29/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 30/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 31/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllGather: opCount 0 sendbuff 0x637800000 recvbuff 0x637800800 count 4 datatype 1 op 0 root 0 comm 0x2a750d10 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Broadcast: opCount 0 sendbuff 0x637800000 recvbuff 0x637800000 count 1 datatype 4 op 0 root 0 comm 0x2a750d10 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Broadcast: opCount 0 sendbuff 0x637800200 recvbuff 0x637800200 count 17 datatype 1 op 0 root 0 comm 0x2a750d10 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllGather: opCount 0 sendbuff 0x63783de00 recvbuff 0x63783e200 count 1 datatype 4 op 0 root 0 comm 0x2a750d10 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllGather: opCount 0 sendbuff 0xfd5f04dffe00 recvbuff 0x6379fc800 count 4 datatype 1 op 0 root 0 comm 0x2a750d10 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63063f9000 recvbuff 0xfd63063f9000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Symmetric VA size=280GB
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 00/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 01/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 02/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 03/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 04/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 05/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 06/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 07/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 08/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 09/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 10/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 11/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 12/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 13/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 14/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 15/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 16/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 17/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 18/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 19/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 20/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 21/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 22/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 23/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 24/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 25/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 26/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 27/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 28/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 29/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 30/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Channel 31/0 : 2[2] -> 3[3] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd6306073000 recvbuff 0xfd6306073000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd630607a000 recvbuff 0xfd630607a000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd6306081800 recvbuff 0xfd6306081800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63063f9000 recvbuff 0xfd63063f9000 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd630608f800 recvbuff 0xfd630608f800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4d26000 recvbuff 0xfd5da4d26000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63063f7000 recvbuff 0xfd63063f7000 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4d26000 recvbuff 0xfd5da4d26000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4d36800 recvbuff 0xfd5da4d36800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63060a3800 recvbuff 0xfd63060a3800 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4d2f800 recvbuff 0xfd5da4d2f800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4d45000 recvbuff 0xfd5da4d45000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63060a3800 recvbuff 0xfd63060a3800 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4d45000 recvbuff 0xfd5da4d45000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4d57000 recvbuff 0xfd5da4d57000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63063fc800 recvbuff 0xfd63063fc800 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4d57000 recvbuff 0xfd5da4d57000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4d73800 recvbuff 0xfd5da4d73800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63061fa200 recvbuff 0xfd63061fa200 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4d73800 recvbuff 0xfd5da4d73800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd59fef80400 recvbuff 0xfd59fef80400 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63061fa200 recvbuff 0xfd63061fa200 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4d6c800 recvbuff 0xfd5da4d6c800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd630608bc00 recvbuff 0xfd630608bc00 count 1 datatype 7 op 2 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd6306087c00 recvbuff 0xfd6306087c00 count 1 datatype 4 op 3 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63063f2000 recvbuff 0xfd63063f2000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63061f3c00 recvbuff 0xfd63061f3c00 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd6306000000 recvbuff 0xfd6306000000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63063f2000 recvbuff 0xfd63063f2000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63063f3c00 recvbuff 0xfd63063f3c00 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd6306019000 recvbuff 0xfd6306019000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4dba800 recvbuff 0xfd5da4dba800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63063f2000 recvbuff 0xfd63063f2000 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4dba800 recvbuff 0xfd5da4dba800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4dc1800 recvbuff 0xfd5da4dc1800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63063f2000 recvbuff 0xfd63063f2000 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4dba800 recvbuff 0xfd5da4dba800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4dd7000 recvbuff 0xfd5da4dd7000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63063f2000 recvbuff 0xfd63063f2000 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4dd0000 recvbuff 0xfd5da4dd0000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd630601b000 recvbuff 0xfd630601b000 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd630609fa00 recvbuff 0xfd630609fa00 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4de5800 recvbuff 0xfd5da4de5800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd6306016800 recvbuff 0xfd6306016800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4dd0000 recvbuff 0xfd5da4dd0000 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd6306016800 recvbuff 0xfd6306016800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4df7800 recvbuff 0xfd5da4df7800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd5da4dd0000 recvbuff 0xfd5da4dd0000 count 3584 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd6306016800 recvbuff 0xfd6306016800 count 7168 datatype 7 op 0 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0xfd63060a7200 recvbuff 0xfd63060a7200 count 1 datatype 7 op 2 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837a00 recvbuff 0x637837a00 count 1 datatype 4 op 3 root 0 comm 0x34d11f70 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllGather: opCount 0 sendbuff 0xfd63060a7400 recvbuff 0x637837400 count 1 datatype 4 op 0 root 0 comm 0x2a750d10 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:52960:52960 [2] NCCL INFO AllGather: opCount 0 sendbuff 0xfd5f04dffe00 recvbuff 0x637837600 count 75 datatype 1 op 0 root 0 comm 0x2a750d10 [nranks=4] stream (nil)

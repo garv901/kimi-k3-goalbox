@@ -1,0 +1,2 @@
+kimi-k3-syn-l8-tp4-b1-s8192: incorrect
+{"results": "/mnt/shared/home/dc/workspace/kimi-k3-goalbox/reports/gb300/step8-tp4-ranklocal-immutability-20261112T201126Z/result.jsonl", "provisional_geomean_speedup": null, "passed": 0, "total": 1}

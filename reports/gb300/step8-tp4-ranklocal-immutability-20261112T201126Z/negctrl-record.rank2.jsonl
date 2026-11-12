@@ -1,0 +1,1 @@
+{"control": "ranklocal_immutability", "rank": 2, "target_rank": 2, "tensor": "l3_kv_cache", "corrupted": true, "index": [0, 0, 0], "delta": 1.0, "value_before": 1.203125, "value_after": 2.203125, "changed": true, "tensor_bytes": 8388608}

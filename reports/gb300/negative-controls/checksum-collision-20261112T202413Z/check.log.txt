@@ -1,0 +1,10 @@
+tensor bytes 134217728 path device checksums sums_before [-561631164351506, 180669126530346688]
+single word +1 at 12345: detected (candidate mutated input x)
+revert: NOT detected
+pair +1 at word 100, -1 at word 65621: bf16 values (-0.07421875, -1.09375, -0.09375, -0.07470703125) -> (-0.07470703125, -1.09375, -0.09326171875, -0.07470703125), sums_after [-561631164351506, 180669126530346688], NOT detected
+pair +12345 at word 7000000, -12345 at word 7065521: bf16 values (0.78125, -1.3203125, 1.8828125, 0.76171875) -> (7.984713253390703e+28, -1.3203125, 1.8143800820083272e-29, 0.76171875), sums_after [-561631164351506, 180669126530346688], NOT detected
+pair +-3 at word 0, --3 at word 65521: bf16 values (-1.125, -1.15625, 0.07177734375, 0.8515625) -> (-1.1015625, -1.15625, 0.0732421875, 0.8515625), sums_after [-561631164351506, 180669126530346688], NOT detected
+final revert: NOT detected
+64 MB tensor (path host copy, torch.bfloat16), same pair: detected (candidate mutated input y)
+wall 2.76s maxrss 1191552kB
+rc=0

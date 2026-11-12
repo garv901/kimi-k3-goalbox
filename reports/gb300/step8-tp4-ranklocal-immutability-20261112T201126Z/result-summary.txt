@@ -1,0 +1,13 @@
+status: incorrect
+reason: AssertionError: rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache
+submission_sha256: 411c0b0a4dcf3a5f796f01677d7e87179dea42652681e4761c89d819b9f04604
+correctness: None
+launch_audit: None
+rank 0 (cuda:0): status=incorrect trials=0 reason=AssertionError: rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache
+   peak_allocated_bytes: None
+rank 1 (cuda:1): status=incorrect trials=0 reason=AssertionError: rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache
+   peak_allocated_bytes: None
+rank 2 (cuda:2): status=incorrect trials=0 reason=AssertionError: rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache
+   peak_allocated_bytes: None
+rank 3 (cuda:3): status=incorrect trials=0 reason=AssertionError: rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache
+   peak_allocated_bytes: None
