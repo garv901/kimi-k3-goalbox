@@ -1,0 +1,625 @@
+{
+ "torch": "2.14.1+cu130",
+ "host": "pod4-gb300-3-tray09-f3",
+ "cuda_visible_devices": "",
+ "cuda_available": false,
+ "part_a": [
+  {
+   "batch": 1,
+   "shape": [
+    1,
+    8192,
+    512
+   ],
+   "bytes": 8388608,
+   "over_host_limit": false,
+   "snapshot_path": "host copy",
+   "snapshot_deterministic": true,
+   "snapshot_s_cpu": 0.0,
+   "value_before": -0.18359375,
+   "value_after": 0.81640625,
+   "detected_at_000": "candidate mutated input l3_kv_cache",
+   "revert_passes": true
+  },
+  {
+   "batch": 8,
+   "shape": [
+    8,
+    8192,
+    512
+   ],
+   "bytes": 67108864,
+   "over_host_limit": false,
+   "snapshot_path": "host copy",
+   "snapshot_deterministic": true,
+   "snapshot_s_cpu": 0.001,
+   "value_before": -0.18359375,
+   "value_after": 0.81640625,
+   "detected_at_000": "candidate mutated input l3_kv_cache",
+   "revert_passes": true
+  },
+  {
+   "batch": 64,
+   "shape": [
+    64,
+    8192,
+    512
+   ],
+   "bytes": 536870912,
+   "over_host_limit": true,
+   "snapshot_path": "device checksums (two int64)",
+   "snapshot_deterministic": true,
+   "snapshot_s_cpu": 0.657,
+   "checksums_before": [
+    -2210483810699375,
+    1518804666980406477
+   ],
+   "value_before": -0.18359375,
+   "value_after": 0.81640625,
+   "detected_at_000": "candidate mutated input l3_kv_cache",
+   "checksums_after": [
+    -2210483810731866,
+    1518804666980373986
+   ],
+   "word0_after": 1060847441,
+   "plain_sum_delta": -32491,
+   "weighted_sum_delta": -32491,
+   "revert_passes": true,
+   "detected_second_chunk": "candidate mutated input l3_kv_cache",
+   "detected_last_element": "candidate mutated input l3_kv_cache",
+   "element_index_second_chunk": 167772160
+  }
+ ],
+ "tiny_case": {
+  "batch": 3,
+  "layers": 5,
+  "experts": 128,
+  "topk": 8,
+  "vocab": 128,
+  "q_heads": 4,
+  "context": 4,
+  "gpus": 4,
+  "tp": 4
+ },
+ "part_b": [
+  {
+   "submission": "positive_control_oracle.py",
+   "child_rc": 0,
+   "wall_s": 3.8,
+   "status": "correctness_only",
+   "reason": null,
+   "ranks": [
+    {
+     "rank": 0,
+     "status": "pass",
+     "reason": null,
+     "trials": 1
+    },
+    {
+     "rank": 1,
+     "status": "pass",
+     "reason": null,
+     "trials": 1
+    },
+    {
+     "rank": 2,
+     "status": "pass",
+     "reason": null,
+     "trials": 1
+    },
+    {
+     "rank": 3,
+     "status": "pass",
+     "reason": null,
+     "trials": 1
+    }
+   ],
+   "records": {}
+  },
+  {
+   "submission": "negctrl_immutability.py",
+   "child_rc": 0,
+   "wall_s": 3.3,
+   "status": "incorrect",
+   "reason": "AssertionError: rank 0: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 1: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 3: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+   "ranks": [
+    {
+     "rank": 0,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 1: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 3: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+     "trials": 0
+    },
+    {
+     "rank": 1,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 1: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 3: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+     "trials": 0
+    },
+    {
+     "rank": 2,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 1: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 3: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+     "trials": 0
+    },
+    {
+     "rank": 3,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 1: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache; rank 3: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+     "trials": 0
+    }
+   ],
+   "records": {
+    "rank0": [
+     {
+      "control": "immutability",
+      "tensor": "l3_kv_cache",
+      "index": [
+       0,
+       0,
+       0
+      ],
+      "delta": 1.0,
+      "value_before": -0.0849609375,
+      "value_after": 0.9140625,
+      "changed": true,
+      "tensor_bytes": 768,
+      "snapshot_path": "host copy, exact compare"
+     }
+    ],
+    "rank1": [
+     {
+      "control": "immutability",
+      "tensor": "l3_kv_cache",
+      "index": [
+       0,
+       0,
+       0
+      ],
+      "delta": 1.0,
+      "value_before": -0.0849609375,
+      "value_after": 0.9140625,
+      "changed": true,
+      "tensor_bytes": 768,
+      "snapshot_path": "host copy, exact compare"
+     }
+    ],
+    "rank2": [
+     {
+      "control": "immutability",
+      "tensor": "l3_kv_cache",
+      "index": [
+       0,
+       0,
+       0
+      ],
+      "delta": 1.0,
+      "value_before": -0.0849609375,
+      "value_after": 0.9140625,
+      "changed": true,
+      "tensor_bytes": 768,
+      "snapshot_path": "host copy, exact compare"
+     }
+    ],
+    "rank3": [
+     {
+      "control": "immutability",
+      "tensor": "l3_kv_cache",
+      "index": [
+       0,
+       0,
+       0
+      ],
+      "delta": 1.0,
+      "value_before": -0.0849609375,
+      "value_after": 0.9140625,
+      "changed": true,
+      "tensor_bytes": 768,
+      "snapshot_path": "host copy, exact compare"
+     }
+    ]
+   }
+  },
+  {
+   "submission": "negctrl_logits.py",
+   "child_rc": 0,
+   "wall_s": 3.4,
+   "status": "incorrect",
+   "reason": "AssertionError: rank 0: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 1: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 2: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 3: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}",
+   "ranks": [
+    {
+     "rank": 0,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 1: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 2: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 3: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}",
+     "trials": 0
+    },
+    {
+     "rank": 1,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 1: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 2: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 3: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}",
+     "trials": 0
+    },
+    {
+     "rank": 2,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 1: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 2: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 3: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}",
+     "trials": 0
+    },
+    {
+     "rank": 3,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 1: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 2: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}; rank 3: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.5010862399074355, 'oracle_rel_l2_max': 0.044630218758949354, 'worst_ratio': 13.199856411580814}",
+     "trials": 0
+    }
+   ],
+   "records": {
+    "rank0": [
+     {
+      "control": "logits",
+      "row": 0,
+      "stride": 4,
+      "scale": 1.0,
+      "shard_vocab": 32,
+      "perturbed_indices": 8,
+      "delta": 1.0752017498016357,
+      "rel_l2_change_of_row_on_this_shard": 0.5
+     }
+    ],
+    "rank1": [
+     {
+      "control": "logits",
+      "row": 0,
+      "stride": 4,
+      "scale": 1.0,
+      "shard_vocab": 32,
+      "perturbed_indices": 8,
+      "delta": 1.0386441946029663,
+      "rel_l2_change_of_row_on_this_shard": 0.5000000596046448
+     }
+    ],
+    "rank2": [
+     {
+      "control": "logits",
+      "row": 0,
+      "stride": 4,
+      "scale": 1.0,
+      "shard_vocab": 32,
+      "perturbed_indices": 8,
+      "delta": 1.0428825616836548,
+      "rel_l2_change_of_row_on_this_shard": 0.5
+     }
+    ],
+    "rank3": [
+     {
+      "control": "logits",
+      "row": 0,
+      "stride": 4,
+      "scale": 1.0,
+      "shard_vocab": 32,
+      "perturbed_indices": 8,
+      "delta": 0.8107901811599731,
+      "rel_l2_change_of_row_on_this_shard": 0.5
+     }
+    ]
+   }
+  },
+  {
+   "submission": "negctrl_routing.py",
+   "child_rc": 0,
+   "wall_s": 3.7,
+   "status": "incorrect",
+   "reason": "AssertionError: rank 0: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 1: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 2: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 3: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}",
+   "ranks": [
+    {
+     "rank": 0,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 1: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 2: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 3: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}",
+     "trials": 0
+    },
+    {
+     "rank": 1,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 1: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 2: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 3: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}",
+     "trials": 0
+    },
+    {
+     "rank": 2,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 1: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 2: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 3: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}",
+     "trials": 0
+    },
+    {
+     "rank": 3,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 1: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 2: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}; rank 3: trial 0: AssertionError: expert_ids: {'candidate_max_shortfall': 0.6759308576583862, 'oracle_max_shortfall': 0.001713573932647705, 'allowed': 0.00442714786529541, 'sets_differing_from_oracle': 1}",
+     "trials": 0
+    }
+   ],
+   "records": {
+    "rank0": [
+     {
+      "control": "routing",
+      "layer": 1,
+      "row": 0,
+      "slot": 0,
+      "original_expert": 4,
+      "replacement_expert": 0,
+      "replacement_shortfall_below_kth_best": 0.6758696436882019,
+      "min_shortfall_required": 0.05,
+      "max_shortfall_other_rows": 0.0,
+      "max_shortfall_same_row_later_layers": 0.02567601203918457
+     }
+    ],
+    "rank1": [
+     {
+      "control": "routing",
+      "layer": 1,
+      "row": 0,
+      "slot": 0,
+      "original_expert": 4,
+      "replacement_expert": 0,
+      "replacement_shortfall_below_kth_best": 0.6758696436882019,
+      "min_shortfall_required": 0.05,
+      "max_shortfall_other_rows": 0.0,
+      "max_shortfall_same_row_later_layers": 0.02567601203918457
+     }
+    ],
+    "rank2": [
+     {
+      "control": "routing",
+      "layer": 1,
+      "row": 0,
+      "slot": 0,
+      "original_expert": 4,
+      "replacement_expert": 0,
+      "replacement_shortfall_below_kth_best": 0.6758696436882019,
+      "min_shortfall_required": 0.05,
+      "max_shortfall_other_rows": 0.0,
+      "max_shortfall_same_row_later_layers": 0.02567601203918457
+     }
+    ],
+    "rank3": [
+     {
+      "control": "routing",
+      "layer": 1,
+      "row": 0,
+      "slot": 0,
+      "original_expert": 4,
+      "replacement_expert": 0,
+      "replacement_shortfall_below_kth_best": 0.6758696436882019,
+      "min_shortfall_required": 0.05,
+      "max_shortfall_other_rows": 0.0,
+      "max_shortfall_same_row_later_layers": 0.02567601203918457
+     }
+    ]
+   }
+  },
+  {
+   "submission": "negctrl_ranklocal_immutability.py",
+   "child_rc": 0,
+   "wall_s": 3.6,
+   "status": "incorrect",
+   "reason": "AssertionError: rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+   "ranks": [
+    {
+     "rank": 0,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+     "trials": 0
+    },
+    {
+     "rank": 1,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+     "trials": 0
+    },
+    {
+     "rank": 2,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+     "trials": 0
+    },
+    {
+     "rank": 3,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 2: trial 0: AssertionError: candidate mutated input l3_kv_cache",
+     "trials": 0
+    }
+   ],
+   "records": {
+    "rank0": [
+     {
+      "control": "ranklocal_immutability",
+      "rank": 0,
+      "target_rank": 2,
+      "tensor": "l3_kv_cache",
+      "corrupted": false
+     }
+    ],
+    "rank1": [
+     {
+      "control": "ranklocal_immutability",
+      "rank": 1,
+      "target_rank": 2,
+      "tensor": "l3_kv_cache",
+      "corrupted": false
+     }
+    ],
+    "rank2": [
+     {
+      "control": "ranklocal_immutability",
+      "rank": 2,
+      "target_rank": 2,
+      "tensor": "l3_kv_cache",
+      "corrupted": true,
+      "index": [
+       0,
+       0,
+       0
+      ],
+      "delta": 1.0,
+      "value_before": 0.134765625,
+      "value_after": 1.1328125,
+      "changed": true,
+      "tensor_bytes": 768
+     }
+    ],
+    "rank3": [
+     {
+      "control": "ranklocal_immutability",
+      "rank": 3,
+      "target_rank": 2,
+      "tensor": "l3_kv_cache",
+      "corrupted": false
+     }
+    ]
+   }
+  },
+  {
+   "submission": "negctrl_ranklocal_routing.py",
+   "child_rc": 0,
+   "wall_s": 3.4,
+   "status": "incorrect",
+   "reason": "AssertionError: rank 0: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 1: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 2: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 3: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks",
+   "ranks": [
+    {
+     "rank": 0,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 1: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 2: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 3: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks",
+     "trials": 0
+    },
+    {
+     "rank": 1,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 1: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 2: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 3: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks",
+     "trials": 0
+    },
+    {
+     "rank": 2,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 1: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 2: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 3: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks",
+     "trials": 0
+    },
+    {
+     "rank": 3,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 1: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 2: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks; rank 3: trial 0: AssertionError: expert_ids: ids out of range, repeated in a row, wrong in a dense layer, or different between ranks",
+     "trials": 0
+    }
+   ],
+   "records": {
+    "rank0": [
+     {
+      "control": "ranklocal_routing",
+      "rank": 0,
+      "target_rank": 2,
+      "corrupted": false
+     }
+    ],
+    "rank1": [
+     {
+      "control": "ranklocal_routing",
+      "rank": 1,
+      "target_rank": 2,
+      "corrupted": false
+     }
+    ],
+    "rank2": [
+     {
+      "control": "ranklocal_routing",
+      "rank": 2,
+      "target_rank": 2,
+      "corrupted": true,
+      "layer": 1,
+      "row": 0,
+      "slot": 0,
+      "original_expert": 1,
+      "replacement_expert": 0,
+      "forced_rerun": false
+     }
+    ],
+    "rank3": [
+     {
+      "control": "ranklocal_routing",
+      "rank": 3,
+      "target_rank": 2,
+      "corrupted": false
+     }
+    ]
+   }
+  },
+  {
+   "submission": "negctrl_ranklocal_logits.py",
+   "child_rc": 0,
+   "wall_s": 3.4,
+   "status": "incorrect",
+   "reason": "AssertionError: rank 0: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 1: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 2: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 3: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}",
+   "ranks": [
+    {
+     "rank": 0,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 1: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 2: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 3: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}",
+     "trials": 0
+    },
+    {
+     "rank": 1,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 1: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 2: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 3: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}",
+     "trials": 0
+    },
+    {
+     "rank": 2,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 1: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 2: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 3: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}",
+     "trials": 0
+    },
+    {
+     "rank": 3,
+     "status": "incorrect",
+     "reason": "AssertionError: rank 0: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 1: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 2: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}; rank 3: trial 0: AssertionError: logits: {'candidate_rel_l2_max': 0.2803056574731534, 'oracle_rel_l2_max': 0.02645241196732316, 'worst_ratio': 9.710704933397693}",
+     "trials": 0
+    }
+   ],
+   "records": {
+    "rank0": [
+     {
+      "control": "ranklocal_logits",
+      "rank": 0,
+      "target_rank": 2,
+      "corrupted": false
+     }
+    ],
+    "rank1": [
+     {
+      "control": "ranklocal_logits",
+      "rank": 1,
+      "target_rank": 2,
+      "corrupted": false
+     }
+    ],
+    "rank2": [
+     {
+      "control": "ranklocal_logits",
+      "rank": 2,
+      "target_rank": 2,
+      "corrupted": true,
+      "row": 0,
+      "stride": 4,
+      "scale": 1.0,
+      "shard_vocab": 32,
+      "perturbed_indices": 8,
+      "delta": 1.0740373134613037,
+      "rel_l2_change_of_row_on_this_shard": 0.5
+     }
+    ],
+    "rank3": [
+     {
+      "control": "ranklocal_logits",
+      "rank": 3,
+      "target_rank": 2,
+      "corrupted": false
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,1 @@
+{"control": "ranklocal_logits", "rank": 2, "target_rank": 2, "corrupted": true, "row": 0, "stride": 4, "scale": 1.0, "shard_vocab": 32, "perturbed_indices": 8, "delta": 1.0740373134613037, "rel_l2_change_of_row_on_this_shard": 0.5}

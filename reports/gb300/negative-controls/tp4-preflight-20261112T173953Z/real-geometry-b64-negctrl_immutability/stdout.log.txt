@@ -1,0 +1,2 @@
+kimi-k3-syn-l8-tp4-b64-s8192: incorrect
+{"results": "/mnt/shared/home/kevin/workspace/kimi-k3-goalbox/reports/gb300/negative-controls/tp4-preflight-20261112T173953Z/real-geometry-b64-negctrl_immutability/result.jsonl", "provisional_geomean_speedup": null, "passed": 0, "total": 1}

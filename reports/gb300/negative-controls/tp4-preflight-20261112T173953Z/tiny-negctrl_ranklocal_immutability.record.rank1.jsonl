@@ -1,0 +1,1 @@
+{"control": "ranklocal_immutability", "rank": 1, "target_rank": 2, "tensor": "l3_kv_cache", "corrupted": false}

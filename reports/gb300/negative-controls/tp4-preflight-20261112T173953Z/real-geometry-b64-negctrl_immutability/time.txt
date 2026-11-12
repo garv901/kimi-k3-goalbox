@@ -1,0 +1,24 @@
+Command exited with non-zero status 1
+	Command being timed: "timeout -k 30 3300 /mnt/shared/home/kevin/workspace/kimi-k3-goalbox/.venv/bin/python -s -m megabench evaluate --case kimi-k3-syn-l8-tp4-b64-s8192 --submission /mnt/shared/home/kevin/workspace/kimi-k3-goalbox/reports/gb300/negative-controls/negctrl_immutability.py --method negctrl-tp4-cpu-preflight --session-id tp4-cpu-preflight-20261112T173953Z --device cpu --trials 1 --warmup 0 --reps 1 --timeout 3000 --output /mnt/shared/home/kevin/workspace/kimi-k3-goalbox/reports/gb300/negative-controls/tp4-preflight-20261112T173953Z/real-geometry-b64-negctrl_immutability/result.jsonl"
+	User time (seconds): 8388.15
+	System time (seconds): 642.11
+	Percent of CPU this job got: 4457%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 3:22.58
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 44881792
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 2721
+	Minor (reclaiming a frame) page faults: 13722364
+	Voluntary context switches: 12963934
+	Involuntary context switches: 334034
+	Swaps: 0
+	File system inputs: 64
+	File system outputs: 2816
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 65536
+	Exit status: 1

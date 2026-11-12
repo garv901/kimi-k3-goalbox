@@ -1,0 +1,1 @@
+{"control": "logits", "row": 0, "stride": 4, "scale": 1.0, "shard_vocab": 32, "perturbed_indices": 8, "delta": 1.0752017498016357, "rel_l2_change_of_row_on_this_shard": 0.5}

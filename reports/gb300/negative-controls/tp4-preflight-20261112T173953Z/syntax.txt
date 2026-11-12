@@ -1,0 +1,2 @@
+py_compile ok
+bash -n step7-tp4-control.sh ok
