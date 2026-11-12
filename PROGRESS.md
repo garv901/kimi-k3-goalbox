@@ -34,3 +34,13 @@ Development log of the `gb300-tp4-synthetic` branch: validating the kimi-k3-goal
 - Infrastructure: four distinct GPUs by UUID and PCI id, no other GPU process, 0 GPU-pod requests before, during (30 s polling) and after, no leftover processes. Not interrupted.
 - New: `reports/gb300/ISSUES.md` with non-blocking notes for the repo owner, first of all the launch-audit accounting semantics (collectives counted twice, copies counted as launches).
 - Next (needs approval): `kimi-k3-syn-l8-tp4-b8-s8192`, then B64; then a deliberately corrupted-output negative control before any TP8 or real-weight work.
+
+## 2026-11-12: Step 4, TP4 batch 8 (PASS as expected)
+
+- Run: `kimi-k3-syn-l8-tp4-b8-s8192`, candidate = the oracle, rack 10 tray14 GPUs 0 to 3, host level, 117 s, runner at `211ecda`. Report: `reports/gb300/step4-syn-l8-tp4-b8-20261112T002655Z/REPORT.md`.
+- Result: 12 of 12 rank-trial combinations pass; worst band ratios logits 0.489, cache writes 0.481, KDA states 0.459; next_token inside the tie margin; expert sets identical; cache_length exact; inputs unchanged. Launch audit fails on all ranks: 58948 profiler events per rank = 52933 compute kernels + 26 NCCL device kernels + 5963 memcpy + 26 collective records (actual launches 52959). Status `non_megakernel`.
+- NCCL: 603 collectives per process, identical sequence on all four processes, 0 warnings; the audited step has the same 26 NCCL kernels as B1. The trace decomposition shows the 603 span 21 decode steps across trials, warmup, timing and audit plus 57 evaluator collectives (ISSUES.md item 2).
+- Memory: 34.30 GB allocated per GPU (B1: 33.96), 37726 MiB sampled (B1: 37210); reserved not exposed by the evaluator. Timing recorded, not a baseline (1050 ms candidate, 1033 ms eager reference, one 19 percent outlier rep).
+- Infrastructure: four distinct GPUs, no other GPU process, 0 GPU-pod requests before, during and after, no leftover processes. Not interrupted.
+- ISSUES.md updated (B1 vs B8 accounting table, collective coverage, reserved memory, timing noise).
+- Next (needs approval): `kimi-k3-syn-l8-tp4-b64-s8192` with the memory feasibility assessment in the Step 4 report message; then the corrupted-output negative control before any TP8 or real-weight work.

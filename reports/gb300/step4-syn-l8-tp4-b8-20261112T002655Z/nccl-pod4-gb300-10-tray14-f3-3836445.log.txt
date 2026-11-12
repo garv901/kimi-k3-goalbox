@@ -1,0 +1,907 @@
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclOsDlopen(libnccl-env.so) failed: libnccl-env.so: cannot open shared object file: No such file or directory
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+pod4-gb300-10-tray14-f3:3836445:3836728 [0] NCCL INFO Socket handshake magic 0x564ab9f2fc4b9d6c (built-in default)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO cudaDriverVersion 13020
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO NCCL version 2.30.7+cuda13.3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO NCCL git version HEAD a5187fa2e
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Comm config Blocking set to 1
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Comm config Comm name set to default_pg:0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclOsDlopen(libnccl-net.so) failed: libnccl-net.so: cannot open shared object file: No such file or directory
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO NET/IB : Using [0]mlx5_bond_0:1/RoCE [RO]; OOB bond0:<ip-redacted><0>
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Initialized NET plugin IB
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Assigned NET plugin IB to comm
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclOsDlopen(libnccl-rma.so) failed: libnccl-rma.so: cannot open shared object file: No such file or directory
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO RMA/Plugin: Could not find: libnccl-rma.so
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO RMA/Plugin: Failed to load external plugin libnccl-rma.so, dlHandle: (nil), ncclRma: (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO RMA/Plugin: Assigned plugin RMA_IB_PROXY to comm
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclOsDlopen(libnccl-gin.so) failed: libnccl-gin.so: cannot open shared object file: No such file or directory
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO GIN/Plugin: Could not find: libnccl-gin.so
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO GIN/Plugin: Failed to load external plugin libnccl-gin.so, dlHandle: (nil), ncclGin: (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO GIN/Plugin: Assigned plugin GIN_IB_GDAKI type 3 to comm
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Using network IB
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Loaded NVML from libnvidia-ml.so.1
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO DMA-BUF is available on GPU device 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO [Rank 0] ncclCommInitRankConfig comm 0x345d0590 rank 0 nranks 4 cudaDev 0 nvmlDev 0 busId 806000 commId 0xc063042dd5703838 - Init START
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO RAS client listening socket at ::1<28028>
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO MNNVL busId 0x806000 fabric UUID e74cad10be01e10a.2ee6b41664390487 cliqueId 0x4bb2 state 3 healthMask 0x1aa
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is 0-71. (GPU affinity = 0-71 ; CPU affinity = 0-143).
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO NVLS multicast support is available on dev 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Rank 0: 1 Net devices
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Rank 0: 0 CollNet devices
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Local Net device counts across ranks: min 1 max 1
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Local CollNet device counts across ranks: min 0 max 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO comm 0x345d0590 rank 0 nRanks 4 nNodes 1 localRanks 4 localRank 0 MNNVL 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO NVLS tuning: nChannels 24 chunkSize 131072 treeMaxChunkSize 131072
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 00/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 01/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 02/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 03/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 04/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 05/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 06/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 07/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 08/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 09/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 10/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 11/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 12/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 13/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 14/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 15/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 16/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 17/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 18/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 19/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 20/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 21/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 22/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 23/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 24/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 25/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 26/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 27/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 28/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 29/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 30/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 31/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->-1 [2] 1/-1/-1->0->-1 [3] 1/-1/-1->0->-1 [4] 1/-1/-1->0->-1 [5] 1/-1/-1->0->-1 [6] 1/-1/-1->0->-1 [7] 1/-1/-1->0->-1 [8] 1/-1/-1->0->-1 [9] 1/-1/-1->0->-1 [10] -1/-1/-1->0->3 [11] -1/-1/-1->0->3 [12] 1/-1/-1->0->3 [13] 1/-1/-1->0->3 [14] 1/-1/-1->0->3 [15] 1/-1/-1->0->3 [16] 1/-1/-1->0->-1 [17] 1/-1/-1->0->-1 [18] 1/-1/-1->0->-1 [19] 1/-1/-1->0->-1 [20] 1/-1/-1->0->-1 [21] 1/-1/-1->0->-1 [22] 1/-1/-1->0->-1 [23] 1/-1/-1->0->-1 [24] 1/-1/-1->0->-1 [25] 1/-1/-1->0->-1 [26] -1/-1/-1->0->3 [27] -1/-1/-1->0->3 [28] 1/-1/-1->0->3 [29] 1/-1/-1->0->3 [30] 1/-1/-1->0->3 [31] 1/-1/-1->0->3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO P2P Chunksize set to 524288
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclOsDlopen(libnccl-profiler.so) failed: libnccl-profiler.so: cannot open shared object file: No such file or directory
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+pod4-gb300-10-tray14-f3:3836445:3836742 [0] NCCL INFO [Proxy Service] Device 0 CPU core 25
+pod4-gb300-10-tray14-f3:3836445:3836742 [0] NCCL INFO proxy listening socket at <ip-redacted><60709>
+pod4-gb300-10-tray14-f3:3836445:3836746 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 26
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclOsDlopen(libnccl-tuner.so) failed: libnccl-tuner.so: cannot open shared object file: No such file or directory
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO 32 coll channels, 32 collnet channels, 24 nvls channels, 32 p2p channels, 32 p2p channels per peer
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO CC Off, workFifoBytes 1048576
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclCommInitRankConfig comm 0x345d0590 rank 0 nranks 4 cudaDev 0 nvmlDev 0 busId 806000 commId 0xc063042dd5703838 - Init COMPLETE
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Init timings - ncclCommInitRankConfig: rank 0 nranks 4 total 1.10 (kernels 0.21, alloc 0.23, bootstrap 0.11, allgathers 0.00, topo 0.08, graphs 0.01, connections 0.46, rest 0.00)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Comm config Blocking set to 1
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Comm config Comm name set to undefined:1
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Initialized NET plugin IB
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Assigned NET plugin IB to comm
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO RMA/Plugin: Assigned plugin RMA_IB_PROXY to comm
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO GIN/Plugin: Assigned plugin GIN_IB_GDAKI type 3 to comm
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Using network IB
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO DMA-BUF is available on GPU device 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclCommSplit comm 0x3eb91270 rank 0 nranks 4 cudaDev 0 nvmlDev 0 busId 806000 parent 0x345d0590 childCount 1 color 2003953581 key 0- Init START
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO MNNVL busId 0x806000 fabric UUID e74cad10be01e10a.2ee6b41664390487 cliqueId 0x4bb2 state 3 healthMask 0x1aa
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is 0-71. (GPU affinity = 0-71 ; CPU affinity = 0-143).
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO NVLS multicast support is available on dev 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Rank 0: 1 Net devices
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Rank 0: 0 CollNet devices
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Local Net device counts across ranks: min 1 max 1
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Local CollNet device counts across ranks: min 0 max 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO comm 0x3eb91270 rank 0 nRanks 4 nNodes 1 localRanks 4 localRank 0 MNNVL 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO NVLS tuning: nChannels 24 chunkSize 131072 treeMaxChunkSize 131072
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 00/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 01/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 02/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 03/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 04/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 05/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 06/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 07/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 08/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 09/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 10/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 11/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 12/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 13/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 14/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 15/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 16/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 17/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 18/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 19/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 20/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 21/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 22/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 23/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 24/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 25/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 26/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 27/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 28/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 29/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 30/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 31/32 : 0 1 2 3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->-1 [2] 1/-1/-1->0->-1 [3] 1/-1/-1->0->-1 [4] 1/-1/-1->0->-1 [5] 1/-1/-1->0->-1 [6] 1/-1/-1->0->-1 [7] 1/-1/-1->0->-1 [8] 1/-1/-1->0->-1 [9] 1/-1/-1->0->-1 [10] -1/-1/-1->0->3 [11] -1/-1/-1->0->3 [12] 1/-1/-1->0->3 [13] 1/-1/-1->0->3 [14] 1/-1/-1->0->3 [15] 1/-1/-1->0->3 [16] 1/-1/-1->0->-1 [17] 1/-1/-1->0->-1 [18] 1/-1/-1->0->-1 [19] 1/-1/-1->0->-1 [20] 1/-1/-1->0->-1 [21] 1/-1/-1->0->-1 [22] 1/-1/-1->0->-1 [23] 1/-1/-1->0->-1 [24] 1/-1/-1->0->-1 [25] 1/-1/-1->0->-1 [26] -1/-1/-1->0->3 [27] -1/-1/-1->0->3 [28] 1/-1/-1->0->3 [29] 1/-1/-1->0->3 [30] 1/-1/-1->0->3 [31] 1/-1/-1->0->3
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO P2P Chunksize set to 524288
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+pod4-gb300-10-tray14-f3:3836445:3836760 [0] NCCL INFO [Proxy Service] Device 0 CPU core 27
+pod4-gb300-10-tray14-f3:3836445:3836760 [0] NCCL INFO proxy listening socket at <ip-redacted><37217>
+pod4-gb300-10-tray14-f3:3836445:3836764 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 28
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO 32 coll channels, 32 collnet channels, 24 nvls channels, 32 p2p channels, 32 p2p channels per peer
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO CC Off, workFifoBytes 1048576
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclCommSplit comm 0x3eb91270 rank 0 nranks 4 cudaDev 0 nvmlDev 0 busId 806000 parent 0x345d0590 childCount 1 color 2003953581 key 0 - Init COMPLETE
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Init timings - ncclCommSplit: rank 0 nranks 4 total 0.37 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.00, topo 0.07, graphs 0.01, connections 0.27, rest 0.01)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Comm config Blocking set to 1
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Comm config Comm name set to undefined:2
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Initialized NET plugin IB
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Assigned NET plugin IB to comm
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO RMA/Plugin: Assigned plugin RMA_IB_PROXY to comm
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO GIN/Plugin: Assigned plugin GIN_IB_GDAKI type 3 to comm
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Using network IB
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO DMA-BUF is available on GPU device 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclCommSplit comm 0x3fe747b0 rank 0 nranks 1 cudaDev 0 nvmlDev 0 busId 806000 parent 0x345d0590 childCount 2 color 59908776 key 0- Init START
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO MNNVL busId 0x806000 fabric UUID e74cad10be01e10a.2ee6b41664390487 cliqueId 0x4bb2 state 3 healthMask 0x1aa
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is 0-71. (GPU affinity = 0-71 ; CPU affinity = 0-143).
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Rank 0: 1 Net devices
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Rank 0: 0 CollNet devices
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Local Net device counts across ranks: min 1 max 1
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Local CollNet device counts across ranks: min 0 max 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO comm 0x3fe747b0 rank 0 nRanks 1 nNodes 1 localRanks 1 localRank 0 MNNVL 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 00/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 01/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 02/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 03/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 04/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 05/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 06/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 07/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 08/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 09/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 10/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 11/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 12/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 13/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 14/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 15/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 16/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 17/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 18/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 19/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 20/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 21/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 22/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 23/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 24/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 25/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 26/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 27/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 28/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 29/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 30/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 31/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 32/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 33/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 34/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 35/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 36/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 37/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 38/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 39/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 40/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 41/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 42/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 43/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 44/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 45/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 46/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 47/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 48/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 49/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 50/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 51/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 52/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 53/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 54/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 55/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 56/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 57/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 58/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 59/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 60/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 61/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 62/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 63/64 : 0
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Trees [0] -1/-1/-1->0->-1 [1] -1/-1/-1->0->-1 [2] -1/-1/-1->0->-1 [3] -1/-1/-1->0->-1 [4] -1/-1/-1->0->-1 [5] -1/-1/-1->0->-1 [6] -1/-1/-1->0->-1 [7] -1/-1/-1->0->-1 [8] -1/-1/-1->0->-1 [9] -1/-1/-1->0->-1 [10] -1/-1/-1->0->-1 [11] -1/-1/-1->0->-1 [12] -1/-1/-1->0->-1 [13] -1/-1/-1->0->-1 [14] -1/-1/-1->0->-1 [15] -1/-1/-1->0->-1 [16] -1/-1/-1->0->-1 [17] -1/-1/-1->0->-1 [18] -1/-1/-1->0->-1 [19] -1/-1/-1->0->-1 [20] -1/-1/-1->0->-1 [21] -1/-1/-1->0->-1 [22] -1/-1/-1->0->-1 [23] -1/-1/-1->0->-1 [24] -1/-1/-1->0->-1 [25] -1/-1/-1->0->-1 [26] -1/-1/-1->0->-1 [27] -1/-1/-1->0->-1 [28] -1/-1/-1->0->-1 [29] -1/-1/-1->0->-1 [30] -1/-1/-1->0->-1 [31] -1/-1/-1->0->-1 [32] -1/-1/-1->0->-1 [33] -1/-1/-1->0->-1 [34] -1/-1/-1->0->-1 [35] -1/-1/-1->0->-1 [36] -1/-1/-1->0->-1 [37] -1/-1/-1->0->-1 [38] -1/-1/-1->0->-1 [39] -1/-1/-1->0->-1 [40] -1/-1/-1->0->-1 [41] -1/-1/-1->0->-1 [42] -1/-1/-1->0->-1 [43] -1/-1/-1->0->-1 [44] -1/-1/-1->0->-1 [45] -1/-1/-1->0->-1 [46] -1/-1/-1->0->-1 [47] -1/-1/-1->0->-1 [48] -1/-1/-1->0->-1 [4
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO P2P Chunksize set to 524288
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+pod4-gb300-10-tray14-f3:3836445:3836770 [0] NCCL INFO [Proxy Service] Device 0 CPU core 29
+pod4-gb300-10-tray14-f3:3836445:3836771 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 30
+pod4-gb300-10-tray14-f3:3836445:3836770 [0] NCCL INFO proxy listening socket at <ip-redacted><60849>
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO 64 coll channels, 64 collnet channels, 0 nvls channels, 64 p2p channels, 64 p2p channels per peer
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO CC Off, workFifoBytes 1048576
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO ncclCommSplit comm 0x3fe747b0 rank 0 nranks 1 cudaDev 0 nvmlDev 0 busId 806000 parent 0x345d0590 childCount 2 color 59908776 key 0 - Init COMPLETE
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Init timings - ncclCommSplit: rank 0 nranks 1 total 0.43 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.00, topo 0.04, graphs 0.00, connections 0.38, rest 0.00)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Rank 0 has color with NCCL_SPLIT_NOCOLOR, not creating a new communicator
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Rank 0 has color with NCCL_SPLIT_NOCOLOR, not creating a new communicator
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Rank 0 has color with NCCL_SPLIT_NOCOLOR, not creating a new communicator
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0x637800200 recvbuff 0x637800600 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Symmetric VA size=280GB
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 00/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 01/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 02/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 03/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 04/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 05/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 06/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 07/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 08/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 09/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 10/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 11/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 12/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 13/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 14/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 15/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 16/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 17/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 18/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 19/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 20/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 21/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 22/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 23/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 24/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 25/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 26/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 27/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 28/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 29/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 30/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 31/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0x637800000 recvbuff 0x637800800 count 4 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Broadcast: opCount 0 sendbuff 0x637800400 recvbuff 0x637800400 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Broadcast: opCount 0 sendbuff 0x637800000 recvbuff 0x637800000 count 17 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0x63783de00 recvbuff 0x63783e200 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0xf380a4dffe00 recvbuff 0x6379fc800 count 4 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Symmetric VA size=280GB
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 00/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 01/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 02/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 03/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 04/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 05/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 06/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 07/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 08/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 09/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 10/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 11/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 12/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 13/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 14/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 15/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 16/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 17/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 18/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 19/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 20/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 21/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 22/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 23/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 24/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 25/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 26/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 27/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 28/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 29/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 30/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Channel 31/0 : 0[0] -> 1[1] via P2P/CUMEM
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f3b8400 recvbuff 0xf37b9f3b8400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24fb0000 recvbuff 0xf37b24fb0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f2c8000 recvbuff 0xf37b9f2c8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eaec000 recvbuff 0xf37b9eaec000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f2c8000 recvbuff 0xf37b9f2c8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f360000 recvbuff 0xf37b9f360000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f360000 recvbuff 0xf37b9f360000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x6379fcc00 recvbuff 0x6379fcc00 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea38000 recvbuff 0xf37b9ea38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea38000 recvbuff 0xf37b9ea38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dd4000 recvbuff 0xf37f44dd4000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf384a61e1c00 recvbuff 0xf384a61e1c00 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f3b8400 recvbuff 0xf37b9f3b8400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf384a61e1c00 recvbuff 0xf384a61e1c00 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf4000 recvbuff 0xf37b9ecf4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf384a61e1c00 recvbuff 0xf384a61e1c00 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf4000 recvbuff 0xf37b9ecf4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f200000 recvbuff 0xf37b9f200000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf384a61e1c00 recvbuff 0xf384a61e1c00 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed84000 recvbuff 0xf37b9ed84000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebb4000 recvbuff 0xf37b9ebb4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf384a61e1c00 recvbuff 0xf384a61e1c00 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed7c000 recvbuff 0xf37b9ed7c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebb4000 recvbuff 0xf37b9ebb4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf384a61e1c00 recvbuff 0xf384a61e1c00 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24dff200 recvbuff 0xf37b24dff200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837a00 recvbuff 0x637837a00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0xf37b24dffe00 recvbuff 0x637837600 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0xf380a4dffe00 recvbuff 0x637837800 count 4 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24dffe00 recvbuff 0xf37b24dffe00 count 4 datatype 4 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24db0000 recvbuff 0xf37b24db0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea38000 recvbuff 0xf37b9ea38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24db0000 recvbuff 0xf37b24db0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebc4000 recvbuff 0xf37b9ebc4000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea38000 recvbuff 0xf37b9ea38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb28000 recvbuff 0xf37b9eb28000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24fd8000 recvbuff 0xf37b24fd8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24ec8000 recvbuff 0xf37b24ec8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb6e000 recvbuff 0xf37b9eb6e000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24f1c000 recvbuff 0xf37b24f1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24db0000 recvbuff 0xf37b24db0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24f18000 recvbuff 0xf37b24f18000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed68000 recvbuff 0xf37b9ed68000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb0c000 recvbuff 0xf37b9eb0c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea38000 recvbuff 0xf37b9ea38000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eda0000 recvbuff 0xf37b9eda0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24fb0000 recvbuff 0xf37b24fb0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24ec8000 recvbuff 0xf37b24ec8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24ee4000 recvbuff 0xf37b24ee4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24ec7000 recvbuff 0xf37b24ec7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf380a4dfc200 recvbuff 0xf380a4dfc200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf380a4dfba00 recvbuff 0xf380a4dfba00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf380a4dfc600 recvbuff 0xf380a4dfc600 count 32 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf380a4dfbe00 recvbuff 0xf380a4dfbe00 count 4 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf384a61ffc00 recvbuff 0xf384a61ffc00 count 4 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf380a4dfc600 recvbuff 0xf380a4dfc600 count 4 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf380a4dfbc00 recvbuff 0xf380a4dfbc00 count 4 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837400 recvbuff 0x637837400 count 16 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf380a4dfbe00 recvbuff 0xf380a4dfbe00 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0xf37b24dffe00 recvbuff 0x637837600 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0xf380a4dffe00 recvbuff 0x637837800 count 4 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Broadcast: opCount 0 sendbuff 0x637800400 recvbuff 0x637800400 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Broadcast: opCount 0 sendbuff 0x637800000 recvbuff 0x637800000 count 19 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0x63783de00 recvbuff 0x63783e200 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0xf380a4dffe00 recvbuff 0x6379fc800 count 4 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb90000 recvbuff 0xf37b9eb90000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb90000 recvbuff 0xf37b9eb90000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea90000 recvbuff 0xf37b9ea90000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea90000 recvbuff 0xf37b9ea90000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea90000 recvbuff 0xf37b9ea90000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf4000 recvbuff 0xf37b9ecf4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24db0000 recvbuff 0xf37b24db0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f200000 recvbuff 0xf37b9f200000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9edbc000 recvbuff 0xf37b9edbc000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb74000 recvbuff 0xf37b9eb74000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb66000 recvbuff 0xf37b9eb66000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb4a000 recvbuff 0xf37b9eb4a000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb4a000 recvbuff 0xf37b9eb4a000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf384a60a4800 recvbuff 0xf384a60a4800 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837a00 recvbuff 0x637837a00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0x637837400 recvbuff 0x637837800 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0xf380a4dffe00 recvbuff 0x63783de00 count 4 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837400 recvbuff 0x637837400 count 4 datatype 4 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24f90000 recvbuff 0xf37b24f90000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea48000 recvbuff 0xf37b9ea48000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44ddc000 recvbuff 0xf37f44ddc000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eaa8000 recvbuff 0xf37b9eaa8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24f80000 recvbuff 0xf37b24f80000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24f00000 recvbuff 0xf37b24f00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb28000 recvbuff 0xf37b9eb28000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24ee4000 recvbuff 0xf37b24ee4000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb98000 recvbuff 0xf37b9eb98000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed00000 recvbuff 0xf37b9ed00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24e90000 recvbuff 0xf37b24e90000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed64000 recvbuff 0xf37b9ed64000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24f7c000 recvbuff 0xf37b24f7c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24ec8000 recvbuff 0xf37b24ec8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec34000 recvbuff 0xf37b9ec34000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24f1c000 recvbuff 0xf37b24f1c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9edffc00 recvbuff 0xf37b9edffc00 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9edffa00 recvbuff 0xf37b9edffa00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783de00 recvbuff 0x63783de00 count 32 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783de00 recvbuff 0x63783de00 count 4 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837600 recvbuff 0x637837600 count 4 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x6379fce00 recvbuff 0x6379fce00 count 4 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x6379fc800 recvbuff 0x6379fc800 count 4 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9edffe00 recvbuff 0xf37b9edffe00 count 16 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x6379fcc00 recvbuff 0x6379fcc00 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0x637837400 recvbuff 0x637837800 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0xf380a4dffe00 recvbuff 0x63783de00 count 4 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Broadcast: opCount 0 sendbuff 0x637800400 recvbuff 0x637800400 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Broadcast: opCount 0 sendbuff 0x637800000 recvbuff 0x637800000 count 17 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0x63783de00 recvbuff 0x63783e200 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0xf380a4dffe00 recvbuff 0x6379fc800 count 4 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecc8000 recvbuff 0xf37b9ecc8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed1c000 recvbuff 0xf37b9ed1c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed24000 recvbuff 0xf37b9ed24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed24000 recvbuff 0xf37b9ed24000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24f20000 recvbuff 0xf37b24f20000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24db0000 recvbuff 0xf37b24db0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed24000 recvbuff 0xf37b9ed24000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eaf8200 recvbuff 0xf37b9eaf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed24000 recvbuff 0xf37b9ed24000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea38000 recvbuff 0xf37b9ea38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ead0000 recvbuff 0xf37b9ead0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebbc000 recvbuff 0xf37b9ebbc000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb84000 recvbuff 0xf37b9eb84000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f290000 recvbuff 0xf37b9f290000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb58000 recvbuff 0xf37b9eb58000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24fef400 recvbuff 0xf37b24fef400 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837a00 recvbuff 0x637837a00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0x637837400 recvbuff 0x637837800 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0xf380a4dffe00 recvbuff 0x63783de00 count 4 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837400 recvbuff 0x637837400 count 4 datatype 4 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed68000 recvbuff 0xf37b9ed68000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24f68000 recvbuff 0xf37b24f68000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eda0000 recvbuff 0xf37b9eda0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24db0000 recvbuff 0xf37b24db0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44ddc000 recvbuff 0xf37f44ddc000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed00000 recvbuff 0xf37b9ed00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24f90000 recvbuff 0xf37b24f90000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44ddc000 recvbuff 0xf37f44ddc000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eda0000 recvbuff 0xf37b9eda0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed68000 recvbuff 0xf37b9ed68000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44ddc000 recvbuff 0xf37f44ddc000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24e90000 recvbuff 0xf37b24e90000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea48000 recvbuff 0xf37b9ea48000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44ddc000 recvbuff 0xf37f44ddc000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed68000 recvbuff 0xf37b9ed68000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44ddc000 recvbuff 0xf37f44ddc000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eda0000 recvbuff 0xf37b9eda0000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44ddc000 recvbuff 0xf37f44ddc000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb20000 recvbuff 0xf37b9eb20000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44ddc000 recvbuff 0xf37f44ddc000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24dfba00 recvbuff 0xf37b24dfba00 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf384a61fe800 recvbuff 0xf384a61fe800 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837600 recvbuff 0x637837600 count 32 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837600 recvbuff 0x637837600 count 4 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837600 recvbuff 0x637837600 count 4 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x6379fc800 recvbuff 0x6379fc800 count 4 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783de00 recvbuff 0x63783de00 count 4 datatype 8 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b24dfbe00 recvbuff 0xf37b24dfbe00 count 16 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x6379fca00 recvbuff 0x6379fca00 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0x637837400 recvbuff 0x637837800 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0xf380a4dffe00 recvbuff 0x63783de00 count 4 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Broadcast: opCount 0 sendbuff 0x637800400 recvbuff 0x637800400 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO Broadcast: opCount 0 sendbuff 0x637800000 recvbuff 0x637800000 count 17 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0x63783de00 recvbuff 0x63783e200 count 1 datatype 4 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllGather: opCount 0 sendbuff 0xf380a4dffe00 recvbuff 0x6379fc800 count 4 datatype 1 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783de00 recvbuff 0x63783de00 count 1 datatype 7 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783de00 recvbuff 0x63783de00 count 1 datatype 7 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783de00 recvbuff 0x63783de00 count 1 datatype 7 op 0 root 0 comm 0x345d0590 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44da4000 recvbuff 0xf37f44da4000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea00000 recvbuff 0xf37b9ea00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea54000 recvbuff 0xf37b9ea54000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37f44dc8000 recvbuff 0xf37f44dc8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb24000 recvbuff 0xf37b9eb24000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec38000 recvbuff 0xf37b9ec38000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecf8200 recvbuff 0xf37b9ecf8200 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eb08000 recvbuff 0xf37b9eb08000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ed10000 recvbuff 0xf37b9ed10000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ecd8000 recvbuff 0xf37b9ecd8000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9eac8000 recvbuff 0xf37b9eac8000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec00000 recvbuff 0xf37b9ec00000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ea1c000 recvbuff 0xf37b9ea1c000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec5c000 recvbuff 0xf37b9ec5c000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9f580400 recvbuff 0xf37b9f580400 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ebd7000 recvbuff 0xf37b9ebd7000 count 28672 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0xf37b9ec30000 recvbuff 0xf37b9ec30000 count 57344 datatype 7 op 0 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x63783e200 recvbuff 0x63783e200 count 8 datatype 7 op 2 root 0 comm 0x3eb91270 [nranks=4] stream (nil)
+pod4-gb300-10-tray14-f3:3836445:3836445 [0] NCCL INFO AllReduce: opCount 0 sendbuff 0x637837c00 recvbuff 0x637837c00 count 8 datatype 4 op 3 root 0 comm 0x3eb91270 [nranks=4] stream (nil)

@@ -1,0 +1,75 @@
+status: non_megakernel | reason: None
+session: {'id': 'gb300-step4-20261112T002655Z', 'method': 'oracle-smoke', 'case_id': 'kimi-k3-syn-l8-tp4-b8-s8192'} | submission_sha256: 6f9e8a848ef76fcf234473950f0beedeccdeb163641ce6ee405234c74161c906
+hardware: {'hostname': 'pod4-gb300-10-tray14-f3', 'torch': '2.14.1+cu130', 'cuda': '13.0', 'device': 'cuda:0', 'cuda_visible_devices': '0,1,2,3', 'gpu_name': 'NVIDIA GB300', 'gpu_memory_bytes': 297013411840}
+topology: {'world_size': 4, 'tp': 4, 'ep': 1, 'rank_mapping': 'rank = ep_rank * tp + tp_rank'}
+build_ms: 2421.9 first_call_ms: 994.0
+aggregate correctness: pass | aggregate launch_audit: {'status': 'launch_budget_failed', 'max_gpu_launches_per_rank': 1, 'review_required': True}
+--- rank 0 device cuda:0 status pass reason None
+    gpu: NVIDIA GB300 peak_allocated_GB: 34.3
+    correctness: pass trials: 3
+      trial 0 seed 348423407: ratios {'logits': 0.486, 'kv_write': 0.477, 'pe_write': 0.475, 'recurrent_state': 0.445, 'conv_state': 0.446}; next_token {'rows_outside_tie_margin': 0, 'rows_differing_from_fp32_argmax': 0}; expert_ids {'candidate_max_shortfall': 0.005478918552398682, 'oracle_max_shortfall': 0.005478918552398682, 'allowed': 0.011957837104797364, 'sets_differing_from_oracle': 0}; cache_length {'mismatched_elements': 0}
+      trial 1 seed 2575015891: ratios {'logits': 0.481, 'kv_write': 0.475, 'pe_write': 0.475, 'recurrent_state': 0.441, 'conv_state': 0.44}; next_token {'rows_outside_tie_margin': 0, 'rows_differing_from_fp32_argmax': 1}; expert_ids {'candidate_max_shortfall': 0.00299680233001709, 'oracle_max_shortfall': 0.00299680233001709, 'allowed': 0.00699360466003418, 'sets_differing_from_oracle': 0}; cache_length {'mismatched_elements': 0}
+      trial 2 seed 580083562: ratios {'logits': 0.489, 'kv_write': 0.481, 'pe_write': 0.481, 'recurrent_state': 0.457, 'conv_state': 0.459}; next_token {'rows_outside_tie_margin': 0, 'rows_differing_from_fp32_argmax': 1}; expert_ids {'candidate_max_shortfall': 0.00733572244644165, 'oracle_max_shortfall': 0.00733572244644165, 'allowed': 0.0156714448928833, 'sets_differing_from_oracle': 0}; cache_length {'mismatched_elements': 0}
+    worst band ratio over trials and outputs: 0.489
+    launch_audit: launch_budget_failed | total profiler device events: 58948 | budget: 1
+    accounting: {'compute_kernel': 52933, 'memcpy': 5963, 'nccl_device_kernel': 26, 'nccl_profiler_record': 26} | actual device kernel launches (compute + nccl device): 52959
+    nccl device kernels by name: [('ncclDevKernel_AllReduce_Sum_f32_RING_LL', 25), ('ncclDevKernel_AllReduce_Sum_u64_RING_LL', 1)]
+    candidate_timing: cuda-event p50 1049.672 ms p95 1208.572; reps [1059.9, 1049.7, 1044.6, 1245.7, 1021.9]
+    reference_timing: cuda-event p50 1033.087 ms p95 1085.378; reps [1033.1, 1024.5, 1091.2]
+--- rank 1 device cuda:1 status pass reason None
+    gpu: NVIDIA GB300 peak_allocated_GB: 34.3
+    correctness: pass trials: 3
+      trial 0 seed 348423407: ratios {'logits': 0.486, 'kv_write': 0.477, 'pe_write': 0.475, 'recurrent_state': 0.445, 'conv_state': 0.446}; next_token {'rows_outside_tie_margin': 0, 'rows_differing_from_fp32_argmax': 0}; expert_ids {'candidate_max_shortfall': 0.005478918552398682, 'oracle_max_shortfall': 0.005478918552398682, 'allowed': 0.011957837104797364, 'sets_differing_from_oracle': 0}; cache_length {'mismatched_elements': 0}
+      trial 1 seed 2575015891: ratios {'logits': 0.481, 'kv_write': 0.475, 'pe_write': 0.475, 'recurrent_state': 0.441, 'conv_state': 0.44}; next_token {'rows_outside_tie_margin': 0, 'rows_differing_from_fp32_argmax': 1}; expert_ids {'candidate_max_shortfall': 0.00299680233001709, 'oracle_max_shortfall': 0.00299680233001709, 'allowed': 0.00699360466003418, 'sets_differing_from_oracle': 0}; cache_length {'mismatched_elements': 0}
+      trial 2 seed 580083562: ratios {'logits': 0.489, 'kv_write': 0.481, 'pe_write': 0.481, 'recurrent_state': 0.457, 'conv_state': 0.459}; next_token {'rows_outside_tie_margin': 0, 'rows_differing_from_fp32_argmax': 1}; expert_ids {'candidate_max_shortfall': 0.00733572244644165, 'oracle_max_shortfall': 0.00733572244644165, 'allowed': 0.0156714448928833, 'sets_differing_from_oracle': 0}; cache_length {'mismatched_elements': 0}
+    worst band ratio over trials and outputs: 0.489
+    launch_audit: launch_budget_failed | total profiler device events: 58948 | budget: 1
+    accounting: {'compute_kernel': 52933, 'memcpy': 5963, 'nccl_device_kernel': 26, 'nccl_profiler_record': 26} | actual device kernel launches (compute + nccl device): 52959
+    nccl device kernels by name: [('ncclDevKernel_AllReduce_Sum_f32_RING_LL', 25), ('ncclDevKernel_AllReduce_Sum_u64_RING_LL', 1)]
+    candidate_timing: cuda-event p50 1049.710 ms p95 1208.714; reps [1060.1, 1049.7, 1044.6, 1245.9, 1022.2]
+    reference_timing: cuda-event p50 1033.099 ms p95 1085.177; reps [1033.1, 1024.7, 1091.0]
+--- rank 2 device cuda:2 status pass reason None
+    gpu: NVIDIA GB300 peak_allocated_GB: 34.3
+    correctness: pass trials: 3
+      trial 0 seed 348423407: ratios {'logits': 0.486, 'kv_write': 0.477, 'pe_write': 0.475, 'recurrent_state': 0.445, 'conv_state': 0.446}; next_token {'rows_outside_tie_margin': 0, 'rows_differing_from_fp32_argmax': 0}; expert_ids {'candidate_max_shortfall': 0.005478918552398682, 'oracle_max_shortfall': 0.005478918552398682, 'allowed': 0.011957837104797364, 'sets_differing_from_oracle': 0}; cache_length {'mismatched_elements': 0}
+      trial 1 seed 2575015891: ratios {'logits': 0.481, 'kv_write': 0.475, 'pe_write': 0.475, 'recurrent_state': 0.441, 'conv_state': 0.44}; next_token {'rows_outside_tie_margin': 0, 'rows_differing_from_fp32_argmax': 1}; expert_ids {'candidate_max_shortfall': 0.00299680233001709, 'oracle_max_shortfall': 0.00299680233001709, 'allowed': 0.00699360466003418, 'sets_differing_from_oracle': 0}; cache_length {'mismatched_elements': 0}
+      trial 2 seed 580083562: ratios {'logits': 0.489, 'kv_write': 0.481, 'pe_write': 0.481, 'recurrent_state': 0.457, 'conv_state': 0.459}; next_token {'rows_outside_tie_margin': 0, 'rows_differing_from_fp32_argmax': 1}; expert_ids {'candidate_max_shortfall': 0.00733572244644165, 'oracle_max_shortfall': 0.00733572244644165, 'allowed': 0.0156714448928833, 'sets_differing_from_oracle': 0}; cache_length {'mismatched_elements': 0}
+    worst band ratio over trials and outputs: 0.489
+    launch_audit: launch_budget_failed | total profiler device events: 58948 | budget: 1
+    accounting: {'compute_kernel': 52933, 'memcpy': 5963, 'nccl_device_kernel': 26, 'nccl_profiler_record': 26} | actual device kernel launches (compute + nccl device): 52959
+    nccl device kernels by name: [('ncclDevKernel_AllReduce_Sum_f32_RING_LL', 25), ('ncclDevKernel_AllReduce_Sum_u64_RING_LL', 1)]
+    candidate_timing: cuda-event p50 1049.712 ms p95 1208.705; reps [1060.1, 1049.7, 1044.6, 1245.8, 1022.2]
+    reference_timing: cuda-event p50 1033.097 ms p95 1085.169; reps [1033.1, 1024.7, 1091.0]
+--- rank 3 device cuda:3 status pass reason None
+    gpu: NVIDIA GB300 peak_allocated_GB: 34.3
+    correctness: pass trials: 3
+      trial 0 seed 348423407: ratios {'logits': 0.486, 'kv_write': 0.477, 'pe_write': 0.475, 'recurrent_state': 0.445, 'conv_state': 0.446}; next_token {'rows_outside_tie_margin': 0, 'rows_differing_from_fp32_argmax': 0}; expert_ids {'candidate_max_shortfall': 0.005478918552398682, 'oracle_max_shortfall': 0.005478918552398682, 'allowed': 0.011957837104797364, 'sets_differing_from_oracle': 0}; cache_length {'mismatched_elements': 0}
+      trial 1 seed 2575015891: ratios {'logits': 0.481, 'kv_write': 0.475, 'pe_write': 0.475, 'recurrent_state': 0.441, 'conv_state': 0.44}; next_token {'rows_outside_tie_margin': 0, 'rows_differing_from_fp32_argmax': 1}; expert_ids {'candidate_max_shortfall': 0.00299680233001709, 'oracle_max_shortfall': 0.00299680233001709, 'allowed': 0.00699360466003418, 'sets_differing_from_oracle': 0}; cache_length {'mismatched_elements': 0}
+      trial 2 seed 580083562: ratios {'logits': 0.489, 'kv_write': 0.481, 'pe_write': 0.481, 'recurrent_state': 0.457, 'conv_state': 0.459}; next_token {'rows_outside_tie_margin': 0, 'rows_differing_from_fp32_argmax': 1}; expert_ids {'candidate_max_shortfall': 0.00733572244644165, 'oracle_max_shortfall': 0.00733572244644165, 'allowed': 0.0156714448928833, 'sets_differing_from_oracle': 0}; cache_length {'mismatched_elements': 0}
+    worst band ratio over trials and outputs: 0.489
+    launch_audit: launch_budget_failed | total profiler device events: 58948 | budget: 1
+    accounting: {'compute_kernel': 52933, 'memcpy': 5963, 'nccl_device_kernel': 26, 'nccl_profiler_record': 26} | actual device kernel launches (compute + nccl device): 52959
+    nccl device kernels by name: [('ncclDevKernel_AllReduce_Sum_f32_RING_LL', 25), ('ncclDevKernel_AllReduce_Sum_u64_RING_LL', 1)]
+    candidate_timing: cuda-event p50 1049.642 ms p95 1208.768; reps [1059.9, 1049.6, 1044.6, 1246.0, 1022.1]
+    reference_timing: cuda-event p50 1033.090 ms p95 1084.992; reps [1033.1, 1024.9, 1090.8]
+--- audit-step NCCL device-kernel sequence identical across ranks [0, 1, 2, 3]: True (length 26)
+--- aggregate (slowest rank per rep)
+  candidate_timing: cuda-event p50 1049.712 ms p95 1208.818 host p50 1049.733
+  reference_timing: cuda-event p50 1033.099 ms p95 1085.379 host p50 1033.119
+  graph_baseline_unavailable: The distributed eager reference uses host-driven routing and process-group collectives.
+  speedup_vs_eager_host 0.9841723196548414
+  speedup_vs_eager_cuda_event 0.9841736013880297
+  speedup_vs_best_baseline_cuda_event 0.9841736013880297
+--- NCCL collective trace per process
+  nccl-pod4-gb300-10-tray14-f3-3836445.log.txt: cudaDev ['0'] collectives 603 {'AllGather': 22, 'Broadcast': 8, 'AllReduce': 573} | WARN 0 | other 'error' lines 0 | Init COMPLETE lines 3
+  nccl-pod4-gb300-10-tray14-f3-3836446.log.txt: cudaDev ['1'] collectives 603 {'AllGather': 22, 'Broadcast': 8, 'AllReduce': 573} | WARN 0 | other 'error' lines 0 | Init COMPLETE lines 3
+  nccl-pod4-gb300-10-tray14-f3-3836447.log.txt: cudaDev ['2'] collectives 603 {'AllGather': 22, 'Broadcast': 8, 'AllReduce': 573} | WARN 0 | other 'error' lines 0 | Init COMPLETE lines 3
+  nccl-pod4-gb300-10-tray14-f3-3836448.log.txt: cudaDev ['3'] collectives 603 {'AllGather': 22, 'Broadcast': 8, 'AllReduce': 573} | WARN 0 | other 'error' lines 0 | Init COMPLETE lines 3
+  collective sequence (kind, count, datatype, op) identical across all processes: True | length 603
+  first 6: [('AllGather', '1', '4', '0'), ('AllGather', '4', '1', '0'), ('Broadcast', '1', '4', '0'), ('Broadcast', '17', '1', '0'), ('AllGather', '1', '4', '0'), ('AllGather', '4', '1', '0')]
+  last 3: [('AllReduce', '57344', '7', '0'), ('AllReduce', '8', '7', '2'), ('AllReduce', '8', '4', '3')]
+--- collective histogram (kind, datatype, op) -> count: {('AllGather', '1', '0'): 11, ('AllGather', '4', '0'): 11, ('AllReduce', '4', '2'): 3, ('AllReduce', '4', '3'): 21, ('AllReduce', '7', '0'): 507, ('AllReduce', '7', '2'): 27, ('AllReduce', '8', '0'): 15, ('Broadcast', '1', '0'): 4, ('Broadcast', '4', '0'): 4}
+  greedy-token all-reduces (int64 min) = 21 -> decode steps (candidate, oracle or FP32 reference) in the whole evaluation
+  float32 sum all-reduces = 507; per decode step = 24.14; evaluator agreement all-reduces (int64 max) = 3
+  float32 all-reduce element counts: {'57344': 357, '28672': 147, '8': 24, '16': 3, '1': 3}
+  run-length trace (F = float32 sum all-reduce, fmax = greedy max logit, tokmin = greedy token int64 min, AGREE = evaluator agreement, AG/BC = seed sharing): AG64 AG8 BC64 BC8 AG64 AG8 Fx24 fmax tokmin Fx24 fmax tokmin AG64 AG8 AGREE Fx24 fmax tokmin f64sumx5 fmaxx2 AG64 AG8 BC64 BC8 AG64 AG8 Fx24 fmax tokmin Fx24 fmax tokmin AG64 AG8 AGREE Fx24 fmax tokmin f64sumx5 fmaxx2 AG64 AG8 BC64 BC8 AG64 AG8 Fx24 fmax tokmin Fx24 fmax tokmin AG64 AG8 AGREE Fx24 fmax tokmin f64sumx5 fmaxx2 AG64 AG8 BC64 BC8 AG64 AG8 Fx25 fmax tokmin Fx24 fmax tokmin Fx24 fmax tokmin Fx24 fmax tokmin Fx24 fmax tokmin Fx24 fmax tokmin Fx24 fmax tokmin Fx25 fmax tokmin Fx24 fmax tokmin Fx24 fmax tokmin Fx24 fmax tokmin Fx25 fmax tokmin

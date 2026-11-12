@@ -75,3 +75,15 @@ Chat history, condensed and redacted.
 Technical notes: the accounting split classifies profiler event names (`nccl:` prefix = collective record, `ncclDevKernel` = NCCL kernel, `Memcpy`/`Memset` = copies, otherwise compute kernel); it reads the raw record and changes nothing in the evaluator. The `COLL` trace regex parses `AllReduce: opCount … count … datatype … op …` lines; the 22 AllGather and 8 Broadcast calls are the evaluator's own `shared_seed`/`agree` helpers, not oracle work.
 
 Failures and fixes: none in this step. The report copy to the committing clone again went through the laptop and was slow (33 MB record), so the record is committed compressed.
+
+## 9. Step 4 approval and execution (2026-11-12)
+
+Chat history, condensed and redacted.
+
+- Operator: accepted Step 3 (commit `211ecda`) on the matching four-rank collective traces and 12/12 passes. GO for TP4 B8 only, same submission, controls and timeouts. Requirements: 12/12 passes with worst band ratios per output class, four UUIDs, clean NCCL init, cross-rank comparison of collective sequences (type, element count, datatype, op); audit expected to fail with the event breakdown preserved, check whether the audited step still has 26 NCCL kernels, report actual launches separately from total events, no grader change; peak allocated and reserved memory plus sampled nvidia-smi per GPU, compared with B1; raw timing samples with drift noted, no speedup claims; same monitoring, caches and timeouts; evidence under `reports/gb300/step4-syn-l8-tp4-b8-<ts>/`; update `PROGRESS.md`, `AGENT_TRAJECTORY.md`, `ISSUES.md` (keep the 9089 vs 8215 distinction, document what the 603 collectives cover); push without PR; stop before B64 and propose it with a memory feasibility assessment.
+- Session: derived `step4.sh` from `step3.sh` (case and names only), moved the runner's raw Step 3 copy outside the repo, fast-forwarded the runner to `211ecda`, checked all four GPUs and GPU pods by hand, ran Step 4 (117 s). Stated up front that PyTorch reserved memory is not in the evaluator record and would not be added.
+- Session: extended the analyzer with a histogram and run-length view of the collective trace. The first version had NCCL's reduction-op labels swapped (ncclRedOp_t is sum 0, prod 1, max 2, min 3, avg 4); corrected before producing the committed summary. The run-length view resolved the 603-collective question: 21 decode steps of 26 collectives plus 57 evaluator collectives.
+
+Technical notes: the oracle step's collectives are 17 all-reduces of the hidden state (7168×B), 7 of the latent (3584×B), one float32 max and one int64 min for greedy decoding; element counts scale with B (57344 and 28672 at B8). Compute-kernel and memcpy counts grow about 6.5x from B1 to B8 because the eager oracle's routing is host-driven per row; NCCL kernel count is batch-independent.
+
+Failures and fixes: the analyzer label swap above (caught by cross-checking against the audit's kernel names); no infrastructure or evaluator failures.
