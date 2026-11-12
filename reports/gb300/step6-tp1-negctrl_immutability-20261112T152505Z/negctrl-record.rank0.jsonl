@@ -1,0 +1,1 @@
+{"control": "immutability", "tensor": "l3_kv_cache", "index": [0, 0, 0], "delta": 1.0, "value_before": -0.224609375, "value_after": 0.7734375, "changed": true, "tensor_bytes": 67108864, "snapshot_path": "host copy, exact compare"}

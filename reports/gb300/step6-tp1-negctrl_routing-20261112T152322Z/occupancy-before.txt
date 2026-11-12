@@ -1,0 +1,27 @@
+date_utc: 2026-11-12T15:23:24Z
+index, uuid, memory.used [MiB], utilization.gpu [%]
+0, GPU-2305f466-c3f2-22d8-138d-f36d3a9711d5, 0 MiB, 0 %
+1, GPU-4db89045-c3dd-b6c1-bf5e-3d6fd5609698, 0 MiB, 0 %
+2, GPU-651ce205-dd28-d635-7272-d8f59bad1647, 0 MiB, 0 %
+3, GPU-a7a707cd-65b4-bd7c-5f59-1d4e12a484b8, 0 MiB, 0 %
+compute_apps:
+gpu_uuid, pid, process_name, used_gpu_memory [MiB]
+k8s_pods_on_node:
+  ceph-csi-cephfs      (pod name redacted) Running    gpu=0 started=2026-09-29T12:42:42Z
+  ceph-csi-rbd         (pod name redacted) Running    gpu=0 started=2026-09-29T12:42:42Z
+  inference-bench      (pod name redacted) Running    gpu=0 started=2026-10-09T01:01:05Z
+  kube-system          (pod name redacted) Running    gpu=0 started=2026-09-29T12:42:20Z
+  monitoring           (pod name redacted) Running    gpu=0 started=2026-09-29T12:42:20Z
+  monitoring           (pod name redacted) Running    gpu=0 started=2026-10-07T09:03:31Z
+  nvidia               (pod name redacted) Running    gpu=0 started=2026-10-02T15:15:01Z
+  nvidia               (pod name redacted) Running    gpu=0 started=2026-10-02T15:14:55Z
+  nvidia               (pod name redacted) Running    gpu=0 started=2026-10-01T14:18:09Z
+  nvidia               (pod name redacted) Running    gpu=0 started=2026-10-07T16:50:03Z
+  nvidia               (pod name redacted) Running    gpu=0 started=2026-10-01T14:18:06Z
+  nvidia               (pod name redacted) Running    gpu=0 started=2026-10-02T14:12:12Z
+  nvsentinel           (pod name redacted) Running    gpu=0 started=2026-10-20T14:01:06Z
+  nvsentinel           (pod name redacted) Running    gpu=0 started=2026-10-20T14:01:20Z
+  nvsentinel           (pod name redacted) Running    gpu=0 started=2026-10-20T11:29:08Z
+  nvsentinel           (pod name redacted) Running    gpu=0 started=2026-10-20T14:02:53Z
+  nvsentinel           (pod name redacted) Running    gpu=0 started=2026-10-20T14:02:42Z
+  total_pods=17 total_gpu_requests=0

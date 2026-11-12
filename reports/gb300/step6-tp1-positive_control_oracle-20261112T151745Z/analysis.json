@@ -1,0 +1,91 @@
+{
+ "dir": "step6-tp1-positive_control_oracle-20261112T151745Z",
+ "control": "positive_control_oracle",
+ "commit": "63f6eb8206c730f0f56449179044845f5e36689c",
+ "submission_sha256": "6f9e8a848ef76fcf234473950f0beedeccdeb163641ce6ee405234c74161c906",
+ "worktree_status": "?? reports/gb300/step6-tp1-positive_control_oracle-20261112T151745Z/ ",
+ "host": "pod4-gb300-10-tray14-f3",
+ "exit_code": "1",
+ "status": "non_megakernel",
+ "reason": "",
+ "correctness_status": "pass",
+ "launch_audit_status": "launch_budget_failed",
+ "result_submission_sha256": "6f9e8a848ef76fcf234473950f0beedeccdeb163641ce6ee405234c74161c906",
+ "result_keys": [
+  "build_ms",
+  "candidate_timing",
+  "case",
+  "contract_sha256",
+  "correctness",
+  "first_call_ms_including_jit",
+  "graph_baseline_unavailable",
+  "hardware",
+  "launch_audit",
+  "reference_timing",
+  "session",
+  "source_hints_advisory",
+  "speedup_vs_best_baseline_cuda_event",
+  "speedup_vs_eager_cuda_event",
+  "speedup_vs_eager_host",
+  "status",
+  "submission",
+  "submission_sha256",
+  "timestamp_utc"
+ ],
+ "wall_s": 73.0,
+ "gpu_peak_used_mb": 63698,
+ "gpu_pids": [
+  "4193298"
+ ],
+ "host_mem": {
+  "samples": 8,
+  "used_mb_first": 145964,
+  "used_mb_max": 152260,
+  "used_mb_last": 152260,
+  "growth_mb_max": 6296,
+  "swap_used_mb_max": 0
+ },
+ "k8s_samples": 3,
+ "k8s_nonzero_gpu_samples": [],
+ "records": [],
+ "cleanup": [
+  "date_utc: 2026-11-12T15:19:02Z evaluator_exit=1",
+  "no leftover megabench processes"
+ ],
+ "stderr_flagged_lines": [],
+ "expected": {
+  "status": "non_megakernel",
+  "correctness": "pass",
+  "launch_audit": "launch_budget_failed",
+  "reason_prefix": null
+ },
+ "checks": {
+  "status_as_expected": true,
+  "reason_as_expected": true,
+  "exit_code_1": true,
+  "no_gpu_pod_during_run": true,
+  "gpu_idle_after": true,
+  "no_leftover_processes": true,
+  "correctness_pass": true,
+  "launch_audit_as_expected": true,
+  "three_trials_all_outputs_in_band": true
+ },
+ "all_checks_met": true,
+ "trials": [
+  {
+   "seed": 39328672,
+   "scenario": "seeded",
+   "worst_ratio_max": 0.4826870239661923
+  },
+  {
+   "seed": 2141071806,
+   "scenario": "seeded",
+   "worst_ratio_max": 0.48024153518570534
+  },
+  {
+   "seed": 649274595,
+   "scenario": "seeded",
+   "worst_ratio_max": 0.47154097350155366
+  }
+ ]
+}

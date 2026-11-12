@@ -1,0 +1,15 @@
+status: incorrect
+reason: AssertionError: candidate mutated input l3_kv_cache
+submission_sha256: None
+correctness: None
+launch_audit: None
+peak_allocated_bytes: None
+traceback_tail: /mnt/shared/home/dc/workspace/kimi-k3-goalbox/megabench/harness/runner.py", line 116, in evaluate_case
+    record["correctness"], first_call_ms = check_trials(
+                                           ^^^^^^^^^^^^^
+  File "/mnt/shared/home/dc/workspace/kimi-k3-goalbox/megabench/harness/correctness.py", line 117, in check_trials
+    check_unchanged(inputs, originals)
+  File "/mnt/shared/home/dc/workspace/kimi-k3-goalbox/megabench/harness/correctness.py", line 45, in check_unchanged
+    raise AssertionError(f"candidate mutated input {name}")
+AssertionError: candidate mutated input l3_kv_cache
+

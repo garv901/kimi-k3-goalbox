@@ -1,0 +1,7 @@
+status: non_megakernel
+reason: None
+submission_sha256: 6f9e8a848ef76fcf234473950f0beedeccdeb163641ce6ee405234c74161c906
+correctness: pass
+launch_audit: launch_budget_failed
+peak_allocated_bytes: None
+traceback_tail: 

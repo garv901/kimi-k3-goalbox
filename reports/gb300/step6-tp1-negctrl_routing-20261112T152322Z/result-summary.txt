@@ -1,0 +1,13 @@
+status: incorrect
+reason: AssertionError: expert_ids: {'candidate_max_shortfall': 0.33990389108657837, 'oracle_max_shortfall': 0.0012260675430297852, 'allowed': 0.0034521350860595703, 'sets_differing_from_oracle': 1}
+submission_sha256: None
+correctness: None
+launch_audit: None
+peak_allocated_bytes: None
+traceback_tail: kspace/kimi-k3-goalbox/megabench/tasks/workloads.py", line 40, in compare_outputs
+    return None if compare is None else compare(case, t, expected, actual, serial=serial)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/shared/home/dc/workspace/kimi-k3-goalbox/megabench/tasks/kimi.py", line 461, in compare
+    raise AssertionError('; '.join(failures))
+AssertionError: expert_ids: {'candidate_max_shortfall': 0.33990389108657837, 'oracle_max_shortfall': 0.0012260675430297852, 'allowed': 0.0034521350860595703, 'sets_differing_from_oracle': 1}
+

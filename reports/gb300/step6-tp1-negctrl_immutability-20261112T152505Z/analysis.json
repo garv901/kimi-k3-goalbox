@@ -1,0 +1,75 @@
+{
+ "dir": "step6-tp1-negctrl_immutability-20261112T152505Z",
+ "control": "negctrl_immutability",
+ "commit": "63f6eb8206c730f0f56449179044845f5e36689c",
+ "submission_sha256": "c9375eb89f9d2007bddedcd34a189e8146a4248c9a79e72248207d4572cf8952",
+ "worktree_status": "?? reports/gb300/step6-tp1-negctrl_immutability-20261112T152505Z/ ?? reports/gb300/step6-tp1-negctrl_logits-20261112T152106Z/ ?? reports/gb300/step6-tp1-negctrl_routing-20261112T152322Z/ ?? reports/gb300/step6-tp1-positive_control_oracle-20261112T151745Z/ ",
+ "host": "pod4-gb300-10-tray14-f3",
+ "exit_code": "1",
+ "status": "incorrect",
+ "reason": "AssertionError: candidate mutated input l3_kv_cache",
+ "correctness_status": null,
+ "launch_audit_status": null,
+ "result_submission_sha256": null,
+ "result_keys": [
+  "case",
+  "contract_sha256",
+  "reason",
+  "session",
+  "status",
+  "submission",
+  "traceback"
+ ],
+ "wall_s": 53.0,
+ "gpu_peak_used_mb": 63694,
+ "gpu_pids": [
+  "5681"
+ ],
+ "host_mem": {
+  "samples": 6,
+  "used_mb_first": 160500,
+  "used_mb_max": 164540,
+  "used_mb_last": 149014,
+  "growth_mb_max": 4040,
+  "swap_used_mb_max": 0
+ },
+ "k8s_samples": 2,
+ "k8s_nonzero_gpu_samples": [],
+ "records": [
+  {
+   "control": "immutability",
+   "tensor": "l3_kv_cache",
+   "index": [
+    0,
+    0,
+    0
+   ],
+   "delta": 1.0,
+   "value_before": -0.224609375,
+   "value_after": 0.7734375,
+   "changed": true,
+   "tensor_bytes": 67108864,
+   "snapshot_path": "host copy, exact compare"
+  }
+ ],
+ "cleanup": [
+  "date_utc: 2026-11-12T15:26:01Z evaluator_exit=1",
+  "no leftover megabench processes"
+ ],
+ "stderr_flagged_lines": [],
+ "expected": {
+  "status": "incorrect",
+  "reason_prefix": "candidate mutated input l3_kv_cache"
+ },
+ "checks": {
+  "status_as_expected": true,
+  "reason_as_expected": true,
+  "exit_code_1": true,
+  "no_gpu_pod_during_run": true,
+  "gpu_idle_after": true,
+  "no_leftover_processes": true,
+  "record_present": true,
+  "record_confirms_mutation": true
+ },
+ "all_checks_met": true
+}
