@@ -1,0 +1,563 @@
+{
+ "kimi-k3-tp8-b1-s8192": {
+  "gpus": 8,
+  "tp": 8,
+  "layers": 93,
+  "batch": 1,
+  "checkpoint": true,
+  "weight_tensors": 2322,
+  "weight_bytes": 205056581360,
+  "state_tensors": 188,
+  "state_bytes": 283299849,
+  "host_snapshot_tensors": 2232,
+  "host_snapshot_bytes": 34581376761,
+  "checksum_tensors": 278,
+  "checksum_bytes": 170758504448,
+  "checksum_int32_words": 42689626112,
+  "largest_tensors": [
+   [
+    "l1_gate_blocks",
+    616562688
+   ],
+   [
+    "l1_up_blocks",
+    616562688
+   ],
+   [
+    "l1_down_blocks",
+    616562688
+   ],
+   [
+    "l2_gate_blocks",
+    616562688
+   ]
+  ],
+  "largest_fp32_weight_cast_bytes": 587202560,
+  "logits_fp32_bytes": 81920,
+  "hbm_floor_ms": 3.440414802,
+  "sol_minimum_bytes": 27523318416,
+  "sol_components_bytes": {
+   "kda_weights": 7767638016,
+   "mla_weights": 2028994560,
+   "dense_ffn": 181665792,
+   "moe_dense_parts": 13674479616,
+   "routed_experts": 3228696576,
+   "norms_and_residual_mixers": 7999488,
+   "lm_head": 293601280,
+   "embedding_rows": 14336,
+   "mla_cache_reads": 226492416,
+   "kda_state": 113614848,
+   "outputs": 121488
+  }
+ },
+ "kimi-k3-tp8-b8-s8192": {
+  "gpus": 8,
+  "tp": 8,
+  "layers": 93,
+  "batch": 8,
+  "checkpoint": true,
+  "weight_tensors": 2322,
+  "weight_bytes": 205056581360,
+  "state_tensors": 188,
+  "state_bytes": 2266398792,
+  "host_snapshot_tensors": 2232,
+  "host_snapshot_bytes": 36564475704,
+  "checksum_tensors": 278,
+  "checksum_bytes": 170758504448,
+  "checksum_int32_words": 42689626112,
+  "largest_tensors": [
+   [
+    "l1_gate_blocks",
+    616562688
+   ],
+   [
+    "l1_up_blocks",
+    616562688
+   ],
+   [
+    "l1_down_blocks",
+    616562688
+   ],
+   [
+    "l2_gate_blocks",
+    616562688
+   ]
+  ],
+  "largest_fp32_weight_cast_bytes": 587202560,
+  "logits_fp32_bytes": 655360,
+  "hbm_floor_ms": 6.368491793125,
+  "sol_minimum_bytes": 50947934345,
+  "sol_components_bytes": {
+   "kda_weights": 7767638016,
+   "mla_weights": 2028994560,
+   "dense_ffn": 181665792,
+   "moe_dense_parts": 13674479616,
+   "routed_experts": 24271610889,
+   "norms_and_residual_mixers": 7999488,
+   "lm_head": 293601280,
+   "embedding_rows": 114688,
+   "mla_cache_reads": 1811939328,
+   "kda_state": 908918784,
+   "outputs": 971904
+  }
+ },
+ "kimi-k3-tp8-b64-s8192": {
+  "gpus": 8,
+  "tp": 8,
+  "layers": 93,
+  "batch": 64,
+  "checkpoint": true,
+  "weight_tensors": 2322,
+  "weight_bytes": 205056581360,
+  "state_tensors": 188,
+  "state_bytes": 18131190336,
+  "host_snapshot_tensors": 2208,
+  "host_snapshot_bytes": 39544365360,
+  "checksum_tensors": 302,
+  "checksum_bytes": 183643406336,
+  "checksum_int32_words": 45910851584,
+  "largest_tensors": [
+   [
+    "l1_gate_blocks",
+    616562688
+   ],
+   [
+    "l1_up_blocks",
+    616562688
+   ],
+   [
+    "l1_down_blocks",
+    616562688
+   ],
+   [
+    "l2_gate_blocks",
+    616562688
+   ]
+  ],
+  "largest_fp32_weight_cast_bytes": 587202560,
+  "logits_fp32_bytes": 5242880,
+  "hbm_floor_ms": 21.183601542625,
+  "sol_minimum_bytes": 169468812341,
+  "sol_components_bytes": {
+   "kda_weights": 7767638016,
+   "mla_weights": 2028994560,
+   "dense_ffn": 181665792,
+   "moe_dense_parts": 13674479616,
+   "routed_experts": 123738875957,
+   "norms_and_residual_mixers": 7999488,
+   "lm_head": 293601280,
+   "embedding_rows": 917504,
+   "mla_cache_reads": 14495514624,
+   "kda_state": 7271350272,
+   "outputs": 7775232
+  }
+ },
+ "kimi-k3-syn-l8-tp4-b1-s8192": {
+  "gpus": 4,
+  "tp": 4,
+  "layers": 8,
+  "batch": 1,
+  "checkpoint": false,
+  "weight_tensors": 200,
+  "weight_bytes": 31941893184,
+  "state_tensors": 18,
+  "state_bytes": 28753929,
+  "host_snapshot_tensors": 171,
+  "host_snapshot_bytes": 2918800457,
+  "checksum_tensors": 47,
+  "checksum_bytes": 29051846656,
+  "checksum_int32_words": 7262961664,
+  "largest_tensors": [
+   [
+    "l1_gate_blocks",
+    1233125376
+   ],
+   [
+    "l1_up_blocks",
+    1233125376
+   ],
+   [
+    "l1_down_blocks",
+    1233125376
+   ],
+   [
+    "l2_gate_blocks",
+    1233125376
+   ]
+  ],
+  "largest_fp32_weight_cast_bytes": 1174405120,
+  "logits_fp32_bytes": 163840,
+  "hbm_floor_ms": 0.546314402,
+  "sol_minimum_bytes": 4370515216,
+  "sol_components_bytes": {
+   "kda_weights": 1339883520,
+   "mla_weights": 277610496,
+   "dense_ffn": 363331584,
+   "moe_dense_parts": 1271660544,
+   "routed_experts": 491323392,
+   "norms_and_residual_mixers": 688128,
+   "lm_head": 587202560,
+   "embedding_rows": 14336,
+   "mla_cache_reads": 18874368,
+   "kda_state": 19759104,
+   "outputs": 167184
+  }
+ },
+ "kimi-k3-syn-l8-tp4-b8-s8192": {
+  "gpus": 4,
+  "tp": 4,
+  "layers": 8,
+  "batch": 8,
+  "checkpoint": false,
+  "weight_tensors": 200,
+  "weight_bytes": 31941893184,
+  "state_tensors": 18,
+  "state_bytes": 230031432,
+  "host_snapshot_tensors": 171,
+  "host_snapshot_bytes": 3120077960,
+  "checksum_tensors": 47,
+  "checksum_bytes": 29051846656,
+  "checksum_int32_words": 7262961664,
+  "largest_tensors": [
+   [
+    "l1_gate_blocks",
+    1233125376
+   ],
+   [
+    "l1_up_blocks",
+    1233125376
+   ],
+   [
+    "l1_down_blocks",
+    1233125376
+   ],
+   [
+    "l2_gate_blocks",
+    1233125376
+   ]
+  ],
+  "largest_fp32_weight_cast_bytes": 1174405120,
+  "logits_fp32_bytes": 1310720,
+  "hbm_floor_ms": 0.9805503465000001,
+  "sol_minimum_bytes": 7844402772,
+  "sol_components_bytes": {
+   "kda_weights": 1339883520,
+   "mla_weights": 277610496,
+   "dense_ffn": 363331584,
+   "moe_dense_parts": 1271660544,
+   "routed_experts": 3693506004,
+   "norms_and_residual_mixers": 688128,
+   "lm_head": 587202560,
+   "embedding_rows": 114688,
+   "mla_cache_reads": 150994944,
+   "kda_state": 158072832,
+   "outputs": 1337472
+  }
+ },
+ "kimi-k3-syn-l8-tp4-b64-s8192": {
+  "gpus": 4,
+  "tp": 4,
+  "layers": 8,
+  "batch": 64,
+  "checkpoint": false,
+  "weight_tensors": 200,
+  "weight_bytes": 31941893184,
+  "state_tensors": 18,
+  "state_bytes": 1840251456,
+  "host_snapshot_tensors": 163,
+  "host_snapshot_bytes": 3052576384,
+  "checksum_tensors": 55,
+  "checksum_bytes": 30729568256,
+  "checksum_int32_words": 7682392064,
+  "largest_tensors": [
+   [
+    "l1_gate_blocks",
+    1233125376
+   ],
+   [
+    "l1_up_blocks",
+    1233125376
+   ],
+   [
+    "l1_down_blocks",
+    1233125376
+   ],
+   [
+    "l2_gate_blocks",
+    1233125376
+   ]
+  ],
+  "largest_fp32_weight_cast_bytes": 1174405120,
+  "logits_fp32_bytes": 10485760,
+  "hbm_floor_ms": 3.14429565875,
+  "sol_minimum_bytes": 25154365270,
+  "sol_components_bytes": {
+   "kda_weights": 1339883520,
+   "mla_weights": 277610496,
+   "dense_ffn": 363331584,
+   "moe_dense_parts": 1271660544,
+   "routed_experts": 18829828950,
+   "norms_and_residual_mixers": 688128,
+   "lm_head": 587202560,
+   "embedding_rows": 917504,
+   "mla_cache_reads": 1207959552,
+   "kda_state": 1264582656,
+   "outputs": 10699776
+  }
+ },
+ "kimi-k3-syn-l8-tp8-b1-s8192": {
+  "gpus": 8,
+  "tp": 8,
+  "layers": 8,
+  "batch": 1,
+  "checkpoint": false,
+  "weight_tensors": 200,
+  "weight_bytes": 16411757344,
+  "state_tensors": 18,
+  "state_bytes": 23814153,
+  "host_snapshot_tensors": 195,
+  "host_snapshot_bytes": 2900552489,
+  "checksum_tensors": 23,
+  "checksum_bytes": 13535019008,
+  "checksum_int32_words": 3383754752,
+  "largest_tensors": [
+   [
+    "l1_gate_blocks",
+    616562688
+   ],
+   [
+    "l1_up_blocks",
+    616562688
+   ],
+   [
+    "l1_down_blocks",
+    616562688
+   ],
+   [
+    "l2_gate_blocks",
+    616562688
+   ]
+  ],
+  "largest_fp32_weight_cast_bytes": 587202560,
+  "logits_fp32_bytes": 81920,
+  "hbm_floor_ms": 0.329431202,
+  "sol_minimum_bytes": 2635449616,
+  "sol_components_bytes": {
+   "kda_weights": 675446784,
+   "mla_weights": 169082880,
+   "dense_ffn": 181665792,
+   "moe_dense_parts": 1040449536,
+   "routed_experts": 245661696,
+   "norms_and_residual_mixers": 688128,
+   "lm_head": 293601280,
+   "embedding_rows": 14336,
+   "mla_cache_reads": 18874368,
+   "kda_state": 9879552,
+   "outputs": 85264
+  }
+ },
+ "kimi-k3-syn-l8-tp8-b8-s8192": {
+  "gpus": 8,
+  "tp": 8,
+  "layers": 8,
+  "batch": 8,
+  "checkpoint": false,
+  "weight_tensors": 200,
+  "weight_bytes": 16411757344,
+  "state_tensors": 18,
+  "state_bytes": 190513224,
+  "host_snapshot_tensors": 195,
+  "host_snapshot_bytes": 3067251560,
+  "checksum_tensors": 23,
+  "checksum_bytes": 13535019008,
+  "checksum_int32_words": 3383754752,
+  "largest_tensors": [
+   [
+    "l1_gate_blocks",
+    616562688
+   ],
+   [
+    "l1_up_blocks",
+    616562688
+   ],
+   [
+    "l1_down_blocks",
+    616562688
+   ],
+   [
+    "l2_gate_blocks",
+    616562688
+   ]
+  ],
+  "largest_fp32_weight_cast_bytes": 587202560,
+  "logits_fp32_bytes": 655360,
+  "hbm_floor_ms": 0.55481444525,
+  "sol_minimum_bytes": 4438515562,
+  "sol_components_bytes": {
+   "kda_weights": 675446784,
+   "mla_weights": 169082880,
+   "dense_ffn": 181665792,
+   "moe_dense_parts": 1040449536,
+   "routed_experts": 1846753002,
+   "norms_and_residual_mixers": 688128,
+   "lm_head": 293601280,
+   "embedding_rows": 114688,
+   "mla_cache_reads": 150994944,
+   "kda_state": 79036416,
+   "outputs": 682112
+  }
+ },
+ "kimi-k3-syn-l8-tp8-b64-s8192": {
+  "gpus": 8,
+  "tp": 8,
+  "layers": 8,
+  "batch": 64,
+  "checkpoint": false,
+  "weight_tensors": 200,
+  "weight_bytes": 16411757344,
+  "state_tensors": 18,
+  "state_bytes": 1524105792,
+  "host_snapshot_tensors": 193,
+  "host_snapshot_bytes": 3327102304,
+  "checksum_tensors": 25,
+  "checksum_bytes": 14608760832,
+  "checksum_int32_words": 3652190208,
+  "largest_tensors": [
+   [
+    "l1_gate_blocks",
+    616562688
+   ],
+   [
+    "l1_up_blocks",
+    616562688
+   ],
+   [
+    "l1_down_blocks",
+    616562688
+   ],
+   [
+    "l2_gate_blocks",
+    616562688
+   ]
+  ],
+  "largest_fp32_weight_cast_bytes": 587202560,
+  "logits_fp32_bytes": 5242880,
+  "hbm_floor_ms": 1.7028092693749999,
+  "sol_minimum_bytes": 13622474155,
+  "sol_components_bytes": {
+   "kda_weights": 675446784,
+   "mla_weights": 169082880,
+   "dense_ffn": 181665792,
+   "moe_dense_parts": 1040449536,
+   "routed_experts": 9414914475,
+   "norms_and_residual_mixers": 688128,
+   "lm_head": 293601280,
+   "embedding_rows": 917504,
+   "mla_cache_reads": 1207959552,
+   "kda_state": 632291328,
+   "outputs": 5456896
+  }
+ },
+ "kimi-k3-dev-l4-tp1-b8-s8192": {
+  "gpus": 1,
+  "tp": 1,
+  "layers": 4,
+  "batch": 8,
+  "checkpoint": false,
+  "weight_tensors": 100,
+  "weight_bytes": 57585746048,
+  "state_tensors": 10,
+  "state_bytes": 233570376,
+  "host_snapshot_tensors": 61,
+  "host_snapshot_bytes": 713867464,
+  "checksum_tensors": 49,
+  "checksum_bytes": 57105448960,
+  "checksum_int32_words": 14276362240,
+  "largest_tensors": [
+   [
+    "l1_gate_blocks",
+    4932501504
+   ],
+   [
+    "l1_up_blocks",
+    4932501504
+   ],
+   [
+    "l1_down_blocks",
+    4932501504
+   ],
+   [
+    "l2_gate_blocks",
+    4932501504
+   ]
+  ],
+  "largest_fp32_weight_cast_bytes": 4697620480,
+  "logits_fp32_bytes": 5242880,
+  "hbm_floor_ms": 1.849799924375,
+  "sol_minimum_bytes": 14798399395,
+  "sol_components_bytes": {
+   "kda_weights": 2663251968,
+   "mla_weights": 464388096,
+   "dense_ffn": 1453326336,
+   "moe_dense_parts": 1139539968,
+   "routed_experts": 6331724579,
+   "norms_and_residual_mixers": 344064,
+   "lm_head": 2348810240,
+   "embedding_rows": 114688,
+   "mla_cache_reads": 75497472,
+   "kda_state": 316145664,
+   "outputs": 5256320
+  }
+ },
+ "kimi-k3-dev-l8-tp2-b8-s8192": {
+  "gpus": 2,
+  "tp": 2,
+  "layers": 8,
+  "batch": 8,
+  "checkpoint": false,
+  "weight_tensors": 200,
+  "weight_bytes": 63002164864,
+  "state_tensors": 18,
+  "state_bytes": 309067848,
+  "host_snapshot_tensors": 137,
+  "host_snapshot_bytes": 2212806344,
+  "checksum_tensors": 81,
+  "checksum_bytes": 61098426368,
+  "checksum_int32_words": 15274606592,
+  "largest_tensors": [
+   [
+    "l1_gate_blocks",
+    2466250752
+   ],
+   [
+    "l1_up_blocks",
+    2466250752
+   ],
+   [
+    "l1_down_blocks",
+    2466250752
+   ],
+   [
+    "l2_gate_blocks",
+    2466250752
+   ]
+  ],
+  "largest_fp32_weight_cast_bytes": 2348810240,
+  "logits_fp32_bytes": 2621440,
+  "hbm_floor_ms": 1.8320221491250002,
+  "sol_minimum_bytes": 14656177193,
+  "sol_components_bytes": {
+   "kda_weights": 2668756992,
+   "mla_weights": 494665728,
+   "dense_ffn": 726663168,
+   "moe_dense_parts": 1734082560,
+   "routed_experts": 7387012009,
+   "norms_and_residual_mixers": 688128,
+   "lm_head": 1174405120,
+   "embedding_rows": 114688,
+   "mla_cache_reads": 150994944,
+   "kda_state": 316145664,
+   "outputs": 2648192
+  }
+ }
+}
