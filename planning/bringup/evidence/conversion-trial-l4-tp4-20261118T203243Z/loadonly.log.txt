@@ -1,0 +1,53 @@
+{
+ "case": "kimi-k3-real-l4-tp4-b1-s8192-bringup",
+ "device": "cpu",
+ "wall_seconds": 1.6,
+ "weights_root": "/mnt/shared/home/kevin/weights/kimi-k3-fixture-trial",
+ "all_pass": true,
+ "per_rank": [
+  {
+   "rank": 0,
+   "status": "pass",
+   "load_seconds": 0.0,
+   "weight_bytes": 14683704608,
+   "memory_allocated_bytes": null,
+   "max_memory_reserved_bytes": null,
+   "gpu_free_after_load_bytes": null,
+   "max_rss_bytes": 509607936,
+   "reason": null
+  },
+  {
+   "rank": 1,
+   "status": "pass",
+   "load_seconds": 0.0,
+   "weight_bytes": 14683704608,
+   "memory_allocated_bytes": null,
+   "max_memory_reserved_bytes": null,
+   "gpu_free_after_load_bytes": null,
+   "max_rss_bytes": 509607936,
+   "reason": null
+  },
+  {
+   "rank": 2,
+   "status": "pass",
+   "load_seconds": 0.0,
+   "weight_bytes": 14683704608,
+   "memory_allocated_bytes": null,
+   "max_memory_reserved_bytes": null,
+   "gpu_free_after_load_bytes": null,
+   "max_rss_bytes": 971243520,
+   "reason": null
+  },
+  {
+   "rank": 3,
+   "status": "pass",
+   "load_seconds": 0.0,
+   "weight_bytes": 14683704608,
+   "memory_allocated_bytes": null,
+   "max_memory_reserved_bytes": null,
+   "gpu_free_after_load_bytes": null,
+   "max_rss_bytes": 509607936,
+   "reason": null
+  }
+ ]
+}

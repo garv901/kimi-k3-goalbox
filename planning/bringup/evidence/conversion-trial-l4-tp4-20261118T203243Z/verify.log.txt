@@ -1,0 +1,6 @@
+global.safetensors: OK (5 tensors, 1 s)
+layer000.safetensors: OK (21 tensors, 1 s)
+layer001.safetensors: OK (32 tensors, 3 s)
+layer002.safetensors: OK (32 tensors, 6 s)
+layer003.safetensors: OK (28 tensors, 10 s)
+{"hf": "/mnt/shared/weights/kimi-k3", "out": "/mnt/shared/home/kevin/weights/kimi-k3-fixture-trial", "tp": 4, "layers": 4, "experts": "all", "tensors": 118, "bytes": 57585746048, "mismatches": [], "files": [{"file": "global.safetensors", "ok": true, "tensors": 5}, {"file": "layer000.safetensors", "ok": true, "tensors": 21}, {"file": "layer001.safetensors", "ok": true, "tensors": 32}, {"file": "layer002.safetensors", "ok": true, "tensors": 32}, {"file": "layer003.safetensors", "ok": true, "tensors": 28}], "ok": true, "seconds": 9.8}

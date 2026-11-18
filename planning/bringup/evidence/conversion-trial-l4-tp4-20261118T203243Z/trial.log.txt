@@ -1,0 +1,7 @@
+start 2026-11-18T20:32:43Z host pod4-gb300-3-tray14-f3 commit bcb672f3777ab1a339c499ae82dad36c94643c96
+wrote global.safetensors
+wrote layer000.safetensors
+wrote layer001.safetensors
+wrote layer002.safetensors
+wrote layer003.safetensors
+exit 0 end 2026-11-18T20:33:54Z
