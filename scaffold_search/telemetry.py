@@ -12,6 +12,8 @@
 """
 import collections, json, os, subprocess, sys, threading, time
 
+from scaffold_search.workspace import NGPU
+
 LEASE_LOG = '/srv/ss/lease.jsonl'
 STALL_GAP_S = 300
 
@@ -106,7 +108,7 @@ def gpu_summary(run_dir):
 
 
 def lease_summary(run_id, t0=None, t1=None):
-    """lease covariates of one run inside [t0, t1]; wait_share_8gpu = 8-GPU wait / phase length."""
+    """lease covariates of one run inside [t0, t1]; wait_share_node = whole-node (4-GPU) wait / phase length."""
     rows = []
     if os.path.exists(LEASE_LOG):
         for line in open(LEASE_LOG):
@@ -123,14 +125,14 @@ def lease_summary(run_id, t0=None, t1=None):
     by_n = collections.Counter(e['n'] for e in rel)
     return {'leases': len(rel), 'by_gpus': dict(by_n),
             'wait_min_total': round(sum(e['wait_s'] for e in rel) / 60, 2),
-            'wait_min_8gpu': round(sum(e['wait_s'] for e in rel if e['n'] == 8) / 60, 2),
+            'wait_min_node': round(sum(e['wait_s'] for e in rel if e['n'] == NGPU) / 60, 2),
             'max_wait_min': round(max([e['wait_s'] for e in rel] or [0]) / 60, 2),
             'hold_min_total': round(sum(e['hold_s'] for e in rel) / 60, 2),
             'gpu_min_held': round(sum(e['hold_s'] * e['n'] for e in rel) / 60, 2),
-            'wait_share_8gpu': round(sum(e['wait_s'] for e in rel if e['n'] == 8) / (t1 - t0), 4) if t0 and t1 else None,
-            'util_mean_8gpu': (round(sum(e['util_mean'] * e['hold_s'] for e in rel if e['n'] == 8 and e.get('util_mean') is not None)
-                                     / max(1e-9, sum(e['hold_s'] for e in rel if e['n'] == 8 and e.get('util_mean') is not None)), 1)
-                               if any(e['n'] == 8 and e.get('util_mean') is not None for e in rel) else None),
+            'wait_share_node': round(sum(e['wait_s'] for e in rel if e['n'] == NGPU) / (t1 - t0), 4) if t0 and t1 else None,
+            'util_mean_node': (round(sum(e['util_mean'] * e['hold_s'] for e in rel if e['n'] == NGPU and e.get('util_mean') is not None)
+                                     / max(1e-9, sum(e['hold_s'] for e in rel if e['n'] == NGPU and e.get('util_mean') is not None)), 1)
+                               if any(e['n'] == NGPU and e.get('util_mean') is not None for e in rel) else None),
             'expired': sum(1 for e in rel if e.get('reason') == 'expired'),
             'preempted': sum(1 for e in rel if e.get('reason') == 'preempted'),
             'preempted_min_lost': round(sum(e['hold_s'] * e['n'] for e in rel if e.get('reason') == 'preempted') / 60, 2),

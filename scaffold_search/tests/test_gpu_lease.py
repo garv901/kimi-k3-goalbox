@@ -1,5 +1,7 @@
 """gpu_lease policy tests against a private daemon (temp socket/log) using dummy commands.
 
+Node size 4 (GPU_LEASE_NGPU default; the whole-node class is the 4-GPU lease).
+
 Run on the node as root:  python3.12 -m pytest -q scaffold_search/tests/test_gpu_lease.py
 (or `python3.12 scaffold_search/tests/test_gpu_lease.py`). Uses the real GPUs only for the
 visibility test (a tiny torch call); everything else is `sleep`.
@@ -49,10 +51,10 @@ def overlap(a, b):
     return a[2] < b[3] - 0.05 and b[2] < a[3] - 0.05
 
 
-def test_exclusive_8gpu_and_gpu_disjoint():
+def test_exclusive_node_lease_and_gpu_disjoint():
     E = Env()
     try:
-        ps = [E.run('A', 8, 'sleep 1.5'), E.run('B', 8, 'sleep 1.5'), E.run('C', 1, 'sleep 1'),
+        ps = [E.run('A', 4, 'sleep 1.5'), E.run('B', 4, 'sleep 1.5'), E.run('C', 1, 'sleep 1'),
               E.run('D', 2, 'sleep 1')]
         for p in ps:
             assert p.wait(timeout=60) == 0
@@ -61,7 +63,7 @@ def test_exclusive_8gpu_and_gpu_disjoint():
         for i, a in enumerate(iv):
             for b in iv[i + 1:]:
                 if overlap(a, b):
-                    assert a[1] < 8 and b[1] < 8, (a, b)
+                    assert a[1] < 4 and b[1] < 4, (a, b)
                     assert not set(a[4]) & set(b[4]), (a, b)
     finally:
         E.close()
@@ -70,7 +72,7 @@ def test_exclusive_8gpu_and_gpu_disjoint():
 def test_per_run_cap_and_round_robin():
     E = Env()
     try:
-        blocker = E.run('X', 8, 'sleep 2')
+        blocker = E.run('X', 4, 'sleep 2')
         time.sleep(0.5)
         ps = [E.run('A', 1, 'sleep 1') for _ in range(6)]
         time.sleep(0.3)
@@ -96,9 +98,9 @@ def test_per_run_cap_and_round_robin():
 def test_starvation_guard():
     E = Env()
     try:
-        ps = [E.run(r, 1, 'sleep 2') for r in 'ABC' for _ in range(3)]  # 9 small: 8 run, 1 waits
+        ps = [E.run(r, 1, 'sleep 2') for r in 'ABC' for _ in range(3)]  # 9 small 1-GPU requests on 4 GPUs: 4 run, 5 wait
         time.sleep(0.7)
-        big = E.run('Z', 8, 'sleep 1')
+        big = E.run('Z', 4, 'sleep 1')
         time.sleep(0.3)
         late = [E.run('D', 1, 'sleep 0.5') for _ in range(2)]
         for p in ps + [big] + late:
@@ -118,18 +120,18 @@ def test_starvation_guard():
 
 
 def test_mixed_stream_bounded_waits():
-    """Two runs keep 8-GPU requests queued back to back while two others submit 1-GPU jobs:
+    """Two runs keep whole-node (4-GPU) requests queued back to back while two others submit 1-GPU jobs:
     neither class may starve (the old policy let 1-GPU requests wait for the whole stream)."""
     E = Env()
     try:
         stop = time.time() + 14
         loops = []
-        for r in ('X', 'Y'):  # each keeps one 8-GPU request outstanding at all times
-            loops.append(E.run(r, 8, f'true', ))
+        for r in ('X', 'Y'):  # each keeps one 4-GPU request outstanding at all times
+            loops.append(E.run(r, 4, f'true', ))
         import threading
         def big_stream(run):
             while time.time() < stop:
-                E.run(run, 8, 'sleep 1').wait()
+                E.run(run, 4, 'sleep 1').wait()
         def small_stream(run):
             while time.time() < stop:
                 E.run(run, 1, 'sleep 1').wait()
@@ -142,15 +144,15 @@ def test_mixed_stream_bounded_waits():
         ev = E.events()
         g = [e for e in ev if e['ev'] == 'grant']
         small = [e for e in g if e['cls'] == 'small']
-        big = [e for e in g if e['cls'] == '8']
+        big = [e for e in g if e['cls'] == 'node']
         assert len(small) >= 4 and len(big) >= 4, (len(small), len(big))
-        # bounded: a small request waits at most for the 8-GPU leases that were already queued
+        # bounded: a small request waits at most for the 4-GPU leases that were already queued
         # before it (one per big stream) plus the one running; under the old policy it waited for
         # the whole 14 s stream
-        hold = max(e['hold_s'] for e in ev if e['ev'] == 'release' and e['cls'] == '8')
+        hold = max(e['hold_s'] for e in ev if e['ev'] == 'release' and e['cls'] == 'node')
         assert max(e['wait_s'] for e in small) < 3 * hold + 1.0, (max(e['wait_s'] for e in small), hold)
         assert max(e['wait_s'] for e in big) < 3 * hold + 2.0, (max(e['wait_s'] for e in big), hold)
-        print('   small waits max %.2fs, 8-GPU waits max %.2fs, grants small=%d big=%d' % (
+        print('   small waits max %.2fs, 4-GPU waits max %.2fs, grants small=%d big=%d' % (
             max(e['wait_s'] for e in small), max(e['wait_s'] for e in big), len(small), len(big)))
     finally:
         E.close()
@@ -160,9 +162,9 @@ def test_daemon_restart_while_queued():
     """A request queued when the daemon restarts is resubmitted to the new daemon."""
     E = Env()
     try:
-        holder = E.run('A', 8, 'sleep 3')
+        holder = E.run('A', 4, 'sleep 3')
         time.sleep(0.5)
-        waiter = E.run('B', 8, 'echo RAN')
+        waiter = E.run('B', 4, 'echo RAN')
         time.sleep(0.5)
         holder.kill(); holder.wait()          # drop the holder, then restart with B queued
         E.d.kill(); E.d.wait()
@@ -183,7 +185,7 @@ def test_adopts_running_gpu_processes():
     E = Env(GPU_LEASE_ADOPT='1', GPU_LEASE_ADOPT_PIDS=str(gp.pid))
     try:
         t0 = time.time()
-        p = E.run('A', 8, 'true')
+        p = E.run('A', 4, 'true')
         assert p.wait(timeout=60) == 0
         waited = time.time() - t0
         ev = E.events()
@@ -197,11 +199,11 @@ def test_adopts_running_gpu_processes():
 def test_experiment_runs_before_builders():
     E = Env()
     try:
-        blocker = E.run('r01', 8, 'sleep 5')
+        blocker = E.run('r01', 4, 'sleep 5')
         time.sleep(0.5)
         b = E.run('builder-x', 1, 'true')       # older, low priority
         time.sleep(0.3)
-        e = E.run('r02', 8, 'true')             # newer, experiment run
+        e = E.run('r02', 4, 'true')             # newer, experiment run
         for p in (blocker, b, e):
             assert p.wait(timeout=60) == 0
         ev = E.events()
@@ -268,13 +270,13 @@ def test_idle_lease_is_reaped():
         E.close()
 
 
-def test_small_lease_preempted_for_waiting_8gpu():
+def test_small_lease_preempted_for_waiting_node_lease():
     E = Env(GPU_LEASE_PREEMPT_WAIT_S='1', GPU_LEASE_SMALL_CAP_S='2', GPU_LEASE_PREEMPT_GRACE_S='2')
     try:
         small = E.run('A', 1, 'sleep 300')
         time.sleep(0.5)
         t0 = time.time()
-        big = E.run('B', 8, 'true')
+        big = E.run('B', 4, 'true')
         assert big.wait(timeout=60) == 0
         waited = time.time() - t0
         assert small.wait(timeout=30) != 0
@@ -288,11 +290,11 @@ def test_small_lease_preempted_for_waiting_8gpu():
         E.close()
 
 
-def test_no_preemption_without_waiting_8gpu():
+def test_no_preemption_without_waiting_node_lease():
     E = Env(GPU_LEASE_PREEMPT_WAIT_S='1', GPU_LEASE_SMALL_CAP_S='1', GPU_LEASE_PREEMPT_GRACE_S='1')
     try:
         p = E.run('A', 1, 'sleep 8')
-        q = E.run('builder-x', 8, 'true')   # low priority: does not trigger preemption
+        q = E.run('builder-x', 4, 'true')   # low priority: does not trigger preemption
         assert p.wait(timeout=60) == 0
         assert q.wait(timeout=60) == 0
         rel = [e for e in E.events() if e['ev'] == 'release' and e['run'] == 'A']
@@ -324,14 +326,14 @@ def test_client_death_releases():
     E = Env()
     try:
         marker = os.path.join(E.dir, 'child.pid')
-        p = E.run('A', 8, f'echo $$ > {marker}; sleep 300')
+        p = E.run('A', 4, f'echo $$ > {marker}; sleep 300')
         for _ in range(100):
             if os.path.exists(marker) and open(marker).read().strip():
                 break
             time.sleep(0.1)
         cpid = int(open(marker).read())
         p.send_signal(signal.SIGKILL); p.wait()
-        q = E.run('B', 8, 'true')
+        q = E.run('B', 4, 'true')
         assert q.wait(timeout=30) == 0
         time.sleep(0.3)
         assert not os.path.exists(f'/proc/{cpid}')
@@ -363,10 +365,10 @@ def test_visibility_and_nested():
         p = E.run('A', 1, f'{PY} -c "{code}"')
         out, err = p.communicate(timeout=120)
         assert 'NDEV 1' in out, (out, err)
-        # nested: an 8-GPU lease whose command asks for 1 GPU runs directly (no deadlock)
-        p = E.run('A', 8, f'{PY} {GL} run --gpus 1 -- sh -c "echo inner \\$CUDA_VISIBLE_DEVICES"')
+        # nested: a 4-GPU lease whose command asks for 1 GPU runs directly (no deadlock)
+        p = E.run('A', 4, f'{PY} {GL} run --gpus 1 -- sh -c "echo inner \\$CUDA_VISIBLE_DEVICES"')
         out, err = p.communicate(timeout=60)
-        assert 'inner 0,1,2,3,4,5,6,7' in out, (out, err)
+        assert 'inner 0,1,2,3' in out, (out, err)
         grants = [e for e in E.events() if e['ev'] == 'grant']
         assert len(grants) == 2
     finally:

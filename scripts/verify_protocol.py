@@ -8,7 +8,7 @@ Recomputes, with the method used for the PROTOCOL.md manifest:
     scaffold_search/patches/gpu_noise_multirank.patch
   - tree hashes: overlays/{S,A1,A2,A3}, scaffold_search/harness_files
     (sha256 over `relpath \\0 sha256(file) \\n`, walking directories in sorted os.walk order)
-  - seed: sha256 of seeds/dsv41_b8_nopf/MANIFEST.sha256 (= SEED_SHA256), and, if src/ is unpacked,
+  - seed: sha256 of seeds/dsv41_b8_tp4_nopf/MANIFEST.sha256 (= SEED_SHA256), and, if src/ is unpacked,
     every file of src/ against the manifest
   - with --trusted: the trusted tree's .ss_commit and .ss_patches
 Exit 0 only if everything matches. Any mismatch means the run conditions differ from the
@@ -61,8 +61,8 @@ def main():
     checks.append(('prompts/goal_improve.md', t['prompts/goal_improve.md'], lambda: fh(f'{ROOT}/prompts/goal_improve.md')))
     checks.append(('patches/gpu_noise_multirank.patch', want_patch,
                    lambda: fh(f'{ROOT}/scaffold_search/patches/gpu_noise_multirank.patch')))
-    seed = f'{ROOT}/seeds/dsv41_b8_nopf'
-    want_seed = t['seed dsv41_b8_nopf (MANIFEST sha256)']
+    seed = f'{ROOT}/seeds/dsv41_b8_tp4_nopf'
+    want_seed = t['seed dsv41_b8_tp4_nopf (MANIFEST sha256)']
     checks.append(('seed MANIFEST.sha256', want_seed, lambda: fh(f'{seed}/MANIFEST.sha256')))
     checks.append(('seed SEED_SHA256 file', want_seed, lambda: open(f'{seed}/SEED_SHA256').read().strip()))
     bad = 0

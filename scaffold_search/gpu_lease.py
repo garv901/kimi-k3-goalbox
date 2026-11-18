@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""gpu_lease: one daemon per node that hands out 1..3-GPU and 8-GPU leases.
+"""gpu_lease: one daemon per node that hands out 1..3-GPU and whole-node (all NGPU GPUs) leases.
+
+dsv41-tp4-rack10-v1: NGPU = 4 (one 4x GB300 tray); the whole-node class is the 4-GPU lease.
 
 Standalone (stdlib only) so the same file serves as the CLI for run users.
 
@@ -13,10 +15,10 @@ Design
   cwd, env and stdio fds (passed over the unix socket with SCM_RIGHTS), CUDA_VISIBLE_DEVICES set
   and the supplementary group `ss-gpu` added. When /dev/nvidia* are root:ss-gpu 0660 (isolation
   step), only lease-spawned processes of run users can open the GPUs.
-- Policy (PLAN 4.5, age-ordered across classes): an 8-GPU lease is exclusive; the next waiting
-  8-GPU request blocks small requests that arrived after it, while older small requests are still
+- Policy (PLAN 4.5, age-ordered across classes): a whole-node lease is exclusive; the next waiting
+  whole-node request blocks small requests that arrived after it, while older small requests are still
   served first (so neither class starves); inside a class grants go round-robin across runs
-  (least-recently granted run first, FIFO inside a run); a run holds at most 3 GPUs in small leases; default max minutes 20 (8-GPU) / 60 (small),
+  (least-recently granted run first, FIFO inside a run); a run holds at most 3 GPUs in small leases; default max minutes 20 (whole node) / 60 (small),
   capped for non-root at 30 / 120. On expiry, client disconnect or cancel the session/process
   group is SIGTERMed, then SIGKILLed after 10 s, and stray GPU processes of the same (non-root)
   uid on the lease's GPUs are killed.
@@ -26,9 +28,9 @@ Design
   runs directly inside the outer lease when it asks for <= the outer lease's GPU count.
 - Priority: experiment runs first; requests of runs named builder-*, smoke* or root are served only
   when no experiment-run request is waiting.
-- Conditional small-lease cap: while an experiment run's 8-GPU request has waited >= 2 min, small
+- Conditional small-lease cap: while an experiment run's whole-node request has waited >= 2 min, small
   leases older than 10 min are ended (SIGTERM, 30 s grace, SIGKILL; release reason 'preempted',
-  plus a 'preempt' event). Without a waiting 8-GPU request small leases keep their 60/120 min limits.
+  plus a 'preempt' event). Without a waiting whole-node request small leases keep their 60/120 min limits.
 - Robustness: a reaper thread releases leases/requests whose handler died (and kills their
   process group), forces kill-run after 30 s, and reaps leases whose GPUs had no compute process
   and 0% utilization for GPU_LEASE_IDLE_S seconds (default 300; reason 'idle-reaped').
@@ -39,14 +41,15 @@ import argparse, array, grp, json, os, pwd, signal, socket, struct, subprocess, 
 
 SOCK = os.environ.get('GPU_LEASE_SOCK', '/srv/ss/lease/lease.sock')
 LOG = os.environ.get('GPU_LEASE_LOG', '/srv/ss/lease.jsonl')
-NGPU = int(os.environ.get('GPU_LEASE_NGPU', '8'))
+NGPU = int(os.environ.get('GPU_LEASE_NGPU', '4'))   # GPUs of the node; the whole-node lease class
+SIZES = tuple(sorted({1, 2, 3, NGPU}))              # lease sizes a run may ask for
 GPU_GROUP = 'ss-gpu'
 SMALL_CAP = 3                    # GPUs per run in concurrent small leases
-DEFAULT_MIN = {8: 20, 'small': 60}
-NONROOT_MAX_MIN = {8: 30, 'small': 120}
+DEFAULT_MIN = {'node': 20, 'small': 60}
+NONROOT_MAX_MIN = {'node': 30, 'small': 120}
 KILL_GRACE = 10
 IDLE_S = float(os.environ.get('GPU_LEASE_IDLE_S', '300'))  # 0 disables the idle reaper
-# conditional small-lease cap: while an experiment run's 8-GPU request has waited PREEMPT_WAIT_S,
+# conditional small-lease cap: while an experiment run's whole-node request has waited PREEMPT_WAIT_S,
 # small leases older than SMALL_CAP_S are ended (SIGTERM, PREEMPT_GRACE_S, SIGKILL; 'preempted')
 PREEMPT_WAIT_S = float(os.environ.get('GPU_LEASE_PREEMPT_WAIT_S', '120'))
 SMALL_CAP_S = float(os.environ.get('GPU_LEASE_SMALL_CAP_S', '600'))
@@ -106,7 +109,10 @@ class Daemon:
 
     # policy ---------------------------------------------------------
     def small_held(self, run):
-        return sum(len(l['gpus']) for l in self.active.values() if l['run'] == run and l['n'] < 8)
+        return sum(len(l['gpus']) for l in self.active.values() if l['run'] == run and l['n'] < self.ngpu)
+
+    def cls(self, n):
+        return 'node' if n == self.ngpu else 'small'
 
     def rr_order(self, reqs):
         """round-robin: least recently granted run first; FIFO (seq) inside a run."""
@@ -118,9 +124,9 @@ class Daemon:
     def schedule(self):
         """Grant whatever the policy allows. Caller holds self.cv.
 
-        Age order across classes: the next 8-GPU request (round-robin among runs) blocks only
+        Age order across classes: the next whole-node request (round-robin among runs) blocks only
         small requests that arrived after it; small requests that are older are still served
-        first. An 8-GPU lease starts when all GPUs are free and is exclusive. Inside each class,
+        first. A whole-node lease starts when all GPUs are free and is exclusive. Inside each class,
         grants are round-robin across runs; a run holds at most SMALL_CAP GPUs in small leases."""
         changed = True
         while changed:
@@ -132,16 +138,16 @@ class Daemon:
             # experiment-run request is waiting (small ones held back only by their run's cap
             # do not count as waiting)
             hi = [r for r in pend if not low_priority(r['run']) and not
-                  (r['n'] < 8 and self.small_held(r['run']) + r['n'] > SMALL_CAP)]
+                  (r['n'] < self.ngpu and self.small_held(r['run']) + r['n'] > SMALL_CAP)]
             if hi:
                 pend = [r for r in pend if not low_priority(r['run'])]
-            big = self.rr_order([r for r in pend if r['n'] == 8])
-            small = [r for r in pend if r['n'] < 8]
+            big = self.rr_order([r for r in pend if r['n'] == self.ngpu])
+            small = [r for r in pend if r['n'] < self.ngpu]
             nb = big[0] if big else None
             if nb is not None:
                 small = [r for r in small if r['seq'] < nb['seq']]   # only older small requests
-            busy8 = any(l['n'] == 8 for l in self.active.values())
-            if not busy8:
+            busy_node = any(l['n'] == self.ngpu for l in self.active.values())
+            if not busy_node:
                 for r in self.rr_order(small):
                     if len(self.free) >= r['n'] and self.small_held(r['run']) + r['n'] <= SMALL_CAP:
                         self.grant(r, sorted(self.free)[:r['n']]); changed = True
@@ -160,7 +166,7 @@ class Daemon:
         r['t_grant'] = time.time()
         self.active[r['id']] = r
         self.queue.remove(r)
-        self.log(ev='grant', id=r['id'], run=r['run'], uid=r['uid'], n=r['n'], cls='8' if r['n'] == 8 else 'small', gpus=gpus,
+        self.log(ev='grant', id=r['id'], run=r['run'], uid=r['uid'], n=r['n'], cls=self.cls(r['n']), gpus=gpus,
                  wait_s=round(r['t_grant'] - r['t_req'], 3), max_min=r['max_min'])
         self.cv.notify_all()
 
@@ -170,7 +176,7 @@ class Daemon:
                 del self.active[r['id']]
                 self.free |= set(r['gpus'])
                 self.log(ev='release', id=r['id'], run=r['run'], uid=r['uid'], n=r['n'],
-                         cls='8' if r['n'] == 8 else 'small', gpus=r['gpus'],
+                         cls=self.cls(r['n']), gpus=r['gpus'],
                          wait_s=round(r['t_grant'] - r['t_req'], 3),
                          hold_s=round(time.time() - r['t_grant'], 3), reason=reason, rc=rc,
                          util_mean=round(r['util_sum'] / r['util_n'], 1) if r.get('util_n') else None,
@@ -274,9 +280,9 @@ class Daemon:
 
     def handle_run(self, conn, req, uid, gid, fds):
         n = int(req['gpus'])
-        if n not in (1, 2, 3, 8) or n > self.ngpu:
-            send_msg(conn, {'error': 'gpus must be 1, 2, 3 or 8'}); return
-        kind = 8 if n == 8 else 'small'
+        if n not in SIZES or n > self.ngpu:
+            send_msg(conn, {'error': f'gpus must be one of {", ".join(map(str, SIZES))}'}); return
+        kind = self.cls(n)
         mm = float(req.get('max_minutes') or DEFAULT_MIN[kind])
         if uid != 0:
             mm = min(mm, NONROOT_MAX_MIN[kind])
@@ -406,11 +412,11 @@ class Daemon:
             with self.cv:
                 items = [r for r in list(self.active.values()) + list(self.queue) if r.get('run') != 'orphan']
             with self.cv:
-                big_wait = [q for q in self.queue if q['n'] == 8 and not q['dead'] and not low_priority(q['run'])
+                big_wait = [q for q in self.queue if q['n'] == self.ngpu and not q['dead'] and not low_priority(q['run'])
                             and now - q['t_req'] >= PREEMPT_WAIT_S]
                 if big_wait:
                     for l in self.active.values():
-                        if l['n'] < 8 and l.get('run') != 'orphan' and not l.get('kill_reason') \
+                        if l['n'] < self.ngpu and l.get('run') != 'orphan' and not l.get('kill_reason') \
                                 and now - l['t_grant'] > SMALL_CAP_S:
                             l['kill_reason'] = 'preempted'
                             l['kill_t'] = now
@@ -452,7 +458,7 @@ class Daemon:
         with self.cv:
             self.seq += 1
             r = {'id': f'orphan-{self.seq}', 'seq': self.seq, 'run': 'orphan', 'uid': -1, 'gid': -1,
-                 'n': 8 if len(gpus) == self.ngpu else len(gpus), 'max_min': 0, 'cmd': 'adopted at daemon start',
+                 'n': len(gpus), 'max_min': 0, 'cmd': 'adopted at daemon start',
                  't_req': time.time(), 't_grant': time.time(), 'granted': True, 'dead': False, 'gpus': gpus}
             self.free -= set(gpus)
             self.active[r['id']] = r
@@ -636,7 +642,7 @@ def cmd_run(a):
                 rc = m['exit']
                 if m['reason'] == 'preempted':
                     print(f'gpu_lease: this {a.gpus}-GPU lease was ended after {SMALL_CAP_S / 60:.0f} min because '
-                          'another job has been waiting for all 8 GPUs; rerun it shorter or checkpoint long jobs',
+                          f'another job has been waiting for all {NGPU} GPUs; rerun it shorter or checkpoint long jobs',
                           file=sys.stderr)
                 elif m['reason'] not in ('exit',):
                     print(f'gpu_lease: lease ended ({m["reason"]})', file=sys.stderr)

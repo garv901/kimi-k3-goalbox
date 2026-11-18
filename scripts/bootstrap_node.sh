@@ -1,6 +1,6 @@
 #!/bin/bash
-# bootstrap_node.sh: prepare an 8x B300 node (inside the container, as root) for the scaffold-search
-# runs. Idempotent: safe to rerun after a container restart.
+# bootstrap_node.sh: prepare a 4x GB300 node (protocol dsv41-tp4-rack10-v1; inside the container, as
+# root) for the scaffold-search runs. Idempotent: safe to rerun after a container restart.
 #
 #   bash scripts/bootstrap_node.sh [--check-login]
 #
@@ -10,13 +10,13 @@
 #   SS_BENCHMARK_URL   clone URL of kamahori/vibe-megakernel (default https://github.com/kamahori/vibe-megakernel.git)
 #   SS_SEED_REPO_URL   clone URL of the seed repo (only used if the vendored seed fails to verify)
 #   SS_ALLOW_MISMATCH=1  continue although the tree differs from the PROTOCOL.md manifest (runs would be invalid)
-#   SS_SKIP_GPU_CHECK=1  skip the 8x B300 check (for a dry run on another machine)
+#   SS_SKIP_GPU_CHECK=1  skip the 4x GB300 check (for a dry run on another machine)
 # --check-login: also run one tiny `claude -p` as root to prove the login works (costs ~$0.01).
 #
 # Steps: tools -> /srv/ss/harness checkout -> seed (vendored, verified) ->
 # benchmark + patch -> trusted snapshot -> PROTOCOL manifest check -> snapshot repo config ->
 # gpu_lease install, groups, node lockdown (ss-gpu owns /dev/nvidia*) -> tmux ss-lease + ss-proxy ->
-# sanity checks (8x B300, claude 2.1.326, credentials, proxy allowlist, lease daemon).
+# sanity checks (4x GB300 sm_103, claude 2.1.326, credentials, proxy allowlist, lease daemon).
 set -euo pipefail
 SS=/srv/ss
 H=$SS/harness
@@ -108,10 +108,12 @@ $SS/bin/gpu_lease status >/dev/null && echo "gpu_lease daemon: up" || die "gpu_l
 say "sanity checks"
 fail=0
 if [ "${SS_SKIP_GPU_CHECK:-0}" != 1 ]; then
-  n=$(nvidia-smi -L | grep -c 'B300' || true)
+  n=$(nvidia-smi -L | grep -c -E 'GB300|B300' || true)
   cc=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader | sort -u | tr '\n' ' ')
-  echo "GPUs: $(nvidia-smi -L | wc -l) total, $n B300, compute capability $cc"
-  [ "$n" = 8 ] || { echo "FAIL: need 8x B300"; fail=1; }
+  echo "GPUs: $(nvidia-smi -L | wc -l) total, $n (G)B300, compute capability $cc"
+  [ "$n" = 4 ] && [ "$(nvidia-smi -L | wc -l)" = 4 ] || { echo "FAIL: need exactly 4x GB300 (TP4 protocol)"; fail=1; }
+  [ "$cc" = "10.3 " ] || { echo "FAIL: compute capability $cc, need 10.3 (sm_103)"; fail=1; }
+  [ "$(uname -m)" = aarch64 ] || echo "note: $(uname -m) host (the pinned image is linux/arm64)"
   nvidia-smi topo -m 2>/dev/null | head -10 || true
 fi
 v=$($SS/bin/claude --version 2>/dev/null || true)

@@ -8,7 +8,7 @@
 Each rank runs under its own ncu (--replay-mode application --target-processes all): ncu serialises
 profiled kernels across the processes it controls, so ONE ncu over all ranks deadlocks a kernel that waits
 for its peers. Every replay pass re-runs each rank, which joins a fresh per-pass rendezvous, and only the
-warmed launch inside the profiler window (cudaProfilerStart/Stop) is measured. Each pass costs one full run (~1-2 min for 8 ranks),
+warmed launch inside the profiler window (cudaProfilerStart/Stop) is measured. Each pass costs one full run (~1-2 min),
 so the default sets are kept to as few passes as possible. Kernel replay (ncu's default) hangs or fails on
 kernels that wait for peer ranks; do not use it for multi-rank kernels.
 """
@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import common  # noqa: E402
 
 NCU_CANDIDATES = ['/opt/nvidia/nsight-compute/2025.3.1/ncu', '/usr/local/cuda/bin/ncu']
-# replay passes measured on B300 (sm_103): each pass = one full run of every rank (~1-1.5 min for 8 ranks)
+# replay passes measured on B300 (sm_103, TP8 setup): each pass = one full run of every rank (~1-1.5 min)
 SETS = {
     'default': ['dram__bytes_read.sum', 'dram__bytes_write.sum', 'gpu__time_duration.sum', 'smsp__inst_executed.sum',
                 'sm__inst_executed_pipe_tensor.sum', 'sm__inst_executed_pipe_tc.sum'],                       # 1 pass

@@ -21,10 +21,10 @@ command in the "Operations" section; both are needed by every run.
 ## Components
 - **gpu_lease.py** — daemon + CLI. The daemon (root) spawns the command itself as the caller's uid
   (cwd, env and stdio fds passed over the socket), in a new session, with `CUDA_VISIBLE_DEVICES`
-  and the supplementary group `ss-gpu`. Policy: 8-GPU leases exclusive; age order across classes
-  (the next waiting 8-GPU request blocks only *newer* small requests, older small requests are
+  and the supplementary group `ss-gpu`. Policy: whole-node (4-GPU) leases exclusive; age order across classes
+  (the next waiting whole-node request blocks only *newer* small requests, older small requests are
   served first, so neither class starves); round-robin by run inside each class; ≤ 3 GPUs per run
-  in small leases (sizes 1, 2, 3, 8); default max 20 min (8-GPU) / 60 min (small), non-root capped
+  in small leases (sizes 1, 2, 3, 4); default max 20 min (whole node) / 60 min (small), non-root capped
   at 30 / 120; expiry, cancel (SIGINT/SIGTERM to the client) or client death kill the session +
   process group (SIGTERM, 10 s, SIGKILL) and stray GPU processes of the same non-root uid. Run id:
   `ss-<run>` users get `<run>` (SS_RUN_ID ignored, no impersonation); root uses `SS_RUN_ID`. Nested
@@ -34,7 +34,7 @@ command in the "Operations" section; both are needed by every run.
   whose GPUs had no compute process and 0% util for 300 s (`GPU_LEASE_IDLE_S`; reason
   `idle-reaped` — CPU-only work longer than that inside a lease is killed). Releases log
   `util_mean`. Experiment runs have priority over `builder-*`/`smoke*`/root requests. Log events
-  `request/grant/release/abandon/adopt` with `cls` (8 | small), `wait_s`, `hold_s`, `reason`.
+  `request/grant/release/abandon/adopt` with `cls` (node | small), `wait_s`, `hold_s`, `reason`.
 - **isolation.py** — run user `ss-<run_id>` (group ss-agents), home with only a copy of the Claude
   credentials, minimal `settings.json` (deny WebFetch/WebSearch, no autoupdate/telemetry) and
   minimal `~/.claude.json` (onboarding done, workspace trusted); node lockdown (see layout; `/tmp`
@@ -44,7 +44,7 @@ command in the "Operations" section; both are needed by every run.
   run_arm) so token refresh/rotation does not log anyone out.
 - **workspace.py** — `make_agent_workspace --agent plain --case <case> --benchmark-root <trusted>`,
   seed sources (sha256-verified), harness files (`./gpu_run`, snapshotting `./check_candidate`
-  wrapper, `./profile_candidate` and `./timeline_candidate` on an 8-GPU lease, stock tools in
+  wrapper, `./profile_candidate` and `./timeline_candidate` on a 4-GPU lease, stock tools in
   `.harness/*.stock`, `TASK.d/harness.md`), then the arm's overlays verbatim; initial git commit;
   chown to the run user.
 - **snapshot.py** — the wrapper tars the source tree before the check and leaves
@@ -57,7 +57,7 @@ command in the "Operations" section; both are needed by every run.
   Skill/Task, tokens, cost, rate-limit events, stall minutes from line timestamps), snapshots.
 - **rescore.py + review.py** — see "Outcome computation".
 - **Conditional small-lease cap**: while an
-  experiment run's 8-GPU request has waited ≥ 2 min, small leases older than 10 min are ended
+  experiment run's whole-node request has waited ≥ 2 min, small leases older than 10 min are ended
   (SIGTERM, 30 s grace, SIGKILL; `preempt` event + release reason `preempted`; `./gpu_run` prints
   why). Telemetry/result.json: `lease.preempted`, `lease.preempted_min_lost`, `lease.idle_reaped`.
   Bounds the time any run's check waits behind other runs' small leases to ≈ 12.5 min; A3 (most
@@ -79,7 +79,7 @@ command in the "Operations" section; both are needed by every run.
 1. node lockdown (idempotent), run user, workspace; pins recorded in `logs/run.json` (Claude
    version, model `claude-opus-5-5`, harness commit, trusted commit + patch sha256, seed sha256,
    prompt sha256, arm file sha256).
-2. **Calibration**: the seed checked once (stock check, fresh tree, as the run user, 8-GPU lease)
+2. **Calibration**: the seed checked once (stock check, fresh tree, as the run user, 4-GPU lease)
    *before* the agent clock starts → covariate `calibration.L_ms`.
 3. `claude -p "<prompts/goal_improve.md with {DEADLINE}>" --model claude-opus-5-5 --permission-mode
    auto --permission-prompts none --output-format stream-json --verbose --disallowedTools
@@ -95,18 +95,19 @@ command in the "Operations" section; both are needed by every run.
 
 ## Outcome computation (rescore.py, review.py)
 - Candidates: passing snapshots ordered by the agent-measured p50; the best is re-checked 3× in a
-  fresh `make_agent_workspace` tree (stock tools, no build cache) as the run user on an 8-GPU lease;
+  fresh `make_agent_workspace` tree (stock tools, no build cache) as the run user on a 4-GPU lease;
   L = median of the per-run `fast_p50_ms` (that run only; the gpu_noise history minimum is not
   used). If review fails, the next-best is tried (≤ 3). None valid → **L = this run's calibration of
   the seed** (`source: seed-fallback`).
-- Review: all 3 runs `ok_provisional`, launch audit 1 kernel on each of the 8 ranks, every trial of
+- Review: all 3 runs `ok_provisional`, launch audit 1 kernel on each of the 4 ranks, every trial of
   every rank passes; the evaluator has no seed option — it draws fresh random seeds per trial
   (`secrets.randbits`), so the 3 rescore runs give 3 fresh seeds per scenario (raw, accept_full,
   accept_mixed) that the agent never saw; recorded as `fresh_seeds_per_scenario`. Sources reachable
   from `submission.py` (imports, quoted local source names, `#include`) must not load tensors from
   files (`torch.load`, `np.load`, safetensors, pickle, fromfile) nor import `megabench`/`reference`
   or mention an oracle.
-- Primary score 28.95 / L; AUC = time-average over the budget of log(28.95 / best passing L so far)
+- Primary score 28.95 / L (28.95 = the TP8 normalizer kept for the formula; TP4 scores compare only
+  with TP4 scores); AUC = time-average over the budget of log(28.95 / best passing L so far)
   (agent-measured p50 at check end time; seed calibration before the first pass); final tree: one
   check unless its digest equals the chosen snapshot's.
 - Transcript scan (flags only): WebFetch/WebSearch calls, network commands in Bash (curl, wget,
@@ -120,7 +121,7 @@ source, snapshot, rescore_p50s_ms, b3_ms}, auc, final_tree{L_ms, status, score, 
 candidates_tried[{snapshot, agent_p50_ms, sha256, rescore_p50s, L_ms, review_reports,
 review_sources, runs[], digest}], secondary{time_to_first_improvement_min, gpu_busy_fraction,
 checks{n,passing}, tokens, cost_usd, rate_limit_stall_min, tool_calls, skill_calls,
-subagent_calls, lease{leases, by_gpus, wait_min_total, wait_min_8gpu, max_wait_min, hold_min_total,
+subagent_calls, lease{leases, by_gpus, wait_min_total, wait_min_node, max_wait_min, hold_min_total,
 gpu_min_held, expired, abandoned}, score_per_usd, abort_flags, agent_exit, gpu_clean_after,
 bypass_pids}, transcript_scan{flagged,n,flags}, snapshots[], results_push`.
 
@@ -168,13 +169,13 @@ then restart the tmux session; queued clients resubmit, running lease processes 
   Agent-reported p50s in `checks.jsonl` feed the AUC and candidate ranking only.
 - The snapshot tar is taken just before the check; files edited by a background process during the
   check are not reflected.
-- An 8-GPU lease waits for every small lease to end (exclusive); heavy 8-GPU traffic still delays
-  small leases by up to the 8-GPU leases queued ahead of them.
+- A whole-node lease waits for every small lease to end (exclusive); heavy whole-node traffic still delays
+  small leases by up to the whole-node leases queued ahead of them.
 - Rescore and calibration run under the run's lease identity; lease covariates are windowed to
   the agent phase.
-- Node capacity: one 8-GPU check is ~2.5 min (in-run) / ~3.5 min (3-process rescore check); each
+- Node capacity (TP8 figures): one whole-node check is ~2.5 min (in-run) / ~3.5 min (3-process rescore check); each
   run also needs 1 calibration + 3 rescore (+1 final unless identical) checks ≈ 15 min of node
-  time. A long small lease (up to 60 min, builders) blocks every 8-GPU request until it ends;
+  time. A long small lease (up to 60 min, builders) blocks every whole-node request until it ends;
   builder-*/smoke* requests wait while any experiment request waits (strict priority).
 - Short budgets: with a 10-min fake budget a check queued behind other runs may not finish before
   the T−lead point (logged `incomplete`).

@@ -27,7 +27,7 @@ def test_arms_overlays():
     want = {'A0S': ['S'], 'A1': ['S', 'A1'], 'A2': ['S', 'A1', 'A2'], 'A3': ['S', 'A1', 'A3']}
     for a, ov in want.items():
         arm = workspace.load_arm(f'{ROOT}/arms/{a}.toml')
-        assert arm['overlays'] == ov and arm['budget_minutes'] == 120 and arm['task'] == 'improve-b8'
+        assert arm['overlays'] == ov and arm['budget_minutes'] == 120 and arm['task'] == 'improve-b8-tp4'
 
 
 def test_overlays_do_not_collide():

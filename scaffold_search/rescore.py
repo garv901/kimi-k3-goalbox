@@ -4,16 +4,16 @@
 
 1. Candidates: passing snapshots (snapshots/index.jsonl) ordered by the agent-measured p50.
 2. For the best one: extract into a fresh `make_agent_workspace` tree (trusted evaluator, no build
-   cache), run the stock ./check_candidate `reps` times, each on an 8-GPU lease, as the run user.
+   cache), run the stock ./check_candidate `reps` times, each on a whole-node (4-GPU) lease, as the run user.
    L = median of the per-run p50 (gpu_noise `fast_p50_ms` of that run, not the cross-run history).
-3. Automated review (review.py): every rescore run ok_provisional, 1 launch on each of the 8 ranks,
+3. Automated review (review.py): every rescore run ok_provisional, 1 launch on each of the 4 ranks,
    every trial (fresh random seeds drawn by the evaluator, never seen by the agent) passing; sources
    reachable from submission.py load no tensors from files and import no reference/oracle. If it
    fails, the next-best snapshot is tried (at most 3). No valid snapshot -> the run scores the
    seed: L = this run's calibration measurement of the seed.
 4. Final tree (the workspace at the end): one check, unless its source digest equals the chosen
    snapshot's.
-5. result.json: primary score 28.95/L, AUC (mean over the budget of log(28.95 / best passing L so
+5. result.json: primary score B3_MS/L, AUC (mean over the budget of log(B3_MS / best passing L so
    far), agent-measured p50s, seed latency before the first pass), final-tree score and secondary
    metrics from telemetry.json; written to <run_dir>/result.json and pushed to branch `results`
    as results/<run_id>/.
@@ -22,7 +22,15 @@ import argparse, calendar, fcntl, glob, hashlib, json, math, os, shutil, statist
 
 from scaffold_search import isolation, snapshot, review, telemetry, workspace
 
+# Score normalizer. 28.95 ms is the TP8 PyTorch baseline (library kernels + torch.compile + CUDA graph +
+# PDL on 8x B300) kept from protocol scaffold-search-dsv41 so that the score formula is unchanged; it is
+# NOT a TP4 measurement. TP4 scores/AUCs are comparable only with each other (the decision rule uses
+# ratios and differences of medians, which do not depend on this constant). Replace with the TP4
+# baseline once it is measured (PROTOCOL.md, Outcomes) and regenerate the manifest.
 B3_MS = 28.95
+# Seed latency used for the AUC when a run has no calibration measurement: unknown for TP4 until the
+# first calibration check (Gate F); None = AUC not computed (result.json 'auc': null, 'auc_note').
+SEED_L_FALLBACK_MS = None
 RESULTS_REPO = '/srv/ss/results/repo'
 LOCK = '/srv/ss/results/.lock'
 PY = '/usr/bin/python3.12'
@@ -83,10 +91,10 @@ def fresh_tree(run_id, run_dir, name, populate):
 
 
 def run_check(run_id, run_dir, ws, tag):
-    """one stock check_candidate on an 8-GPU lease, as the run user."""
+    """one stock check_candidate on a whole-node (4-GPU) lease, as the run user."""
     env = isolation.agent_env(run_id, run_dir)
     t0 = time.time()
-    p = subprocess.run(['/srv/ss/bin/gpu_lease', 'run', '-v', '--gpus', '8', '--max-minutes', '30', '--',
+    p = subprocess.run(['/srv/ss/bin/gpu_lease', 'run', '-v', '--gpus', str(workspace.NGPU), '--max-minutes', '30', '--',
                         './check_candidate'], cwd=ws, env=env, preexec_fn=isolation.demote(run_id),
                        capture_output=True, text=True)
     out = p.stdout + p.stderr
@@ -235,10 +243,10 @@ def rescore_run(run_dir, reps=3, final=True, push=True, max_candidates=3):
                          'status': r0.get('status'), 'agent_view_p50_ms': r0.get('p50_ms')}
     t0 = run.get('t_agent_start')
     budget = run.get('budget_minutes')
-    seed_for_auc = seed_L or 21.48
+    seed_for_auc = seed_L or SEED_L_FALLBACK_MS
     first_imp = None
     for s in sorted(snaps, key=lambda s: s.get('end') or ''):
-        if s.get('p50_ms') and s['p50_ms'] < seed_for_auc * 0.99:
+        if seed_for_auc and s.get('p50_ms') and s['p50_ms'] < seed_for_auc * 0.99:
             te = calendar.timegm(time.strptime(s['end'], '%Y-%m-%dT%H:%M:%SZ'))
             first_imp = round((te - t0) / 60, 2); break
     tr = tel['transcript']
@@ -256,7 +264,8 @@ def rescore_run(run_dir, reps=3, final=True, push=True, max_candidates=3):
         'primary': {'score': round(score, 4) if score else None, 'L_ms': L, 'source': source,
                     'snapshot': chosen['snapshot'] if chosen else None,
                     'rescore_p50s_ms': chosen['rescore_p50s'] if chosen else None, 'b3_ms': B3_MS},
-        'auc': round(auc(snaps, seed_for_auc, t0, budget), 5) if t0 and budget else None,
+        'auc': round(auc(snaps, seed_for_auc, t0, budget), 5) if t0 and budget and seed_for_auc else None,
+        'auc_note': None if seed_for_auc else 'no seed calibration for this run and no SEED_L_FALLBACK_MS (TP4 uncalibrated)',
         'final_tree': final_res and {**final_res, 'score': round(B3_MS / final_res['L_ms'], 4) if final_res.get('L_ms') else None},
         'candidates_tried': tried,
         'secondary': {

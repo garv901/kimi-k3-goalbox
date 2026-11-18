@@ -5,12 +5,13 @@
 #   1. PROTOCOL manifest (scripts/verify_protocol.py)                                    CPU, seconds
 #   2. CPU unit tests: tests/test_scaffold_search.py + tests/test_package.py           CPU, seconds
 #   3. gpu_lease policy tests (private daemon, mostly `sleep`; 2 tests touch a GPU)   root, ~5 min
+#      (whole-node class = 4 GPUs: GPU_LEASE_NGPU defaults to 4)
 #   4. isolation tests as a run user (needs ss-lease + ss-proxy; --claude adds 2 tiny
 #      `claude -p` calls as the run user, ~$0.05)                                     root, ~2 min
 #   5. arm workspaces S/A1/A2/A3 build without conflicts; overlay tools start          root, ~2 min
 #   6. fake-agent smoke: run_arm --arm A0S --fake-agent --budget-minutes 10 (submits the seed;
-#      calibration + 10 min + rescore 3x + final check), expect score ~1.37 = 28.95 / ~21.1 ms
-#                                                                                     full node, ~35 min
+#      calibration + 10 min + rescore 3x + final check); the TP4 seed latency is not calibrated yet:
+#      the smoke prints it (score = 28.95 / L with the TP8 normalizer, see rescore.py) full node, ~35 min
 # --cpu-only: stages 1-2 (any machine with python3.12 + pytest). --no-smoke: skip stage 6.
 set -euo pipefail
 H=$(cd "$(dirname "$0")/.." && pwd)

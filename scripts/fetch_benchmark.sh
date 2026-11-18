@@ -3,14 +3,15 @@
 # snapshot the harness reads (/srv/ss/trusted/vibe-megakernel), with
 # scaffold_search/patches/gpu_noise_multirank.patch applied (scaffold_search/trusted.py). Idempotent.
 #
-#   SS_BENCHMARK_URL  default https://github.com/kamahori/vibe-megakernel.git (runner needs read access)
-#   pinned commit     886eeb3e28db071f6c43b31fd0b6a9c26dbeaf27 (branch dsv41-dspark-batch8)
+#   SS_BENCHMARK_URL  default https://github.com/kaijunli-infr/vibe-megakernel.git (fork of kamahori/vibe-megakernel
+#                     carrying branch dsv41-dspark-batch8-tp4; runner needs read access)
+#   pinned commit     4ac7da6a6607885667c31155f7d55e524b11b1bc (branch dsv41-dspark-batch8-tp4 = 886eeb3e + the b8-tp4 case)
 set -euo pipefail
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 PY=${PY:-/usr/bin/python3.12}
-URL=${SS_BENCHMARK_URL:-https://github.com/kamahori/vibe-megakernel.git}
-BRANCH=dsv41-dspark-batch8
-COMMIT=886eeb3e28db071f6c43b31fd0b6a9c26dbeaf27
+URL=${SS_BENCHMARK_URL:-https://github.com/kaijunli-infr/vibe-megakernel.git}
+BRANCH=dsv41-dspark-batch8-tp4
+COMMIT=4ac7da6a6607885667c31155f7d55e524b11b1bc
 PATCH_SHA=bb4871ccd876220359d5b635f88380955f62c3d61974967b5c33633018cb2f75
 SRC=/srv/ss/build/vibe-megakernel
 DST=/srv/ss/trusted/vibe-megakernel

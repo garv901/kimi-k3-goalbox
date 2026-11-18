@@ -1,25 +1,28 @@
 # Container: build and run
 
-The image holds only tools (CUDA 13.0 devel + torch 2.14.1+cu130 base, git/tmux/curl/gh, pytest,
-Nsight, Claude Code 2.1.326). The harness, benchmark and seed are fetched at run time into
+Protocol **dsv41-tp4-rack10-v1**: one **4x GB300** tray (aarch64), image **linux/arm64**. The image holds
+only tools (CUDA 13.0.1 devel base pinned by arm64 digest, python3.12 + torch 2.14.1+cu130, git/tmux/curl/gh,
+pytest, Nsight, Claude Code 2.1.326). The harness, benchmark and seed are fetched at run time into
 `/srv/ss` by `scripts/bootstrap_node.sh`.
 
-> Not built or tested by us: the package was assembled without Docker or GPUs. Our runs used the
-> same base image digest with these tools installed by hand on a Kubernetes pod (root shell).
+> Not built yet: the Dockerfile was rewritten for arm64 on 2026-11-18 and has not been built on the
+> target tray (Gate C of the test plan). The TP8 image was amd64 and does not run on GB300 trays.
 
 ## Build
 ```sh
-git clone -b scaffold-search-dsv41 https://github.com/garv901/kimi-k3-goalbox ss && cd ss
-docker build -t scaffold-search:dsv41 -f container/Dockerfile container/
+git clone -b dsv41-tp4-rack10-v1 <harness repo> ss && cd ss          # the TP4 fork of scaffold-search-dsv41
+docker build -t scaffold-search:dsv41-tp4 -f container/Dockerfile container/   # on the arm64 tray
 ```
 
 ## Run (Docker)
 ```sh
-docker run -d --name ss --gpus all --ipc=host --shm-size=64g \
+docker run -d --name ss --gpus all --shm-size=64g \
   --ulimit memlock=-1 --ulimit stack=67108864 \
   -v /data/ss:/srv/ss \
   -e SS_SNAPSHOT_REPO=git@github.com:<you>/<repo>.git \
-  scaffold-search:dsv41
+  scaffold-search:dsv41-tp4
+# (no --ipc=host: the 4 ranks share the container's own IPC namespace, which is all the kernel's
+#  CUDA IPC handles and NCCL need; --gpus all = the tray's 4 GB300s)
 docker exec -it ss bash          # everything below runs as root inside the container
 ```
 
@@ -29,12 +32,12 @@ apiVersion: v1
 kind: Pod
 metadata: {name: scaffold-search}
 spec:
-  hostIPC: true                       # NCCL shared memory between the 8 ranks (or a large /dev/shm emptyDir)
+  # no hostIPC: the 4 ranks run in one pod; the /dev/shm emptyDir below is enough
   containers:
   - name: ss
-    image: <registry>/scaffold-search:dsv41
+    image: <registry>/scaffold-search:dsv41-tp4
     command: ["sleep", "infinity"]
-    resources: {limits: {nvidia.com/gpu: 8}}
+    resources: {limits: {nvidia.com/gpu: 4}}
     env: [{name: SS_SNAPSHOT_REPO, value: "git@github.com:<you>/<repo>.git"}]
     volumeMounts: [{name: ss, mountPath: /srv/ss}, {name: shm, mountPath: /dev/shm}]
   volumes:
@@ -43,8 +46,9 @@ spec:
 ```
 
 ## Requirements and capabilities
-- **GPU access:** all 8 GPUs of the node in the container (`--gpus all` / `nvidia.com/gpu: 8`),
-  NVLink between them (the kernel is TP8 with one cooperative launch per rank).
+- **GPU access:** all 4 GPUs of the tray in the container (`--gpus all` / `nvidia.com/gpu: 4`),
+  NVLink between them (the kernel is TP4 with one cooperative launch per rank). Nothing else may
+  use the tray's GPUs: on the Kubernetes trays, reserve the tray (a 4-GPU placeholder pod) first.
 - **Root inside the container**, with the default capability set. Privileged mode is not needed.
   The harness, as root: creates Unix users `ss-<run_id>` and groups `ss-agents`, `ss-gpu`
   (`useradd/groupadd`), chowns and chmods `/dev/nvidia*` to `root:ss-gpu 0660` (CAP_CHOWN,
@@ -72,5 +76,5 @@ spec:
 | `SS_SNAPSHOT_REPO` | bootstrap, snapshot.py, rescore.py | git URL for run branches `run/<id>-<arm>` and branch `results`; unset = no pushes |
 | `SS_BENCHMARK_URL` | fetch_benchmark.sh | clone URL of `kamahori/vibe-megakernel` (default https) |
 | `SS_ALLOW_MISMATCH=1` | bootstrap | continue despite a PROTOCOL.md manifest mismatch (runs invalid) |
-| `SS_SKIP_GPU_CHECK=1` | bootstrap | skip the 8x B300 check |
+| `SS_SKIP_GPU_CHECK=1` | bootstrap | skip the 4x GB300 (sm_103) check |
 | `GPU_LEASE_*` | gpu_lease.py | lease policy knobs; leave unset (defaults = pre-registered values) |

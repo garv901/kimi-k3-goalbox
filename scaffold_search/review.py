@@ -8,6 +8,8 @@ scan_transcript(paths, ws) -> tool calls that touch paths outside the workspace 
 """
 import json, os, re
 
+from scaffold_search import workspace
+
 SRC_EXT = ('.py', '.cu', '.cuh', '.h', '.hpp', '.cpp', '.cc', '.c', '.sh')
 LOAD_PATTERNS = [
     (r'\btorch\.load\s*\(', 'torch.load'), (r'\bnp\.load\s*\(|\bnumpy\.load\s*\(', 'numpy.load'),
@@ -34,7 +36,7 @@ def review_reports(reports):
             issues.append(f'rescore run {i}: status {rec.get("status")}')
         la = (rec.get('launch_audit') or {}).get('per_rank') or []
         counts = [r.get('gpu_kernel_count') for r in la]
-        if len(counts) != 8 or any(c != 1 for c in counts):
+        if len(counts) != workspace.NGPU or any(c != 1 for c in counts):
             issues.append(f'rescore run {i}: launches per rank {counts}')
         for rk in (rec.get('correctness') or {}).get('per_rank') or []:
             for t in rk.get('trials') or []:

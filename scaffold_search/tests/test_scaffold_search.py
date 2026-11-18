@@ -13,7 +13,7 @@ from scaffold_search import rescore, report  # noqa: E402
 def test_arms_parse():
     for a in ('A0S', 'A1', 'A2', 'A3'):
         arm = workspace.load_arm(f'{ROOT}/arms/{a}.toml')
-        assert arm['name'] == a and arm['task'] == 'improve-b8' and arm['budget_minutes'] == 120
+        assert arm['name'] == a and arm['task'] == 'improve-b8-tp4' and arm['budget_minutes'] == 120
     assert workspace.load_arm(f'{ROOT}/arms/A0S.toml')['overlays'] == ['S']
     assert os.path.isdir(f'{ROOT}/overlays/S/.claude/skills/cuda-toolkit')
 
@@ -24,7 +24,13 @@ def test_prompt_len_and_placeholder():
 
 
 def test_seed_manifest():
-    assert len(workspace.verify_seed('dsv41_b8_nopf')) == 64
+    seed = f'{ROOT}/seeds/dsv41_b8_tp4_nopf'
+    assert workspace.verify_seed('dsv41_b8_tp4_nopf') == open(f'{seed}/SEED_SHA256').read().strip()
+    files = [l.split(None, 1)[1].strip() for l in open(f'{seed}/MANIFEST.sha256')]
+    # sources only: the TP8 seed's x86-64 microbenchmark binaries are not part of the TP4 seed
+    assert len(files) == 17 and not any(p.endswith(('/mb', '/mb2', '/mb3', '/l2')) for p in files), files
+    assert {'./mk_head.cu', './mk_tail.cu', './mk_host.py', './submission.py', './NOTES.md'} <= set(files)
+    assert workspace.NGPU == 4 and workspace.CASES['improve-b8-tp4'][1] == 'dsv41_b8_tp4_nopf'
 
 
 def test_schedule_mixes_and_is_reproducible():
@@ -45,7 +51,7 @@ def test_parse_check_canned():
                'candidate_timing': {'cuda_event_p50_ms': 21.2}}, open(rep, 'w'))
     json.dump({'fast_p50_ms': 21.18, 'verdict': 'stable', 'processes': [{}, {}, {}], 'probe_errors': []},
               open(f'{d}/reports/check-x.stability.json', 'w'))
-    log = ('dsv41-flash-dspark-step-k5-ctx2k-b8: ok_provisional (102.98x GPU-event vs best available baseline)\n'
+    log = ('dsv41-flash-dspark-step-k5-ctx2k-b8-tp4: ok_provisional (102.98x GPU-event vs best available baseline)\n'
            f'{{"results": "{rep}", "passed": 1, "total": 1}}\nstability: reports/check-x.stability.json\n')
     r = snapshot.parse_check(d, log)
     assert r['status'] == 'ok_provisional' and r['p50_ms'] == 21.18 and r['n_processes'] == 3
@@ -62,7 +68,7 @@ def test_auc():
     assert abs(rescore.auc(snaps, 21.0, t0, 120) - want) < 1e-6
 
 
-def _rec(status='ok_provisional', counts=(1,) * 8, ok=True):
+def _rec(status='ok_provisional', counts=(1,) * 4, ok=True):
     return {'status': status, 'launch_audit': {'per_rank': [{'gpu_kernel_count': c} for c in counts]},
             'correctness': {'status': 'pass' if ok else 'fail', 'per_rank': [
                 {'trials': [{'seed': s, 'scenario': sc, 'outputs': {'logits': {'pass': ok}}}
@@ -71,7 +77,9 @@ def _rec(status='ok_provisional', counts=(1,) * 8, ok=True):
 
 def test_review_reports():
     assert review.review_reports([_rec(), _rec(), _rec()])['ok']
-    assert not review.review_reports([_rec(), _rec(counts=(1,) * 7 + (2,)), _rec()])['ok']
+    assert not review.review_reports([_rec(), _rec(counts=(1,) * 3 + (2,)), _rec()])['ok']
+    assert not review.review_reports([_rec(), _rec(counts=(1,) * 8), _rec()])['ok']   # a TP8 report is not a TP4 pass
+    assert not review.review_reports([_rec(counts=(1,) * 3), _rec(), _rec()])['ok']
     assert not review.review_reports([_rec(status='incorrect'), _rec(), _rec()])['ok']
     assert not review.review_reports([_rec(ok=False), _rec(), None])['ok']
 
