@@ -1,0 +1,41 @@
+{
+ "rank": 0,
+ "device": "cpu",
+ "status": "pass",
+ "load_seconds": 0.0,
+ "tensors": 100,
+ "weight_bytes": 14683704608,
+ "max_rss_bytes": 509607936,
+ "sample": {
+  "embed": [
+   [
+    40960,
+    7168
+   ],
+   "torch.bfloat16"
+  ],
+  "lm_head": [
+   [
+    40960,
+    7168
+   ],
+   "torch.bfloat16"
+  ],
+  "l1_gate_blocks": [
+   [
+    896,
+    768,
+    112,
+    16
+   ],
+   "torch.uint8"
+  ],
+  "l3_kb": [
+   [
+    6144,
+    512
+   ],
+   "torch.bfloat16"
+  ]
+ }
+}

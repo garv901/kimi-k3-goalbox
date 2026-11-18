@@ -1,0 +1,156 @@
+{
+ "written_utc": "2026-11-18T20:38:00.336481+00:00",
+ "host": "pod4-gb300-3-tray14-f3",
+ "source": {
+  "dir": "/mnt/shared/weights/kimi-k3",
+  "pinned_revision": "f831ab66814297da540d832a5235f8e904f29d06",
+  "config_sha256": "9710e121a58d03ac92c8d6da287a19541994319afbbe6d6202af001ffd379213",
+  "index_sha256": "a1c5210650ce71d2d3ae9ec5a101ac4afd3cf4b10091be589853437eb967febd",
+  "shards_read": [
+   {
+    "file": "model-00001-of-000096.safetensors",
+    "bytes": 2341216112,
+    "sha256": "975584c00f85a95fce8ae0f840af8cef69c2ef4db00d34cab3e2cbdfc60f6e51"
+   },
+   {
+    "file": "model-00002-of-000096.safetensors",
+    "bytes": 16990911504,
+    "sha256": "26a3284e1d2cb567934ebef002e6a1813551d646739e8bcb1e9e3fe7f878e0f5"
+   },
+   {
+    "file": "model-00003-of-000096.safetensors",
+    "bytes": 16990911504,
+    "sha256": "e54af9de4c554956082364010f732443bcd5097390f0121a33fb35e37280b5a9"
+   },
+   {
+    "file": "model-00004-of-000096.safetensors",
+    "bytes": 16567501776,
+    "sha256": "5955fd8feda89b1af8400c25e885e7177d47edff155f54b318beb8dd1cec5c05"
+   },
+   {
+    "file": "model-00094-of-000096.safetensors",
+    "bytes": 4697664072,
+    "sha256": "ad66e1cb96b86963e63d6a0a466b6a407b13c9815cb480fe612480cc6bb3b6e1"
+   }
+  ]
+ },
+ "converter": {
+  "file": "megabench/tasks/kimi_checkpoint.py",
+  "sha256": "cfc1f7fa9af9569a1b8752d4f993b171f1d5db83de8f12c7d3ada889bfbf6715",
+  "repo_commit": "bcb672f3777ab1a339c499ae82dad36c94643c96",
+  "command": "python -s -m megabench.tasks.kimi_checkpoint --src /mnt/shared/weights/kimi-k3 --out /mnt/shared/home/kevin/weights/kimi-k3-fixture-trial --tp 4 --layers 4"
+ },
+ "tp": 4,
+ "layers": 4,
+ "outputs": [
+  {
+   "file": "tp4/rank0/global.safetensors",
+   "bytes": 1174448560,
+   "sha256": "21cb4e70dd5def7df895515affee6a53b42da39848bbbffedf2fdd7c9f7f7579"
+  },
+  {
+   "file": "tp4/rank0/layer000.safetensors",
+   "bytes": 586746056,
+   "sha256": "9180b26e0eff76b86c241eecfa267f3f464c5ac4751735275b92cccf258e0b76"
+  },
+  {
+   "file": "tp4/rank0/layer001.safetensors",
+   "bytes": 4335679120,
+   "sha256": "c49432c77c7409b0770f5d76237609b34bfdc855f17ff3868264fa46dc9645bb"
+  },
+  {
+   "file": "tp4/rank0/layer002.safetensors",
+   "bytes": 4335679120,
+   "sha256": "f169b381fc250f1279f75df82512d20e6023b283747c76f7266d42b88b255b8b"
+  },
+  {
+   "file": "tp4/rank0/layer003.safetensors",
+   "bytes": 4251161360,
+   "sha256": "949a08a1b0b812220a8e3f0b836d47a6045f37906f27124370a03eca1f249d2a"
+  },
+  {
+   "file": "tp4/rank1/global.safetensors",
+   "bytes": 1174448560,
+   "sha256": "a57d74348289e86063008b28a5e75abc26831202c9896cef0a362d4c1f03d1f9"
+  },
+  {
+   "file": "tp4/rank1/layer000.safetensors",
+   "bytes": 586746056,
+   "sha256": "dd7d939bb36af4866165727e15078eeaa2baa83fe9b60b95622f0ffce9fcd6e8"
+  },
+  {
+   "file": "tp4/rank1/layer001.safetensors",
+   "bytes": 4335679120,
+   "sha256": "870c221a3bd51cfda6b70e41429fc728ee84912eef9f0cb4df499e6bd52a7993"
+  },
+  {
+   "file": "tp4/rank1/layer002.safetensors",
+   "bytes": 4335679120,
+   "sha256": "5f2ceac4c9b91b7c0701774aaebcb273d08f7d4821c94609e524aae35feec8af"
+  },
+  {
+   "file": "tp4/rank1/layer003.safetensors",
+   "bytes": 4251161360,
+   "sha256": "3b2eb36e89bffd5fea03e9aab25f633d1be7db218f97016f00d9a00fe4ebfdf4"
+  },
+  {
+   "file": "tp4/rank2/global.safetensors",
+   "bytes": 1174448560,
+   "sha256": "5f00a63b6f0c16c5a7fa5fb4b5610c41aee450b5c64969c4eb7b2bd2fce3d69c"
+  },
+  {
+   "file": "tp4/rank2/layer000.safetensors",
+   "bytes": 586746056,
+   "sha256": "8b84de2266c7e2fb08b2941667607af3890fab220b2fd1164cef9a2c18e25a02"
+  },
+  {
+   "file": "tp4/rank2/layer001.safetensors",
+   "bytes": 4335679120,
+   "sha256": "5e09b95f3a92ca21a981822998da06875258a7031eb2e0c4b35058161306002e"
+  },
+  {
+   "file": "tp4/rank2/layer002.safetensors",
+   "bytes": 4335679120,
+   "sha256": "c6536ea569bd5318f0fe5dc77bae4e8ceb8cb2f04707594693740f359e0767b5"
+  },
+  {
+   "file": "tp4/rank2/layer003.safetensors",
+   "bytes": 4251161360,
+   "sha256": "68281f235e57f2f9de514cb49e824665febca16b14b1aa57a844eb06185ee563"
+  },
+  {
+   "file": "tp4/rank3/global.safetensors",
+   "bytes": 1174448560,
+   "sha256": "2788d9de25cd4b974c0121358722892220da70c0b624f704c3ea25999e6b9227"
+  },
+  {
+   "file": "tp4/rank3/layer000.safetensors",
+   "bytes": 586746056,
+   "sha256": "0a1b0297977ac50f84b822192a5926a9c2802c7ffb02b754e774684e594dfb9d"
+  },
+  {
+   "file": "tp4/rank3/layer001.safetensors",
+   "bytes": 4335679120,
+   "sha256": "c7ef4ce248615767588c6632b51c26d7a26cd226650b23bde62b1859b6bfc720"
+  },
+  {
+   "file": "tp4/rank3/layer002.safetensors",
+   "bytes": 4335679120,
+   "sha256": "eac6e478d9c62d238908766baf0234f7fa30caa5a623ce796aa0e53aa1b294b3"
+  },
+  {
+   "file": "tp4/rank3/layer003.safetensors",
+   "bytes": 4251161360,
+   "sha256": "5078bb37317049033131dcf77cc4bb141ae4a4b16c14d7b6aa0807bc17ce7739"
+  }
+ ],
+ "output_bytes_total": 58734856864,
+ "done_json": {
+  "repo": "moonshotai/Kimi-K3",
+  "revision": "f831ab66814297da540d832a5235f8e904f29d06",
+  "tp": 4,
+  "layers": 4
+ },
+ "log": "start 2026-11-18T20:32:43Z host pod4-gb300-3-tray14-f3 commit bcb672f3777ab1a339c499ae82dad36c94643c96\nwrote global.safetensors\nwrote layer000.safetensors\nwrote layer001.safetensors\nwrote layer002.safetensors\nwrote layer003.safetensors\nexit 0 end 2026-11-18T20:33:54Z\n",
+ "time": "\tCommand being timed: \"env PYTHONPATH=/mnt/shared/home/kevin/workspace/kimi-k3-goalbox /mnt/shared/home/kevin/workspace/kimi-k3-goalbox/.venv/bin/python -s -m megabench.tasks.kimi_checkpoint --src /mnt/shared/weights/kimi-k3 --out /mnt/shared/home/kevin/weights/kimi-k3-fixture-trial --tp 4 --layers 4 --workers 4\"\n\tUser time (seconds): 489.03\n\tSystem time (seconds): 1286.22\n\tPercent of CPU this job got: 2508%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 1:10.75\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 34600000\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 277116\n\tMinor (reclaiming a frame) page faults: 1715205\n\tVoluntary context switches: 3786259\n\tInvoluntary context switches: 104918\n\tSwaps: 0\n\tFile system inputs: 19888472\n\tFile system outputs: 114718592\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 65536\n\tExit status: 0\n"
+}

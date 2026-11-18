@@ -1,0 +1,9 @@
+== verify start 2026-11-18T20:37:48Z
+verify exit 0
+== manifest start 2026-11-18T20:37:59Z
+manifest exit 0
+== loadonly_cpu start 2026-11-18T20:39:09Z
+loadonly exit 1
+== evaluate_cpu start 2026-11-18T20:39:10Z
+evaluate exit 1
+== done 2026-11-18T20:39:11Z
