@@ -173,7 +173,7 @@ For each graded case: the agent's final latency, its ratio to the `sol_info` HBM
 
 ## 15. What the agent can see
 
-- The agent must not see vLLM's Kimi K3 implementation or other production kernels for this model. Keep vLLM, FlashInfer, CUTLASS/CuTeDSL, SGLang and similar packages blocked in the package index, and keep GitHub off the proxy allowlist. Hugging Face (including `moonshotai/Kimi-K3` modeling code) stays allowed.
+- The agent must not see vLLM's Kimi K3 implementation or other production kernels for this model. Keep vLLM, FlashInfer, CUTLASS/CuTeDSL, SGLang and similar packages blocked in the package index, and keep GitHub off the proxy allowlist. WebSearch is disabled for the same reason (section 16). Hugging Face (including `moonshotai/Kimi-K3` modeling code) stays allowed.
 - The agent may see `BASELINES.json` (the vLLM latencies for the graded cases), as the goal prompt says.
 - The workspace gets no extra skills or subagent definitions. Scaffold experiments belong to the `scaffold-search` work.
 - Profiling and timing tools: the agent gets the tools below, through `gpu-run`, on every case including the two-tray real-weight TP8 cases. Describe each one in `TASK.md` with one working example.
@@ -186,8 +186,9 @@ For each graded case: the agent's final latency, its ratio to the `sol_info` HBM
 ## 16. Agent configuration and run conditions
 
 - Pin and record the Claude Code version, the main model (`claude-opus-5-5`) and its effort setting.
-- Subagents: the main model decides whether to spawn subagents, how many, for which tasks, and with which model. In the goal prompt, replace "You can spawn parallel Sonnet subagents for the implementation, but you own the integration and the correctness." with "You can spawn parallel subagents and choose their model, but you own the integration and the correctness." Do not set a default subagent model in the configuration. Record the model of every subagent the agent spawns.
-- Do not change the goal prompt beyond this sentence, the hardware and sandbox text of section 1, the tools of section 15 and the stop rule below.
+- Subagents: allowed. The main model decides whether to spawn subagents, how many, for which tasks, and with which model. Remove `CLAUDE_CODE_SUBAGENT_MODEL=sonnet` from the agent's launch command (`sandbox/bin/goalbox-start` today, and its Kubernetes equivalent); it forces every subagent onto Sonnet. Do not set any default subagent model. Record the model of every subagent the agent spawns.
+- Tools: allowed. The agent may use every Claude Code tool except WebSearch, plus every workspace tool of section 15. Launch Claude Code with `--disallowedTools WebSearch`: WebSearch runs on Anthropic's servers, so the proxy cannot filter it, and it can reach vLLM's implementation (section 15). WebFetch and shell downloads stay, limited by the proxy to the allowlist. Record the disabled tool in the results.
+- The goal prompt `goals/kimi-k3-tp8.txt` on this branch is already updated for this run: two trays, subagents and tools allowed, the profiling and timing tools named, and the stop rule below. Do not change it, except to correct a tool name if you build a tool under a different name. If you rename a tool, change the goal prompt and `TASK.md` together.
 - Start: headless goal mode in a fresh session, empty `/work` except for what the workspace generator writes. No seed kernel.
 - Stop rule: do not let the agent stop early at 1.4x the HBM floor. vLLM's specialized arm is already at 1.21x the floor at B64, so that rule can end a run before it reaches the comparison point. Replace the goal's success condition with: continue optimizing until the budget ends or five consecutive attempts each improve latency by less than 2 percent on every graded case. Keep everything else in the goal text.
 - Budget: 48 hours of wall clock for the agent. At 30 minutes before the end, interrupt the agent and give it at most 15 minutes to commit its best state and update `PROGRESS.md` with a final summary, then stop it. Also record total tokens and cost.
