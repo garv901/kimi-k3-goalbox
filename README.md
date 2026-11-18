@@ -2,14 +2,14 @@
 
 This repository is a harness for a Claude goal-mode baseline.
 In the baseline, one Claude Code agent writes a megakernel for one Kimi K3 decode step.
-The target is one node of 8 NVIDIA B300 GPUs with tensor parallel 8 (TP8).
-On a GB300 NVL72 rack a tray has 4 GPUs, so the synthetic graded cases use tensor parallel 4 (TP4) and run on one tray. See "GB300 NVL72 trays" below.
+The target is tensor parallel 8 (TP8) on two GB300 NVL72 trays (4 GPUs each) in one NVLink domain, with the real checkpoint and all 93 layers.
+The decisions for this run are in `planning/DECISIONS.md`. That file wins over every other file in this repository.
 
 ## The harness
 
 The harness has four parts:
 
-1. **Sandbox.** The agent runs in a bubblewrap (`bwrap`) sandbox. The agent can see only its workspace, its home, the CUDA toolkit and a read-only copy of the benchmark.
+1. **Sandbox.** The agent runs in a sandbox: a Kubernetes pod on the GB300 racks, or Landlock if pods are not available (`planning/DECISIONS.md` section 3). The bubblewrap (`bwrap`) scripts in `sandbox/` are the original single-host version. The agent can see only its workspace, its home, the CUDA toolkit and a read-only copy of the benchmark.
 2. **Network filter.** A proxy lets the agent reach only the Claude API, Hugging Face and a filtered package index. The index does not supply packages that contain LLM kernels, for example vLLM, FlashInfer and CUTLASS.
 3. **GPU broker.** The sandbox has no GPU. The agent sends GPU work with `gpu-run`. The host broker runs the work as a Slurm job or on local GPUs, in a different sandbox with no network.
 4. **Benchmark (MegaBench).** A PyTorch oracle gives the math of one Kimi K3 decode step. The benchmark does a check of correctness, counts the GPU kernel launches and measures the latency.
@@ -22,13 +22,14 @@ The goal is one kernel launch for each rank, correct output on all graded cases,
 | Case | Weights | Batch | Layers |
 |---|---|---|---|
 | `kimi-k3-tp8-b{1,8,64}-s8192` | Real checkpoint, TP8 | 1, 8, 64 | 93 |
-| `kimi-k3-syn-l8-tp4-b{1,8,64}-s8192` | New synthetic weights for each trial, TP4 | 1, 8, 64 | 8 |
 
-All graded cases use a context of 8192 tokens. The real-weight cases are TP8 on an 8-GPU node. The synthetic cases are TP4 so that they run on one GB300 NVL72 tray; the same cases at TP8 (`kimi-k3-syn-l8-tp8-b{1,8,64}-s8192`, suite `p2`) stay in the case table for 8-GPU nodes but are not graded.
-The real-weight cases show the latency of the real model.
-The synthetic cases use new random weights for each trial.
-Thus, a submission that keeps answers for one set of weights does not pass these cases.
-Two small cases (`kimi-k3-dev-l4-tp1-b8-s8192` and `kimi-k3-dev-l8-tp2-b8-s8192`) are for development.
+All graded cases use a context of 8192 tokens and TP8 on two trays. They match the TP8, 8k, no-speculation row of vLLM PR #61867.
+
+Development cases (suite `p2`, not graded):
+
+- `kimi-k3-syn-l8-tp8-b{1,8,64}-s8192`: new synthetic weights for each trial, 8 layers, TP8 on two trays. Thus, a submission that keeps answers for one set of weights does not pass these cases. They are reported but are not in the headline result.
+- `kimi-k3-syn-l8-tp4-b{1,8,64}-s8192`: the same synthetic cases at TP4 on one tray, for fast iteration. On the `gb300-tp4-synthetic` branch these were graded; they are not graded now.
+- `kimi-k3-dev-l4-tp1-b8-s8192` and `kimi-k3-dev-l8-tp2-b8-s8192`: small slices.
 
 ### Accuracy check (the oracle band)
 
@@ -155,8 +156,7 @@ With Slurm, set `GOALBOX_PARTITION` (default: the cluster's default partition) a
 
 ## Requirements
 
-- For the real-weight cases: one node with 8 B300 GPUs (sm_103a, 288 GB each) and approximately 2 TB of free disk. Each rank holds approximately 200 GB of weights, so the real-weight cases do not fit on B200 (180 GB). The harness was developed and its synthetic cases were tested on B200 (see `tools/VERIFY_KIMI.md`).
-- For the synthetic TP4 cases: one GB300 NVL72 tray (4 GPUs, see below).
+- For the graded cases: two GB300 NVL72 trays in one NVLink domain (8 GPUs, sm_103a, 288 GB each), with the per-rank checkpoint of each tray's 4 ranks (approximately 0.82 TB) on its local RAID. Each rank holds approximately 200 GB of weights, so the real-weight cases do not fit on B200 (180 GB). The harness was developed and its synthetic cases were tested on B200 (see `tools/VERIFY_KIMI.md`).
 - Linux with `bwrap` (bubblewrap) and the CUDA 13 toolkit.
 - Slurm, or local GPUs with `GOALBOX_GPU_MODE=local`.
 - Claude Code (`claude` on `PATH`, or `GOALBOX_CLAUDE_BIN`) and an OAuth token.
@@ -165,11 +165,11 @@ With Slurm, set `GOALBOX_PARTITION` (default: the cluster's default partition) a
 
 A GB300 NVL72 rack has 18 trays. Each tray is one Slurm node with 4 NVIDIA GB300 GPUs (B300 silicon, compute capability 10.3 = `sm_103a`, 284208 MiB each) on two Grace CPUs (`aarch64`). Checked on 2026-11-11, Ubuntu 24.04, driver 610.57, CUDA toolkit 13.4, NCCL 2.31.
 
-- The 4 GPUs of a tray run every TP1, TP2 and TP4 case. The TP8 cases (real weights, and the `p2` synthetic TP8 cases) need 8 GPUs on one node: the launcher in `megabench/harness/distributed.py` starts all ranks on one host and reports `unavailable` otherwise. Two trays share one NVLink fabric (IMEX), but a two-node launcher is not implemented.
-- The real checkpoint at TP4 does not fit: two TP8 shards of approximately 200 GB each per GPU.
+- The 4 GPUs of a tray run the TP1, TP2 and TP4 development cases. The TP8 cases (all graded cases, and the synthetic TP8 cases) run on two trays that share one NVLink fabric (IMEX). The launcher in `megabench/harness/distributed.py` still starts all ranks on one host; `planning/DECISIONS.md` section 2 specifies the two-tray launcher that the harness build adds.
+- The real checkpoint at TP4 does not fit: two TP8 shards of approximately 200 GB each per GPU. There is no real-weight TP4 case.
 - PyTorch (`cu130`) and vLLM nightly both publish `aarch64` wheels, so `setup/install.sh` and `baseline/install_vllm.sh` work unchanged.
 - The sandbox needs `bubblewrap` and `socat` (`apt install bubblewrap socat`). Ubuntu 24.04 restricts unprivileged user namespaces (`kernel.apparmor_restrict_unprivileged_userns=1`); the `bubblewrap` package ships the AppArmor profile that allows `bwrap`.
 - Set `GOALBOX_PARTITION` to a partition that has the trays (there is no partition `main`); `sandbox/bin/goalbox-grade` requests as many GPUs as the largest selected case.
-- `goals/kimi-k3-tp4-synthetic.txt` is a goal prompt for a tray with no real checkpoint: `sandbox/bin/goalbox-start NAME TOKEN_FILE goals/kimi-k3-tp4-synthetic.txt`.
+- The only goal prompt is `goals/kimi-k3-tp8.txt`. The TP4 synthetic goal prompt was removed.
 
 CAUTION: Do not put tokens in the repository. Keep each token in a file outside the repository, with mode 600.

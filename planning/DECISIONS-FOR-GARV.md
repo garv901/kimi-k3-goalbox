@@ -1,5 +1,7 @@
 # Decisions required from the repository owner before optimized submissions are graded
 
+> **Superseded (2026-11-18).** The open options and recommendations below are answered in `planning/DECISIONS.md` (for example, D-L7 is now no human review, D-T1 is the two-tray launcher, D-X1 is Kubernetes or Landlock with no requests to administrators). The decisions for the TP8 run on two trays are in `planning/DECISIONS.md`; where this file disagrees with it, `planning/DECISIONS.md` wins. This file is kept as a historical record.
+
 Compiled 2026-11-13 from the GB300 validation campaign (`gb300-tp4-synthetic` at `eac5dd2`) and the Phase B analysis
 (`planning/EVALUATOR-HARDENING-PLAN.md`, `planning/TP8-READINESS.md`). Each item names the policy choice, the
 evaluator behaviour today, and the options as we see them. None of these has been changed in the code.

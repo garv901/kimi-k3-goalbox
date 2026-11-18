@@ -19,7 +19,7 @@ RUN=${GOALBOX_RUNS:-$REPO/runs}/$NAME
 VENV=${GOALBOX_VENV:-$REPO/.venv}
 CASES=("$@")
 [ ${#CASES[@]} -gt 0 ] || mapfile -t CASES < <(PYTHONPATH=$REPO "$VENV/bin/python" -s -c 'from megabench.cases import GRADED; print("\n".join(GRADED))')
-# The Slurm job needs as many GPUs as the largest case (4 on a GB300 NVL72 tray, 8 on a DGX B300).
+# The Slurm job needs as many GPUs as the largest case (8 for TP8: two GB300 NVL72 trays, 4 GPUs each).
 GPUS=$(PYTHONPATH=$REPO "$VENV/bin/python" -s -c 'import sys; from megabench.cases import select_cases; print(max(c.gpus for c in select_cases(ids=sys.argv[1:])))' "${CASES[@]}")
 TS=$(date +%Y%m%d-%H%M%S) G=$RUN/grades/$TS
 mkdir -p "$G"/{home,tmp,sock}

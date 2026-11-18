@@ -1,13 +1,33 @@
 # Decisions by the repository owner (2026-11-18)
 
-These decisions answer `planning/DECISIONS-FOR-GARV.md`. They replace the open options in that file. Build the harness to match them. Where a decision changes evaluator code, the contract digest changes; that is expected (see "Evidence").
+These decisions answer `planning/DECISIONS-FOR-GARV.md`. Apart from the fixed points in section 0, they are recommended defaults; the agent that builds the harness decides the final form. They replace the open options and the recommendations in that file, and they replace the conclusions of `planning/TP8-READINESS.md` and `planning/EVALUATOR-HARDENING-PLAN.md` where the two disagree (for example: no human review, a two-tray launcher instead of an 8-GPU node, no reduced-depth TP4 real-weight case). Where this file and any other file disagree, this file wins. Build the harness to match them. Where a decision changes evaluator code, the contract digest changes; that is expected (see "Evidence").
 
 ## 0. To the Claude agent that reads this file: do this first
+
+### Where to work
+
+- Clone https://github.com/garv901/kimi-k3-goalbox and check out the branch `gb300-tp8-e2e-decisions`. This file, the goal prompt `goals/kimi-k3-tp8.txt`, the case table and the launch scripts on that branch are the starting point.
+- Make the harness changes that this file asks for on that branch, or on a new branch made from it. Commit as you go. Do not commit tokens, host addresses, user names or raw transcripts (section 18).
+
+### Your authority: you make the major decisions
+
+You can see the cluster and we cannot. So you decide how to build and run the harness. The sections below are our recommended defaults, written without access to your machines. Treat them as defaults, not orders: the sandbox mechanism, the launcher design, the weight layout and storage, the evaluator changes, the deadlines, the validation order, the vLLM measurement method and the trajectory pipeline are all yours to change if the environment calls for something else.
+
+Only these points are fixed. Do not change them; if one cannot be met, stop and tell the user.
+
+1. The study: one Claude goal-mode agent writes a megakernel for one Kimi K3 decode step on the real weights, all 93 layers, TP8 on GB300, and we compare it with vLLM PR #61867 (stock and specialized) at the PR's TP8, 8k, no-speculation shapes. The graded cases are B1, B8 and B64. The trajectory is the primary data (section 1).
+2. No person reviews the agent's code or results. Every rule is an automated check.
+3. No requests for permissions: no `sudo`, no package installs by administrators, no AppArmor or sysctl changes, no work-arounds of those restrictions.
+4. The goal agent chooses its own subagents and their models. It has nsys, ncu, and clock64/%globaltimer timing inside the kernel. It cannot see vLLM's Kimi K3 implementation or other production kernels for this model, and it has no web search.
+5. The run ends at the first of: the goal is reached, or 48 hours of run time.
+6. Every transcript (agent and subagents), GPU job and check result is recorded where the agent cannot change it. Raw records stay off the public repository.
+
+For each default you change, record the decision, the reason and what you observed on the cluster, in `planning/DECISIONS-LOG.md` on the branch, and list it in the briefing below.
 
 Before you run any command that changes something, send the user the briefing below. Write it in Simplified Technical English (ASD-STE100) and keep it as short as it is here.
 
 - You may first run read-only commands (for example `kubectl auth can-i ...`, `kubectl get ...`, `df -h`, `cat /sys/kernel/security/lsm`) to find the real values. Put the values you find in place of the text in angle brackets.
-- If a fact on the cluster differs from this file (for example, the account cannot create pods, so the sandbox is the Landlock fallback), change the briefing to the plan you will really follow.
+- If a fact on the cluster differs from this file (for example, the account cannot create pods, so the sandbox is the Landlock fallback), or you choose a different default, change the briefing to the plan you will really follow.
 - If you cannot find a value, say so in the briefing and ask for it.
 - Then wait for the user to agree before you build or run anything.
 
@@ -27,6 +47,8 @@ Briefing to send (template):
 > - The run time is 48 hours.
 >
 > Time during an infrastructure failure does not count.
+>
+> **Our decisions.** We changed these items of the default plan because of the conditions on your cluster: <each change, with one short reason>. If we did not change an item, write "None".
 >
 > **Work before the run.**
 >
@@ -63,7 +85,7 @@ This is a study of the agent, not a kernel race. The question is how far a Claud
 We run one end-to-end experiment: a Claude goal-mode agent writes a megakernel for one Kimi K3 decode step on the real checkpoint, all 93 layers, at TP8. We compare its latency with vLLM's Kimi K3 specialized decode (vllm-project/vllm#61867) and with stock vLLM, both at TP8, on the same GB300 hardware and the same cases.
 
 - Graded cases: the three real-weight cases `kimi-k3-tp8-b{1,8,64}-s8192`.
-- Development cases for the agent: the TP4 synthetic cases (one tray) and the p2 synthetic TP8 cases (two trays). The p2 cases become gradable on the two-tray setup and are reported, but the headline result is the real-weight cases.
+- Development cases for the agent (suite `p2`, not graded): the synthetic TP8 cases (two trays), the synthetic TP4 cases (one tray, fast iteration) and the TP1/TP2 dev cases. The synthetic TP8 cases are reported, but the headline result is the real-weight cases. The TP4 synthetic cases were graded (suite `p1`) on `gb300-tp4-synthetic`; this branch moved them to `p2` in `megabench/cases.py`, so `GRADED` is the three real-weight cases only. The TP4 goal prompt `goals/kimi-k3-tp4-synthetic.txt` is deleted.
 - Goal prompt: `goals/kimi-k3-tp8.txt`, updated only where the hardware description (two trays, not one 8-GPU node) or the sandbox description changes.
 - No person reviews the agent's code or results. Every rule must be enforced by an automated check. If a rule cannot be checked automatically, write that down in the results as a known limit; do not add a manual step.
 
@@ -72,7 +94,6 @@ We run one end-to-end experiment: a Claude goal-mode agent writes a megakernel f
 - TP8 runs on two GB300 NVL72 trays in the same NVLink domain (MNNVL/IMEX), 4 ranks per tray. This matches the hardware of the vLLM GB300 TP8 numbers. Do not use the x86 8-GPU VM node.
 - Add a two-node launcher to the harness (`megabench/harness/distributed.py` or a new module). Ranks 0 to 3 on the first tray, 4 to 7 on the second. Keep the single-host path unchanged for TP1, TP2 and TP4.
 - The agent's megakernel must do all communication between ranks, including across the two trays, inside its one kernel launch.
-- A 48-layer real-weight TP4 case may be added as a development case only. It is not graded.
 
 ## 3. Sandbox: no requests for permissions (D-X1)
 

@@ -1,5 +1,7 @@
 # AGENT TRAJECTORY
 
+> **Superseded (2026-11-18).** This file describes the operator session of the TP4 synthetic validation, not the goal agent run. The decisions for the TP8 run on two trays are in `planning/DECISIONS.md`; where this file disagrees with it, `planning/DECISIONS.md` wins. This file is kept as a historical record.
+
 How the `gb300-tp4-synthetic` branch came about, for review of the development path. Written by the operator's Claude Code session (not the sandboxed goal agent, which has not run). Credentials, cluster addresses and unrelated infrastructure are left out on purpose.
 
 ## 1. Test plan review (2026-11-11)

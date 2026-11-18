@@ -117,8 +117,8 @@ class KimiReferenceTests(unittest.TestCase):
             self.assertGreater(sol.estimate_case(case)['hbm_floor_ms'], 0, case.id)
         tp4 = [c for c in CASES if '-tp4-' in c.id]
         self.assertEqual({(c.gpus, c.tp, c.params['layers']) for c in tp4}, {(4, 4, 8)})
-        self.assertTrue({c.id for c in tp4} <= set(GRADED))
-        self.assertFalse(any('-syn-l8-tp8-' in i for i in GRADED))
+        self.assertFalse({c.id for c in tp4} & set(GRADED))
+        self.assertEqual(set(GRADED), {f'kimi-k3-tp8-b{b}-s8192' for b in (1, 8, 64)})
 
 
 if __name__ == '__main__':

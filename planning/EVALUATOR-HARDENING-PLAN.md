@@ -1,5 +1,7 @@
 # Evaluator hardening plan (Phase B, CPU-only analysis, 2026-11-13)
 
+> **Superseded (2026-11-18).** The analysis stays valid, but its interim measures that rely on human review, and its policy options, are replaced by `planning/DECISIONS.md` sections 4 to 6. The decisions for the TP8 run on two trays are in `planning/DECISIONS.md`; where this file disagrees with it, `planning/DECISIONS.md` wins. This file is kept as a historical record.
+
 Scope: the MegaBench evaluator of this repository at the frozen baseline `eac5dd2` (contract digest `4da60e9b…`;
 `planning/BASELINE-FREEZE.md`). This document analyses four areas, states what is confirmed and what is a hypothesis,
 proposes designs, and ends with a staged implementation and regression-test plan. Nothing in the evaluator, the oracle,

@@ -1,5 +1,7 @@
 # PROGRESS
 
+> **Superseded (2026-11-18).** This log covers the TP4 synthetic validation on one tray, where the synthetic TP4 cases were graded. They are now development cases only. The decisions for the TP8 run on two trays are in `planning/DECISIONS.md`; where this file disagrees with it, `planning/DECISIONS.md` wins. This file is kept as a historical record.
+
 Development log of the `gb300-tp4-synthetic` branch: validating the kimi-k3-goalbox harness on GB300 NVL72 trays before any agent run. Newest entry last. Evidence lives under `reports/gb300/`.
 
 ## 2026-11-11: hardware audit and branch

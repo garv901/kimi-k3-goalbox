@@ -1,5 +1,7 @@
 # TP8 and real-checkpoint readiness assessment (2026-11-13, CPU-only; nothing launched)
 
+> **Superseded (2026-11-18).** The verdict and the recommended path below (an 8-GPU node, a reduced-depth TP4 real-weight case) are replaced by the two-tray launcher, local-RAID weights and the validation order in `planning/DECISIONS.md` sections 2, 7 and 10. The decisions for the TP8 run on two trays are in `planning/DECISIONS.md`; where this file disagrees with it, `planning/DECISIONS.md` wins. This file is kept as a historical record.
+
 Verdict: **not ready**. The per-rank fixture of the real-weight cases fits in a GB300's memory with headroom, and both
 racks have the pinned checkpoint on disk, but (1) the harness can only start all ranks on one host and no GB300 tray has
 8 GPUs, (2) the converted per-rank weight layout does not exist anywhere, (3) there is no sandbox for agent-generated
