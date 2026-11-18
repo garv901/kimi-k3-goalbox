@@ -1,0 +1,16 @@
+blackwell-block-scaled-gemm skill and example
+Copyright (c) 2026 the megakernel-scaffold-search authors.
+
+The example kernel (example/bs_gemm.cu) was written for this skill. Several of its patterns are
+adapted from sgl-nvidia-mega (https://github.com/sgl-project/sgl-nvidia-mega, commit 1195222),
+Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES and SGLang contributors, licensed under the
+Apache License, Version 2.0:
+  - the tcgen05.mma kind::mxf8f6f4.block_scale instruction-descriptor bit layout,
+  - the CU_TENSOR_MAP_DATA_TYPE_16U4_ALIGN16B + SWIZZLE_128B tensor map for packed FP4 weights,
+  - 128x4 scale-factor atoms copied to TMEM with tcgen05.cp.cta_group::1.32x128b.warpx4,
+  - the warp-specialized TMA / MMA / epilogue mbarrier ring and the PDL weight prologue,
+from sgl_nvidia_mega/deepseek_v41/sm103/moe/src/gemm1.cu, gemm2.cu and routed_expert_gemm.py.
+No code was copied verbatim; no model-specific shapes or layouts are used.
+
+You may obtain a copy of the Apache License 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+Distributed under the License on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.

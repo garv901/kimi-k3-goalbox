@@ -1,0 +1,20 @@
+# files that must be executable (the GitHub API used to publish this branch stores every file as 0644);
+# scripts/fix_modes.sh applies this list. Overlay tools are run as ./name by the agents.
+docs/A1/gpu_run_stub
+docs/A3_fixture/gpu_run_stub
+overlays/A1/flag_audit
+overlays/A1/phase_table
+overlays/A1/profile_candidate_all_ranks
+overlays/A3/a3tools/selftest.sh
+overlays/A3/capture
+overlays/A3/task_ab
+scripts/bootstrap_node.sh
+scripts/collect_report.sh
+scripts/fetch_benchmark.sh
+scripts/node_ops/killrun.sh
+scripts/node_ops/restart_lease.sh
+scripts/run_main.sh
+scripts/run_selftest.sh
+scripts/unpack_seed.sh
+scripts/verify_protocol.py
+scripts/fix_modes.sh

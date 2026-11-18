@@ -1,0 +1,5 @@
+#!/bin/sh
+# Preprocessor switches in the shipped build vs NOTES.md (exit 1 on findings). --help for options.
+here=$(cd "$(dirname "$0")" && pwd)
+py=/usr/bin/python3.12; [ -x "$py" ] || py=python3
+exec "$py" "$here/.a1/flag_audit.py" "$@"

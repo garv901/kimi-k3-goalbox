@@ -1,0 +1,5 @@
+#!/bin/sh
+# Per-phase, per-rank table of the candidate's PHASE_TABLE build (see TASK.d/A1.md). --help for options.
+here=$(cd "$(dirname "$0")" && pwd)
+py=/usr/bin/python3.12; [ -x "$py" ] || py=python3
+exec "$py" "$here/.a1/phase_table.py" "$@"

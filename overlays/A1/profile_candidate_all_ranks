@@ -1,0 +1,5 @@
+#!/bin/sh
+# Nsight Compute on all ranks (application replay, hard timeout). --help for options.
+here=$(cd "$(dirname "$0")" && pwd)
+py=/usr/bin/python3.12; [ -x "$py" ] || py=python3
+exec "$py" "$here/.a1/ncu_all_ranks.py" "$@"

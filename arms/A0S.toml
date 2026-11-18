@@ -1,0 +1,8 @@
+# A0S control: the plain workspace plus the 9 syfi CUDA skills (overlays/S).
+name = "A0S"
+base_agent = "plain"
+overlays = ["S"]
+task = "improve-b8"
+budget_minutes = 120
+max_concurrent_1gpu = 3
+claude_extra_args = []

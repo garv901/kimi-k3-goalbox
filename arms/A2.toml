@@ -1,0 +1,8 @@
+# A2 knowledge: A1 tools + B300 primdb rows + skills blackwell-block-scaled-gemm and multi-gpu-sync (overlays/A2).
+name = "A2"
+base_agent = "plain"
+overlays = ["S", "A1", "A2"]
+task = "improve-b8"
+budget_minutes = 120
+max_concurrent_1gpu = 3
+claude_extra_args = []

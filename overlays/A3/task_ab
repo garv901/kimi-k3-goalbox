@@ -1,0 +1,13 @@
+#!/bin/sh
+# ./task_ab A_DIR [B_DIR] --task NAME --in REC --out REC --layer L [--rank R|all] [--reps 9] [--capture DIR]
+# Replays one phase on ONE GPU (./gpu_run -g 1) from captured state; checks against the capture with the
+# case's tolerances; times A and B alternately with CUDA events. See TASK.d/A3.md.
+set -e
+WS=$(cd "$(dirname "$0")" && pwd)
+case "$1" in -h|--help) sed -n 2,4p "$0"; exec python3.12 "$WS/a3tools/task_ab.py" --help ;; esac
+if [ "$1" = "--selftest" ]; then shift; exec "$WS/a3tools/selftest.sh" "$@"; fi
+cd "$WS"
+# build outside the GPU lease (cached), then replay/time under a short 1-GPU lease
+env A3_WS="$WS" PYTHONPATH="$WS:$WS/reference:$PYTHONPATH" python3.12 "$WS/a3tools/task_ab.py" --build-only "$@"
+exec ./gpu_run -g 1 -m 10 -- env A3_WS="$WS" TMPDIR=/tmp TMP=/tmp TEMP=/tmp PYTHONPATH="$WS:$WS/reference:$PYTHONPATH" \
+  python3.12 "$WS/a3tools/task_ab.py" "$@"

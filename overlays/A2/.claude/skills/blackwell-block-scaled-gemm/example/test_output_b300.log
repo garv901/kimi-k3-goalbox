@@ -1,0 +1,11 @@
+{"test":"bs_gemm","M":8,"N":256,"K":512,"splits":1,"pdl":1,"mutated":0,"max_abs_err":26.85,"max_abs_ref":1.025e+04,"pass":true}
+{"test":"bs_gemm","M":48,"N":256,"K":2048,"splits":3,"pdl":1,"mutated":0,"max_abs_err":54.54,"max_abs_ref":1.846e+04,"pass":true}
+{"test":"bs_gemm","M":1,"N":128,"K":256,"splits":1,"pdl":1,"mutated":0,"max_abs_err":6.289,"max_abs_ref":5500,"pass":true}
+{"test":"bs_gemm","M":33,"N":384,"K":1024,"splits":2,"pdl":1,"mutated":0,"max_abs_err":31.76,"max_abs_ref":1.386e+04,"pass":true}
+{"test":"bs_gemm","M":64,"N":512,"K":1792,"splits":8,"pdl":1,"mutated":0,"max_abs_err":36.13,"max_abs_ref":1.719e+04,"pass":true}
+{"test":"bs_gemm","M":8,"N":4096,"K":7168,"splits":8,"pdl":1,"mutated":0,"max_abs_err":63.79,"max_abs_ref":2.896e+04,"pass":true}
+{"test":"bs_gemm","M":48,"N":4096,"K":7168,"splits":8,"pdl":1,"mutated":0,"max_abs_err":63.97,"max_abs_ref":2.861e+04,"pass":true}
+{"test":"bs_gemm","M":16,"N":1024,"K":2048,"splits":8,"pdl":0,"mutated":0,"max_abs_err":53.02,"max_abs_ref":1.743e+04,"pass":true}
+{"test":"bs_gemm","M":8,"N":512,"K":1024,"splits":8,"pdl":1,"mutated":1,"max_abs_err":1.648e+04,"max_abs_ref":1.088e+04,"pass":false}
+{"test":"mutation","caught":true}
+ALL PASS

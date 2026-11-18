@@ -1,0 +1,5 @@
+#!/bin/sh
+# builder-only stand-in for the harness ./gpu_run: ./gpu_run -g N -- CMD
+[ "$1" = "-g" ] || { echo "usage: gpu_run -g N -- CMD" >&2; exit 2; }
+n=$2; shift 2; [ "$1" = "--" ] && shift
+exec env SS_RUN_ID=builder-a1 /srv/ss/bin/gpu_lease run --gpus "$n" --max-minutes ${GPU_RUN_MAX_MIN:-30} -- "$@"

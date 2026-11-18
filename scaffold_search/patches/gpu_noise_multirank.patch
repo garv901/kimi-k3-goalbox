@@ -1,0 +1,109 @@
+--- gpu_noise.py	2026-11-17 09:12:14.585210603 +0000
++++ gpu_noise.py	2026-11-17 09:12:14.600825882 +0000
+@@ -165,10 +165,105 @@
+     return out
+ 
+ 
++def _probe_rank(rank: int, contract: dict, submission: str, warmup: int, reps: int, seed: int,
++                rendezvous: str, out_dir: str) -> None:
++    """One rank of a multi-GPU probe: build with an ``execution`` dict as the evaluator does."""
++    import traceback
++    from datetime import timedelta
++
++    import torch
++    import torch.distributed as dist
++
++    from ..cases import Case
++    from ..harness.runner import _load_submission
++    from ..tasks.parallel import initialize
++    from ..workloads import make_inputs
++
++    case = Case(**contract)
++    device = f"cuda:{rank}"
++    torch.cuda.set_device(rank)
++    row: dict = {"rank": rank}
++    initialized = False
++    try:
++        dist.init_process_group("nccl", init_method=rendezvous, world_size=case.gpus, rank=rank,
++                                timeout=timedelta(minutes=10), device_id=torch.device(device))
++        initialized = True
++        ctx = initialize(case)
++        execution = {"rank": rank, "world_size": case.gpus, "tp_rank": ctx.tp_rank,
++                     "ep_rank": ctx.ep_rank, "backend": dist.get_backend(), "device": device,
++                     "tp_group": ctx.tp_group, "ep_group": ctx.ep_group}
++        if rank == 0:
++            row["gpu_uuid"] = gpu_uuid(device)
++            row["canary_before"] = canary(device)
++        dist.barrier()
++        start = time.perf_counter()
++        candidate = _load_submission(Path(submission), case, execution=execution)
++        row["build_ms"] = (time.perf_counter() - start) * 1000
++        with torch.inference_mode():
++            inputs = make_inputs(case, seed, device)
++            torch.cuda.synchronize(device)
++            dist.barrier()
++            start = time.perf_counter()
++            candidate(inputs)
++            torch.cuda.synchronize(device)
++            row["first_call_ms"] = (time.perf_counter() - start) * 1000
++            dist.barrier()
++            row["times"] = time_candidate(candidate, inputs, device, warmup, reps)
++        dist.barrier()
++        if rank == 0:
++            row["canary_after"] = canary(device)
++    except Exception:  # noqa: BLE001
++        row["error"] = traceback.format_exc(limit=8)
++    finally:
++        (Path(out_dir) / f"rank-{rank}.json").write_text(json.dumps(row))
++        if initialized:
++            dist.destroy_process_group()
++
++
++def _probe_multi(shape, submission: Path, warmup: int, reps: int, seed: int) -> dict:
++    """Multi-GPU probe: one process per rank; per repetition the slowest rank counts."""
++    import tempfile
++
++    import torch.multiprocessing as mp
++
++    with tempfile.TemporaryDirectory(prefix="megabench-probe-") as directory:
++        mp.spawn(_probe_rank, nprocs=shape.gpus, join=True,
++                 args=(shape.to_dict(), str(submission), warmup, reps, seed,
++                       (Path(directory) / "rendezvous").as_uri(), directory))
++        rows = [json.loads((Path(directory) / f"rank-{r}.json").read_text())
++                for r in range(shape.gpus)]
++    errors = [r["error"] for r in rows if "error" in r]
++    if errors:
++        raise RuntimeError("probe rank failed:\n" + errors[0])
++    worst = [max(rep) for rep in zip(*(r["times"] for r in rows), strict=True)]
++    return {"p50_ms": statistics.median(worst), "build_ms": max(r["build_ms"] for r in rows),
++            "first_call_ms": max(r["first_call_ms"] for r in rows), "gpu_uuid": rows[0]["gpu_uuid"],
++            "canary_before": rows[0]["canary_before"], "canary_after": rows[0]["canary_after"]}
++
++
+ def probe(case, submission: Path, *, device: str = "cuda:0", warmup: int = 3,
+           reps: int = 20, seed: int = 7301) -> dict:
+-    """Fresh-process timing of a submission (weighted over regimes, as evaluate does)."""
++    """Fresh-process timing of a submission (weighted over regimes, as evaluate does).
++
++    Multi-GPU cases run one process per rank, each building with the ``execution`` dict
++    (rank, groups, device) that ``megabench evaluate`` passes (scaffold-search harness fix)."""
+     import torch
++    if case.gpus > 1:
++        shapes = ([(r["weight"], sub) for r, sub in case.regime_cases()] if case.regimes
++                  else [(1.0, case)])
++        total = sum(w for w, _ in shapes)
++        row: dict = {"p50_ms": 0.0, "build_ms": 0.0, "first_call_ms": 0.0}
++        for weight, shape in shapes:
++            r = _probe_multi(shape, submission, warmup, reps, seed)
++            row["p50_ms"] += weight / total * r["p50_ms"]
++            row["build_ms"] += r["build_ms"]
++            row["first_call_ms"] += r["first_call_ms"]
++            row.setdefault("gpu_uuid", r["gpu_uuid"])
++            row.setdefault("canary_before", r["canary_before"])
++            row["canary_after"] = r["canary_after"]
++        row["canary"] = {k: min(row["canary_before"][k], row["canary_after"][k])
++                         for k in ("gemm_us", "copy_us")}
++        return row
+     from ..harness.runner import _load_submission
+     from ..workloads import make_inputs
+ 

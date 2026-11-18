@@ -1,0 +1,9 @@
+# A3 parallel engines: A1 tools + capture/task_ab, phase-contract template, engine subagent,
+# integrator instructions (overlays/A3, TASK.d/A3.md).
+name = "A3"
+base_agent = "plain"
+overlays = ["S", "A1", "A3"]
+task = "improve-b8"
+budget_minutes = 120
+max_concurrent_1gpu = 3
+claude_extra_args = []

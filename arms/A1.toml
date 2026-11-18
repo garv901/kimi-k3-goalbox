@@ -1,0 +1,7 @@
+name = "A1"
+base_agent = "plain"
+overlays = ["S", "A1"]
+task = "improve-b8"
+budget_minutes = 120
+max_concurrent_1gpu = 3
+claude_extra_args = []

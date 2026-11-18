@@ -1,0 +1,5 @@
+#!/bin/sh
+# test stub of the harness's ./gpu_run (A3 builder only): ./gpu_run -g N [-m MIN] -- CMD
+N=1; M=10
+while [ $# -gt 0 ]; do case "$1" in -g) N=$2; shift 2;; -m) M=$2; shift 2;; --) shift; break;; *) break;; esac; done
+exec env SS_RUN_ID=builder-a3 /srv/ss/bin/gpu_lease run --gpus "$N" --max-minutes "$M" -- "$@"
