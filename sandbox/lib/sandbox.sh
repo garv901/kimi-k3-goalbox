@@ -58,7 +58,7 @@ case $MODE in
       exec 3<<<"$CLAUDE_CODE_OAUTH_TOKEN"
       args+=(--perms 0400 --ro-bind-data 3 /goalbox/token)
     fi
-    for v in CLAUDE_CODE_SUBAGENT_MODEL DISABLE_AUTOUPDATER \
+    for v in DISABLE_AUTOUPDATER \
              CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC ENABLE_CLAUDEAI_MCP_SERVERS COLORTERM; do
       [ -n "${!v:-}" ] && args+=(--setenv "$v" "${!v}")
     done

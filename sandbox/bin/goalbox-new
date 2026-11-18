@@ -30,7 +30,6 @@ printf '%s\n' 'Read TASK.md (the task) and ENVIRONMENT.md (the sandbox, and how 
 # 2. Fresh Claude home: no memory, history, skills, plugins or claude.ai connectors.
 cat > "$RUN/home/.claude/settings.json" <<'EOF'
 {
-  "env": { "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet" },
   "permissions": { "deny": ["WebSearch", "WebFetch"] },
   "autoUpdates": false
 }

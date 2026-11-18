@@ -33,7 +33,7 @@ tmux new-window -t "$S" -n agent -c "$GB" \
   "CLAUDE_CODE_OAUTH_TOKEN=\$(cat '$TOK') DISABLE_AUTOUPDATER=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 \
    ENABLE_CLAUDEAI_MCP_SERVERS=false \
    lib/sandbox.sh agent '$RUN' -- /goalbox/claude --model ${MODEL:-claude-opus-5-5} --effort ${EFFORT:-high} \
-   --permission-mode auto --disallowedTools WebSearch -n '$NAME'; exec bash"
+   --permission-mode auto -n '$NAME'; exec bash"
 T=$S:agent
 
 ready=0
