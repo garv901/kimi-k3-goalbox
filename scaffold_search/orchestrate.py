@@ -9,6 +9,10 @@ schedule order, staggered by --stagger seconds. Runs whose dir already has resul
 (restartable). The ledger (results/ledger.md + ledger.json on branch `results`) is rewritten after
 each start/finish: per-run wall time and node-hours, the schedule's wall time and the cost at
 $72 per node-hour (the whole node is billed while any run is active).
+
+--slots I[,J...]: run only the runs at wave positions I, J... (TP4 protocol: the schedule is made with K =
+the number of 4-GPU slots, and slot I runs position I of every wave, one run at a time, K=1); the
+schedule name, the tmux session and the ledger get the suffix -slot<I>.
 """
 import argparse, json, os, shlex, subprocess, sys, time
 
@@ -76,9 +80,17 @@ def main():
     ap.add_argument('--stagger', type=int, default=90)
     ap.add_argument('--run-args', default='', help='extra run_arm args, e.g. "--budget-minutes 20"')
     ap.add_argument('--no-push', action='store_true')
+    ap.add_argument('--slots', help='comma list of wave positions to run (sharding across slots); implies K=1 '
+                                    'unless --k is given')
     a = ap.parse_args()
     sched = json.load(open(a.schedule))
     k = a.k or sched['k']
+    if a.slots:
+        pos = sorted({int(x) for x in a.slots.split(',')})
+        assert all(0 <= p < sched['k'] for p in pos), f'--slots {pos} outside 0..{sched["k"] - 1}'
+        sched['order'] = [r for w in sched['waves'] for i, r in enumerate(w) if i in pos]
+        sched['name'] = f'{sched["name"]}-slot{"_".join(map(str, pos))}'
+        k = a.k or 1
     sess = f'ss-runs-{sched["name"]}'
     if tmux('has-session', '-t', sess).returncode != 0:
         tmux('new-session', '-d', '-s', sess, '-n', 'idle', 'sleep infinity')

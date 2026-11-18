@@ -12,19 +12,26 @@
 #      calibration + 10 min + rescore 3x + final check), expect score ~1.37 = 28.95 / ~21.1 ms
 #                                                                                     full node, ~35 min
 # --cpu-only: stages 1-2 (any machine with python3.12 + pytest). --no-smoke: skip stage 6.
+# TP4 (scripts/run_main_tp4.sh selftest): SS_PROTOCOL=PROTOCOL_TP4.md (from /srv/ss/node.env), SS_ARMS_DIR=arms/tp4,
+# SS_SEED=dsv41_b8_tp4_nopf; stage 6 then calibrates the TP4 seed (score = 1/L until b3 is set).
 set -euo pipefail
 H=$(cd "$(dirname "$0")/.." && pwd)
 PY=${PY:-/usr/bin/python3.12}; [ -x "$PY" ] || PY=$(command -v python3.12 || command -v python3)
 CPU_ONLY=0; SMOKE=1; CLAUDE=""
 for a in "$@"; do case "$a" in --cpu-only) CPU_ONLY=1;; --no-smoke) SMOKE=0;; --claude) CLAUDE=--claude;; *) echo "unknown $a"; exit 2;; esac; done
 cd "$H"
+[ -f /srv/ss/node.env ] && { . /srv/ss/node.env; export SS_PROTOCOL; }
+export SS_PROTOCOL=${SS_PROTOCOL:-PROTOCOL.md}
+ARMS_DIR=${SS_ARMS_DIR:-arms}; SEED=${SS_SEED:-dsv41_b8_nopf}
+TBD=""; [ "$SS_PROTOCOL" = PROTOCOL_TP4.md ] && TBD=--allow-tbd
+export ARMS_DIR
 sh scripts/fix_modes.sh
 stage() { printf '\n######## %s\n' "$*"; }
 
 stage "1. PROTOCOL manifest"
-bash scripts/unpack_seed.sh
-if [ -d /srv/ss/trusted/vibe-megakernel ]; then "$PY" scripts/verify_protocol.py --trusted /srv/ss/trusted/vibe-megakernel
-else "$PY" scripts/verify_protocol.py; fi
+bash scripts/unpack_seed.sh "$SEED"
+if [ -d /srv/ss/trusted/vibe-megakernel ]; then "$PY" scripts/verify_protocol.py $TBD --trusted /srv/ss/trusted/vibe-megakernel
+else "$PY" scripts/verify_protocol.py $TBD; fi
 
 stage "2. CPU unit tests"
 "$PY" -m pytest -q -p no:cacheprovider scaffold_search/tests/test_scaffold_search.py scaffold_search/tests/test_package.py
@@ -48,11 +55,12 @@ import os, shutil, subprocess, sys
 sys.path.insert(0, '/srv/ss/harness')
 from scaffold_search import workspace
 base = '/srv/ss/scratch/selftest-ws'
+arms_dir = os.environ['ARMS_DIR']
 for arm in ('A0S', 'A1', 'A2', 'A3'):
     d = f'{base}/{arm}'
     shutil.rmtree(d, ignore_errors=True)
-    ws, info = workspace.build(f'st{arm}', workspace.load_arm(f'/srv/ss/harness/arms/{arm}.toml'), d)
-    print(arm, 'overlays', workspace.load_arm(f'/srv/ss/harness/arms/{arm}.toml')['overlays'],
+    ws, info = workspace.build(f'st{arm}', workspace.load_arm(f'/srv/ss/harness/{arms_dir}/{arm}.toml'), d)
+    print(arm, 'overlays', workspace.load_arm(f'/srv/ss/harness/{arms_dir}/{arm}.toml')['overlays'],
           'overlay files', info['overlay_files'], 'seed', info['seed_sha256'][:12])
     def run(c):
         p = subprocess.run(['bash', '-c', c], cwd=ws, capture_output=True, text=True, timeout=600,
@@ -78,7 +86,8 @@ if [ $SMOKE = 1 ]; then
   stage "6. fake-agent smoke (10-min budget, ~35 min total)"
   RID=testF$(date -u +%m%d%H%M)
   PUSH=""; [ -s /srv/ss/snapshot_repo ] || PUSH=--no-push
-  "$PY" -m scaffold_search.run_arm --arm A0S --run-id "$RID" --budget-minutes 10 --fake-agent $PUSH 2>&1 | tail -25
+  SARM=A0S; [ "$ARMS_DIR" = arms ] || SARM=${ARMS_DIR#arms/}/A0S
+  "$PY" -m scaffold_search.run_arm --arm "$SARM" --run-id "$RID" --budget-minutes 10 --fake-agent $PUSH 2>&1 | tail -25
   "$PY" - "$RID" <<'EOF'
 import json, sys
 r = json.load(open(f'/srv/ss/runs/{sys.argv[1]}/result.json'))

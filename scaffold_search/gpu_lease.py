@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""gpu_lease: one daemon per node that hands out 1..3-GPU and 8-GPU leases.
+"""gpu_lease: one daemon per node that hands out 1..3-GPU (small) and full-node leases.
+
+The node has NGPU GPUs (GPU_LEASE_NGPU or --ngpu; 8 on the TP8 protocol, 4 on a TP4 slot). A full-node
+lease asks for all NGPU GPUs; "8-GPU" below means "full-node" on any node size.
 
 Standalone (stdlib only) so the same file serves as the CLI for run users.
 
@@ -42,8 +45,8 @@ LOG = os.environ.get('GPU_LEASE_LOG', '/srv/ss/lease.jsonl')
 NGPU = int(os.environ.get('GPU_LEASE_NGPU', '8'))
 GPU_GROUP = 'ss-gpu'
 SMALL_CAP = 3                    # GPUs per run in concurrent small leases
-DEFAULT_MIN = {8: 20, 'small': 60}
-NONROOT_MAX_MIN = {8: 30, 'small': 120}
+DEFAULT_MIN = {'full': 20, 'small': 60}
+NONROOT_MAX_MIN = {'full': 30, 'small': 120}
 KILL_GRACE = 10
 IDLE_S = float(os.environ.get('GPU_LEASE_IDLE_S', '300'))  # 0 disables the idle reaper
 # conditional small-lease cap: while an experiment run's 8-GPU request has waited PREEMPT_WAIT_S,
@@ -105,8 +108,12 @@ class Daemon:
         self.logf.write(json.dumps(kw) + '\n')
 
     # policy ---------------------------------------------------------
+    def cls(self, n):
+        """log class: the full-node size as a string ('8' on an 8-GPU node, '4' on a 4-GPU slot) or 'small'."""
+        return str(n) if n == self.ngpu else 'small'
+
     def small_held(self, run):
-        return sum(len(l['gpus']) for l in self.active.values() if l['run'] == run and l['n'] < 8)
+        return sum(len(l['gpus']) for l in self.active.values() if l['run'] == run and l['n'] < self.ngpu)
 
     def rr_order(self, reqs):
         """round-robin: least recently granted run first; FIFO (seq) inside a run."""
@@ -132,15 +139,15 @@ class Daemon:
             # experiment-run request is waiting (small ones held back only by their run's cap
             # do not count as waiting)
             hi = [r for r in pend if not low_priority(r['run']) and not
-                  (r['n'] < 8 and self.small_held(r['run']) + r['n'] > SMALL_CAP)]
+                  (r['n'] < self.ngpu and self.small_held(r['run']) + r['n'] > SMALL_CAP)]
             if hi:
                 pend = [r for r in pend if not low_priority(r['run'])]
-            big = self.rr_order([r for r in pend if r['n'] == 8])
-            small = [r for r in pend if r['n'] < 8]
+            big = self.rr_order([r for r in pend if r['n'] == self.ngpu])
+            small = [r for r in pend if r['n'] < self.ngpu]
             nb = big[0] if big else None
             if nb is not None:
                 small = [r for r in small if r['seq'] < nb['seq']]   # only older small requests
-            busy8 = any(l['n'] == 8 for l in self.active.values())
+            busy8 = any(l['n'] == self.ngpu for l in self.active.values())
             if not busy8:
                 for r in self.rr_order(small):
                     if len(self.free) >= r['n'] and self.small_held(r['run']) + r['n'] <= SMALL_CAP:
@@ -160,7 +167,7 @@ class Daemon:
         r['t_grant'] = time.time()
         self.active[r['id']] = r
         self.queue.remove(r)
-        self.log(ev='grant', id=r['id'], run=r['run'], uid=r['uid'], n=r['n'], cls='8' if r['n'] == 8 else 'small', gpus=gpus,
+        self.log(ev='grant', id=r['id'], run=r['run'], uid=r['uid'], n=r['n'], cls=self.cls(r['n']), gpus=gpus,
                  wait_s=round(r['t_grant'] - r['t_req'], 3), max_min=r['max_min'])
         self.cv.notify_all()
 
@@ -170,7 +177,7 @@ class Daemon:
                 del self.active[r['id']]
                 self.free |= set(r['gpus'])
                 self.log(ev='release', id=r['id'], run=r['run'], uid=r['uid'], n=r['n'],
-                         cls='8' if r['n'] == 8 else 'small', gpus=r['gpus'],
+                         cls=self.cls(r['n']), gpus=r['gpus'],
                          wait_s=round(r['t_grant'] - r['t_req'], 3),
                          hold_s=round(time.time() - r['t_grant'], 3), reason=reason, rc=rc,
                          util_mean=round(r['util_sum'] / r['util_n'], 1) if r.get('util_n') else None,
@@ -238,10 +245,10 @@ class Daemon:
 
     # connection ------------------------------------------------------
     def handle(self, conn):
+        fds = []
         try:
             cred = conn.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize('3i'))
             ppid, uid, gid = struct.unpack('3i', cred)
-            fds = []
             req = recv_msg(conn, fds)
             op = req.get('op')
             if op == 'status':
@@ -270,13 +277,19 @@ class Daemon:
             try: send_msg(conn, {'error': repr(e)})
             except Exception: pass
         finally:
+            # the client's stdio fds: closed after the spawn; close them on every other path too (a refused or
+            # killed request), or a client whose stdout is a pipe never sees EOF
+            for f in fds:
+                try: os.close(f)
+                except OSError: pass
             conn.close()
 
     def handle_run(self, conn, req, uid, gid, fds):
         n = int(req['gpus'])
-        if n not in (1, 2, 3, 8) or n > self.ngpu:
-            send_msg(conn, {'error': 'gpus must be 1, 2, 3 or 8'}); return
-        kind = 8 if n == 8 else 'small'
+        sizes = list(range(1, min(3, self.ngpu - 1) + 1)) + [self.ngpu]
+        if n not in sizes:
+            send_msg(conn, {'error': 'gpus must be ' + ', '.join(map(str, sizes[:-1])) + f' or {self.ngpu}'}); return
+        kind = 'full' if n == self.ngpu else 'small'
         mm = float(req.get('max_minutes') or DEFAULT_MIN[kind])
         if uid != 0:
             mm = min(mm, NONROOT_MAX_MIN[kind])
@@ -328,6 +341,7 @@ class Daemon:
             finally:
                 for f in fds:
                     os.close(f)
+                fds.clear()
             r['pid'] = proc.pid
             if os.environ.get('GPU_LEASE_TEST_CRASH_AFTER_SPAWN'):
                 raise RuntimeError('test crash')
@@ -406,11 +420,11 @@ class Daemon:
             with self.cv:
                 items = [r for r in list(self.active.values()) + list(self.queue) if r.get('run') != 'orphan']
             with self.cv:
-                big_wait = [q for q in self.queue if q['n'] == 8 and not q['dead'] and not low_priority(q['run'])
+                big_wait = [q for q in self.queue if q['n'] == self.ngpu and not q['dead'] and not low_priority(q['run'])
                             and now - q['t_req'] >= PREEMPT_WAIT_S]
                 if big_wait:
                     for l in self.active.values():
-                        if l['n'] < 8 and l.get('run') != 'orphan' and not l.get('kill_reason') \
+                        if l['n'] < self.ngpu and l.get('run') != 'orphan' and not l.get('kill_reason') \
                                 and now - l['t_grant'] > SMALL_CAP_S:
                             l['kill_reason'] = 'preempted'
                             l['kill_t'] = now
@@ -452,7 +466,7 @@ class Daemon:
         with self.cv:
             self.seq += 1
             r = {'id': f'orphan-{self.seq}', 'seq': self.seq, 'run': 'orphan', 'uid': -1, 'gid': -1,
-                 'n': 8 if len(gpus) == self.ngpu else len(gpus), 'max_min': 0, 'cmd': 'adopted at daemon start',
+                 'n': len(gpus), 'max_min': 0, 'cmd': 'adopted at daemon start',
                  't_req': time.time(), 't_grant': time.time(), 'granted': True, 'dead': False, 'gpus': gpus}
             self.free -= set(gpus)
             self.active[r['id']] = r
@@ -636,7 +650,7 @@ def cmd_run(a):
                 rc = m['exit']
                 if m['reason'] == 'preempted':
                     print(f'gpu_lease: this {a.gpus}-GPU lease was ended after {SMALL_CAP_S / 60:.0f} min because '
-                          'another job has been waiting for all 8 GPUs; rerun it shorter or checkpoint long jobs',
+                          'another job has been waiting for all GPUs of the node; rerun it shorter or checkpoint long jobs',
                           file=sys.stderr)
                 elif m['reason'] not in ('exit',):
                     print(f'gpu_lease: lease ended ({m["reason"]})', file=sys.stderr)

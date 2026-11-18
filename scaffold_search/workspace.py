@@ -12,10 +12,10 @@ Layout of /srv/ss/runs/<run_id>/ (0711 root):
 The workspace is `make_agent_workspace --agent <base_agent> --case <case>` (trusted snapshot as
 benchmark root), plus the seed sources (task improve-b8), plus the harness files:
   ./gpu_run                  -> /srv/ss/bin/gpu_lease run ...
-  ./check_candidate          wrapper: tar the source tree, run the stock check under an 8-GPU
-                             lease, leave a pending record in .harness/pending/ for the root
+  ./check_candidate          wrapper: tar the source tree, run the stock check under a full-node
+                             (task gpus) lease, leave a pending record in .harness/pending/ for the root
                              monitor (which snapshots passing checks and pushes the run branch)
-  ./profile_candidate, ./timeline_candidate   stock tools under an 8-GPU lease
+  ./profile_candidate, ./timeline_candidate   stock tools under a full-node lease
   .harness/*.stock           the stock tools
   TASK.d/harness.md          harness notes (identical in every arm)
 then the arm's overlays, copied verbatim in order.
@@ -26,8 +26,31 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 TRUSTED = '/srv/ss/trusted/vibe-megakernel'
 PY = '/usr/bin/python3.12'
-CASES = {'improve-b8': ('dsv41-flash-dspark-step-k5-ctx2k-b8', 'dsv41_b8_nopf'),
-         'scratch-b1': ('dsv41-flash-dspark-step-k5-ctx2k', None)}
+# task -> case, seed (seeds/<seed>/, None = from scratch), gpus (= the case's ranks = the full-node lease;
+# the node or slot must have exactly this many GPUs), b3_ms (score = b3_ms / L; None = not measured yet:
+# rescore then reports 1/L and flags it, see PROTOCOL_TP4.md)
+TASKS = {
+    'improve-b8': {'case': 'dsv41-flash-dspark-step-k5-ctx2k-b8', 'seed': 'dsv41_b8_nopf', 'gpus': 8, 'b3_ms': 28.95},
+    'scratch-b1': {'case': 'dsv41-flash-dspark-step-k5-ctx2k', 'seed': None, 'gpus': 8, 'b3_ms': 28.95},
+    # TP4 (PROTOCOL_TP4.md): the experiment task, and the one-time builder task that ports the TP8 seed
+    'improve-b8-tp4': {'case': 'dsv41-flash-dspark-step-k5-ctx2k-b8-tp4', 'seed': 'dsv41_b8_tp4_nopf', 'gpus': 4,
+                       'b3_ms': None},
+    'port-b8-tp4': {'case': 'dsv41-flash-dspark-step-k5-ctx2k-b8-tp4', 'seed': 'dsv41_b8_nopf', 'gpus': 4,
+                    'b3_ms': None},
+}
+CASES = {k: (v['case'], v['seed']) for k, v in TASKS.items()}
+
+
+def task_of_case(case):
+    for v in TASKS.values():
+        if v['case'] == case:
+            return v
+    raise KeyError(case)
+
+
+def render(text, ngpu):
+    """fill the GPU-count tokens of harness texts (TP8 renders byte-identical to the original texts)."""
+    return text.replace('@A_NGPU@', ('an ' if ngpu == 8 else 'a ') + str(ngpu)).replace('@NGPU@', str(ngpu))
 
 # what the snapshot tarball holds: the source tree, not builds, reports or caches
 TAR_EXCLUDES = ['./.git', './build', './reports', './.harness', 'capture-*', './__pycache__', '*/__pycache__',
@@ -54,6 +77,7 @@ def load_arm(path):
     assert arm['task'] in CASES, arm['task']
     arm.setdefault('max_concurrent_1gpu', 3)
     arm.setdefault('claude_extra_args', [])
+    arm.setdefault('prompt', 'goal_improve.md')
     return arm
 
 
@@ -82,7 +106,7 @@ def wexec(path, text):
 
 SEED_PREBUILD = """#!/bin/sh
 # Compile the submission's CUDA extension without a GPU. ./check_candidate runs this (if it exists
-# and is executable) before it takes the 8-GPU lease, so nvcc does not hold the GPUs. Keep it
+# and is executable) before it takes the @NGPU@-GPU lease, so nvcc does not hold the GPUs. Keep it
 # building exactly what submission.py loads; if it fails, the check still builds inside the lease.
 set -e
 cd "$(dirname "$0")"
@@ -90,7 +114,7 @@ exec /usr/bin/python3.12 -c "import mk_host; mk_host.load_ext()"
 """
 
 
-def harness_files(ws, task_prebuild=None):
+def harness_files(ws, task_prebuild=None, ngpu=8):
     os.makedirs(f'{ws}/.harness/pending', exist_ok=True)
     for tool in ('check_candidate', 'profile_candidate', 'timeline_candidate'):
         if os.path.exists(f'{ws}/{tool}'):
@@ -102,9 +126,9 @@ def harness_files(ws, task_prebuild=None):
     open(f'{ws}/.harness/check_candidate.stock', 'w').write(
         stock.replace('gpu_noise check ', 'gpu_noise check --processes 1 '))
     if task_prebuild and not os.path.exists(f'{ws}/prebuild'):
-        wexec(f'{ws}/prebuild', task_prebuild.replace('{ws}', ws))
-    wexec(f'{ws}/gpu_run', '''#!/bin/sh
-# ./gpu_run -g N [-m MINUTES] [--] CMD...   run CMD on N leased GPUs (N = 1, 2, 3 or 8)
+        wexec(f'{ws}/prebuild', render(task_prebuild.replace('{ws}', ws), ngpu))
+    wexec(f'{ws}/gpu_run', render('''#!/bin/sh
+# ./gpu_run -g N [-m MINUTES] [--] CMD...   run CMD on N leased GPUs (N = 1, 2, 3 or @NGPU@)
 n=1; m=""
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -117,11 +141,11 @@ while [ $# -gt 0 ]; do
 done
 [ $# -gt 0 ] || { echo "usage: ./gpu_run -g N [-m MINUTES] -- CMD..." >&2; exit 2; }
 exec /srv/ss/bin/gpu_lease run -v --gpus "$n" $m -- "$@"
-''')
+''', ngpu))
     excl = ' '.join(f"--exclude='{e}'" for e in TAR_EXCLUDES)
     wexec(f'{ws}/check_candidate', f'''#!/bin/bash
 # Harness wrapper around the stock ./check_candidate (in .harness/): records the source tree that is
-# checked, runs the check on an 8-GPU lease, and leaves a record for the harness snapshotter.
+# checked, runs the check on {render('@A_NGPU@', ngpu)}-GPU lease, and leaves a record for the harness snapshotter.
 set -u
 cd "$(dirname "$0")"
 id=$(date -u +%Y%m%dT%H%M%SZ)-$$
@@ -135,22 +159,28 @@ if [ -x ./prebuild ]; then
   echo "check_candidate: ./prebuild (compile without GPUs)"
   ./prebuild 2>&1 | tail -20 || echo "check_candidate: ./prebuild failed; the check builds inside the lease"
 fi
-./gpu_run -g 8 -m 30 -- .harness/check_candidate.stock "$@" 2>&1 | tee .harness/pending/$id.log
+./gpu_run -g {ngpu} -m 30 -- .harness/check_candidate.stock "$@" 2>&1 | tee .harness/pending/$id.log
 rc=$?
 printf '{{"id":"%s","rc":%d,"start":"%s","end":"%s"}}\\n' "$id" "$rc" "$start" "$(date -u +%FT%TZ)" > .harness/pending/$id.json
 exit $rc
 ''')
     for tool in ('profile_candidate', 'timeline_candidate'):
         wexec(f'{ws}/{tool}', f'''#!/bin/sh
-# Harness wrapper: the stock tool (.harness/{tool}.stock) on an 8-GPU lease.
+# Harness wrapper: the stock tool (.harness/{tool}.stock) on {render('@A_NGPU@', ngpu)}-GPU lease.
 cd "$(dirname "$0")"
-exec ./gpu_run -g 8 -m 30 -- .harness/{tool}.stock "$@"
+exec ./gpu_run -g {ngpu} -m 30 -- .harness/{tool}.stock "$@"
 ''')
     shutil.copytree(f'{HERE}/harness_files', ws, dirs_exist_ok=True)
+    for root, _, files in os.walk(f'{HERE}/harness_files'):
+        for fn in files:
+            dst = os.path.join(ws, os.path.relpath(os.path.join(root, fn), f'{HERE}/harness_files'))
+            text = render(open(dst).read(), ngpu)
+            open(dst, 'w').write(text)
 
 
 def build(run_id, arm, run_dir, uid=None, gid=None):
-    case, seed = CASES[arm['task']]
+    t = TASKS[arm['task']]
+    case, seed = t['case'], t['seed']
     ws = f'{run_dir}/ws'
     if os.path.exists(ws):
         raise SystemExit(f'{ws} exists')
@@ -162,11 +192,11 @@ def build(run_id, arm, run_dir, uid=None, gid=None):
     sh(PY, '-m', 'megabench.integrations.make_agent_workspace', '--agent', arm['base_agent'], '--case', case,
        '--output', ws, '--benchmark-root', TRUSTED, cwd=TRUSTED, env=dict(os.environ, PYTHONPATH=TRUSTED))
     sh('chmod', '-R', 'u+w', ws)  # tools copied from the read-only trusted tree keep a-w
-    info = {'run_id': run_id, 'arm': arm['name'], 'case': case, 'task': arm['task'], 'seed': seed}
+    info = {'run_id': run_id, 'arm': arm['name'], 'case': case, 'task': arm['task'], 'seed': seed, 'gpus': t['gpus']}
     if seed:
         info['seed_sha256'] = verify_seed(seed)
         shutil.copytree(f'{REPO}/seeds/{seed}/src', ws, dirs_exist_ok=True)
-    harness_files(ws, SEED_PREBUILD if seed else None)
+    harness_files(ws, SEED_PREBUILD if seed else None, t['gpus'])
     owner = {}
     for ov in arm['overlays']:
         src = f'{REPO}/overlays/{ov}'

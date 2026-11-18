@@ -1,6 +1,6 @@
 __pycache__/
 *.pyc
 # unpacked by scripts/unpack_seed.sh from src.tar.xz.b64
-seeds/dsv41_b8_nopf/src/
+seeds/*/src/
 seeds/*.fetched/
 .pytest_cache/

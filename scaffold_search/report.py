@@ -1,6 +1,10 @@
 """Aggregate result.json files into a markdown report with the pre-registered verdicts.
 
-  python3.12 -m scaffold_search.report RESULTS_DIR [--out report.md]
+  python3.12 -m scaffold_search.report RESULTS_DIR [--out report.md] [--prefix t] [--comparisons A3:A1,...]
+
+--prefix keeps only run ids starting with it (TP4: t = experiment E4a, c = E4b); --comparisons replaces the
+PROTOCOL.md comparisons (E4b: A3:A1); --margin fixes the margin (E4b: the E4a margin). Without the control
+arm in the selection and without --margin the margin is 5%.
 
 RESULTS_DIR holds <run_id>/result.json (the `results/` dir of branch `results`; `_smoke` and other
 `_` dirs are skipped). Prints every run, per-arm median/IQR of the primary score and AUC, and:
@@ -40,7 +44,7 @@ def control_iqr_rel(rows):
     return iqr(c) / statistics.median(c)
 
 
-def report(rows):
+def report(rows, fixed_margin=None):
     out = ['# Scaffold-search report', '', '| run | arm | score | L ms | source | AUC | final score | '
            'checks (pass) | cost $ | stall min | flags |', '|---|---|---|---|---|---|---|---|---|---|---|']
     for r in sorted(rows, key=lambda r: (r['arm'], r['run_id'])):
@@ -60,8 +64,9 @@ def report(rows):
         used = sum(1 for r in rs if r['secondary'].get('skill_calls'))
         stats[a] = {'n': len(rs), 'med': statistics.median(sc), 'iqr': iqr(sc), 'auc': statistics.median(au) if au else None}
         out.append(f'| {a} | {len(rs)} | {stats[a]["med"]:.4f} | {stats[a]["iqr"]:.4f} | {stats[a]["auc"]} | {used} |')
-    margin = max(0.05, control_iqr_rel(rows))
-    out += ['', f'Margin = max(5%, {CONTROL} IQR/median) = {margin:.4f} (relative to the comparison median).', '']
+    margin = fixed_margin if fixed_margin is not None else max(0.05, control_iqr_rel(rows))
+    out += ['', (f'Margin (fixed) = {margin:.4f}' if fixed_margin is not None else
+                 f'Margin = max(5%, {CONTROL} IQR/median) = {margin:.4f}') + ' (relative to the comparison median).', '']
     verdicts = {}
     for x, y in COMPARISONS:
         if x in stats and y in stats:
@@ -76,8 +81,12 @@ def report(rows):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('results_dir'); ap.add_argument('--out')
+    ap.add_argument('--prefix', default=''); ap.add_argument('--comparisons')
+    ap.add_argument('--margin', type=float, help='fixed margin (E4b: the E4a margin) instead of the control IQR rule')
     a = ap.parse_args()
-    text, _, _ = report(load(a.results_dir))
+    if a.comparisons:
+        COMPARISONS[:] = [tuple(c.split(':')) for c in a.comparisons.split(',')]
+    text, _, _ = report([r for r in load(a.results_dir) if r['run_id'].startswith(a.prefix)], a.margin)
     if a.out:
         open(a.out, 'w').write(text)
     print(text)

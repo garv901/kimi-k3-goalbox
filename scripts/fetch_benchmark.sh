@@ -4,13 +4,19 @@
 # scaffold_search/patches/gpu_noise_multirank.patch applied (scaffold_search/trusted.py). Idempotent.
 #
 #   SS_BENCHMARK_URL  default https://github.com/kamahori/vibe-megakernel.git (runner needs read access)
-#   pinned commit     886eeb3e28db071f6c43b31fd0b6a9c26dbeaf27 (branch dsv41-dspark-batch8)
+#   SS_PROTOCOL       protocol file (default PROTOCOL.md); its "trusted evaluator" row gives the pinned
+#                     commit and branch:
+#                       PROTOCOL.md      886eeb3e28db071f6c43b31fd0b6a9c26dbeaf27 (branch dsv41-dspark-batch8)
+#                       PROTOCOL_TP4.md  c9782832d264fecd8df4619d5e96ed83aadb77db (= 886eeb3 + the TP4 cases)
 set -euo pipefail
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 PY=${PY:-/usr/bin/python3.12}
 URL=${SS_BENCHMARK_URL:-https://github.com/kamahori/vibe-megakernel.git}
-BRANCH=dsv41-dspark-batch8
-COMMIT=886eeb3e28db071f6c43b31fd0b6a9c26dbeaf27
+PROTO=$REPO/${SS_PROTOCOL:-PROTOCOL.md}
+ROW=$(grep -m1 '^| trusted evaluator |' "$PROTO") || { echo "no trusted evaluator row in $PROTO" >&2; exit 1; }
+COMMIT=$(echo "$ROW" | grep -o 'vibe-megakernel [0-9a-f]\{40\}' | cut -d' ' -f2)
+BRANCH=$(echo "$ROW" | sed -n 's/.*(branch \([^)]*\)).*/\1/p'); BRANCH=${BRANCH:-dsv41-dspark-batch8}
+[ ${#COMMIT} = 40 ] || { echo "cannot parse the pinned commit from $PROTO" >&2; exit 1; }
 PATCH_SHA=bb4871ccd876220359d5b635f88380955f62c3d61974967b5c33633018cb2f75
 SRC=/srv/ss/build/vibe-megakernel
 DST=/srv/ss/trusted/vibe-megakernel

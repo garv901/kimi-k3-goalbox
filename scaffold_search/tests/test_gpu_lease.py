@@ -16,7 +16,9 @@ class Env:
         self.dir = tempfile.mkdtemp(prefix='gl_test_')
         self.sock = os.path.join(self.dir, 's.sock')
         self.log = os.path.join(self.dir, 'l.jsonl')
-        self.env = dict(os.environ, GPU_LEASE_SOCK=self.sock, GPU_LEASE_LOG=self.log, GPU_LEASE_ADOPT='0')
+        # 8 = the TP8 node unless a test asks for a 4-GPU slot (GPU_LEASE_NGPU='4')
+        self.env = dict(os.environ, GPU_LEASE_SOCK=self.sock, GPU_LEASE_LOG=self.log, GPU_LEASE_ADOPT='0',
+                        GPU_LEASE_NGPU='8')
         self.env.update(extra_env)
         self.env.pop('SS_LEASE_ID', None)
         self.d = subprocess.Popen([PY, GL, 'daemon'], env=self.env, stdout=subprocess.DEVNULL)
@@ -369,6 +371,50 @@ def test_visibility_and_nested():
         assert 'inner 0,1,2,3,4,5,6,7' in out, (out, err)
         grants = [e for e in E.events() if e['ev'] == 'grant']
         assert len(grants) == 2
+    finally:
+        E.close()
+
+
+
+# ---------------------------------------------------------------- 4-GPU slot (TP4 protocol)
+def test_slot4_sizes_and_exclusive_full_lease():
+    """NGPU=4: sizes 1, 2, 3 and 4 (full, exclusive, logged cls '4'); 8 is refused."""
+    E = Env(GPU_LEASE_NGPU='4')
+    try:
+        bad = E.run('A', 8, 'true')
+        out, err = bad.communicate(timeout=30)
+        assert bad.returncode != 0 and 'gpus must be 1, 2, 3 or 4' in (out + err), (out, err)
+        ps = [E.run('A', 4, 'sleep 1.5'), E.run('B', 4, 'sleep 1.5'), E.run('C', 1, 'sleep 1'),
+              E.run('D', 3, 'sleep 1')]
+        for p in ps:
+            assert p.wait(timeout=60) == 0
+        ev = E.events()
+        iv = intervals(ev)
+        assert len(iv) == 4
+        for i, a in enumerate(iv):
+            for b in iv[i + 1:]:
+                if overlap(a, b):
+                    assert a[1] < 4 and b[1] < 4 and not set(a[4]) & set(b[4]), (a, b)
+        full = [e for e in ev if e['ev'] == 'grant' and e['n'] == 4]
+        assert len(full) == 2 and all(e['cls'] == '4' and e['gpus'] == [0, 1, 2, 3] for e in full), full
+        assert all(e['cls'] == 'small' for e in ev if e['ev'] == 'grant' and e['n'] < 4)
+    finally:
+        E.close()
+
+
+def test_slot4_small_lease_preempted_for_waiting_full():
+    E = Env(GPU_LEASE_NGPU='4', GPU_LEASE_PREEMPT_WAIT_S='1', GPU_LEASE_SMALL_CAP_S='2',
+            GPU_LEASE_PREEMPT_GRACE_S='2')
+    try:
+        p = E.run('A', 1, 'sleep 60')
+        time.sleep(1)
+        big = E.run('B', 4, 'true')
+        assert big.wait(timeout=60) == 0
+        p.wait(timeout=30)
+        ev = E.events()
+        assert any(e['ev'] == 'preempt' and e['run'] == 'A' for e in ev), ev
+        rel = [e for e in ev if e['ev'] == 'release' and e['run'] == 'A']
+        assert rel and rel[0]['reason'] == 'preempted', rel
     finally:
         E.close()
 

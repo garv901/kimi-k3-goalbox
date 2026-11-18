@@ -10,7 +10,10 @@
 #   SS_BENCHMARK_URL   clone URL of kamahori/vibe-megakernel (default https://github.com/kamahori/vibe-megakernel.git)
 #   SS_SEED_REPO_URL   clone URL of the seed repo (only used if the vendored seed fails to verify)
 #   SS_ALLOW_MISMATCH=1  continue although the tree differs from the PROTOCOL.md manifest (runs would be invalid)
-#   SS_SKIP_GPU_CHECK=1  skip the 8x B300 check (for a dry run on another machine)
+#   SS_SKIP_GPU_CHECK=1  skip the B300 count check (for a dry run on another machine)
+#   SS_PROTOCOL        protocol file: PROTOCOL.md (TP8, default) or PROTOCOL_TP4.md (TP4)
+#   SS_NGPU            GPUs of this node/slot = the full-node lease size (default: 4 for PROTOCOL_TP4.md, else 8).
+#                      Written with SS_PROTOCOL to /srv/ss/node.env; run_arm refuses tasks of another size.
 # --check-login: also run one tiny `claude -p` as root to prove the login works (costs ~$0.01).
 #
 # Steps: tools -> /srv/ss/harness checkout -> seed (vendored, verified) ->
@@ -22,6 +25,10 @@ SS=/srv/ss
 H=$SS/harness
 PY=/usr/bin/python3.12
 CHECK_LOGIN=0; [ "${1:-}" = "--check-login" ] && CHECK_LOGIN=1
+# a rerun after a container restart keeps the node's protocol and size unless overridden
+[ -f $SS/node.env ] && { . $SS/node.env; export SS_PROTOCOL SS_NGPU; }
+export SS_PROTOCOL=${SS_PROTOCOL:-PROTOCOL.md}
+case "$SS_PROTOCOL" in PROTOCOL_TP4.md) export SS_NGPU=${SS_NGPU:-4};; *) export SS_NGPU=${SS_NGPU:-8};; esac
 say() { printf '\n== %s\n' "$*"; }
 die() { echo "bootstrap: $*" >&2; exit 1; }
 [ "$(id -u)" = 0 ] || die "run as root (inside the container)"
@@ -46,6 +53,8 @@ if [ "$HERE" != "$H" ]; then
   exec bash "$H/scripts/bootstrap_node.sh" "$@"
 fi
 git -C "$H" log -1 --format='harness commit %H (%cd)'
+echo "protocol $SS_PROTOCOL, $SS_NGPU GPUs per node/slot"
+[ -f "$H/$SS_PROTOCOL" ] || die "no protocol file $H/$SS_PROTOCOL"
 for d in bin lease logs build scratch results runs trusted schedules creds; do mkdir -p $SS/$d; done
 chmod 700 $SS/creds $SS/build $SS/schedules
 
@@ -54,14 +63,18 @@ if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then gh auth setu
 else echo "gh: not logged in (fine if the benchmark repo and SS_SNAPSHOT_REPO are reachable otherwise)"; fi
 
 say "seed"
-bash "$H/scripts/unpack_seed.sh" || die "vendored seed failed to verify against its manifest"
+bash "$H/scripts/unpack_seed.sh" dsv41_b8_nopf || die "vendored seed failed to verify against its manifest"
+if [ -f "$H/seeds/dsv41_b8_tp4_nopf/src.tar.xz.b64" ]; then
+  bash "$H/scripts/unpack_seed.sh" dsv41_b8_tp4_nopf || die "TP4 seed failed to verify against its manifest"
+fi
 
 say "benchmark + trusted snapshot"
 bash "$H/scripts/fetch_benchmark.sh"
 
 say "PROTOCOL manifest"
-if ! "$PY" "$H/scripts/verify_protocol.py" --trusted $SS/trusted/vibe-megakernel; then
-  [ "${SS_ALLOW_MISMATCH:-0}" = 1 ] || die "tree differs from PROTOCOL.md (set SS_ALLOW_MISMATCH=1 to continue anyway; such runs are not valid)"
+TBD=""; [ "$SS_PROTOCOL" = PROTOCOL_TP4.md ] && TBD=--allow-tbd   # seed/baseline rows are filled after the port
+if ! "$PY" "$H/scripts/verify_protocol.py" --protocol "$SS_PROTOCOL" $TBD --trusted $SS/trusted/vibe-megakernel; then
+  [ "${SS_ALLOW_MISMATCH:-0}" = 1 ] || die "tree differs from $SS_PROTOCOL (set SS_ALLOW_MISMATCH=1 to continue anyway; such runs are not valid)"
 fi
 
 say "snapshot repo"
@@ -89,6 +102,7 @@ install -m 755 "$H/scaffold_search/gpu_lease.py" $SS/bin/gpu_lease.py
 printf '#!/bin/sh\nexec /usr/bin/python3.12 /srv/ss/bin/gpu_lease.py "$@"\n' > $SS/bin/gpu_lease
 chmod 755 $SS/bin/gpu_lease $SS/bin $SS/lease
 touch $SS/lease.jsonl
+printf 'SS_PROTOCOL=%s\nSS_NGPU=%s\n' "$SS_PROTOCOL" "$SS_NGPU" > $SS/node.env; chmod 644 $SS/node.env
 # setup-node: /root 0700, /srv/ss dirs, /tmp 1733, trusted tree read-only, pinned claude copy in
 # /srv/ss/bin, /dev/nvidia* root:ss-gpu 0660, credential sync (run_arm repeats it every run)
 (cd "$H" && "$PY" -m scaffold_search.isolation setup-node)
@@ -96,7 +110,7 @@ ls -l /dev/nvidia* | head -3
 
 say "daemons (tmux ss-lease, ss-proxy)"
 if ! tmux has-session -t ss-lease 2>/dev/null; then
-  tmux new -d -s ss-lease "/srv/ss/bin/gpu_lease daemon 2>&1 | tee -a /srv/ss/logs/ss-lease.log"
+  tmux new -d -s ss-lease "/srv/ss/bin/gpu_lease daemon --ngpu $SS_NGPU 2>&1 | tee -a /srv/ss/logs/ss-lease.log"
   sleep 2
 fi
 if ! tmux has-session -t ss-proxy 2>/dev/null; then
@@ -111,7 +125,7 @@ if [ "${SS_SKIP_GPU_CHECK:-0}" != 1 ]; then
   n=$(nvidia-smi -L | grep -c 'B300' || true)
   cc=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader | sort -u | tr '\n' ' ')
   echo "GPUs: $(nvidia-smi -L | wc -l) total, $n B300, compute capability $cc"
-  [ "$n" = 8 ] || { echo "FAIL: need 8x B300"; fail=1; }
+  [ "$n" = "$SS_NGPU" ] || { echo "FAIL: need exactly ${SS_NGPU}x B300 visible in this container (SS_NGPU)"; fail=1; }
   nvidia-smi topo -m 2>/dev/null | head -10 || true
 fi
 v=$($SS/bin/claude --version 2>/dev/null || true)

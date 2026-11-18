@@ -1,0 +1,11 @@
+# Builder (not an experiment arm): port the TP8 seed (seeds/dsv41_b8_nopf) to the TP4 case, once,
+# before the TP4 experiment. Its passing result is frozen with scripts/freeze_seed.py into
+# seeds/dsv41_b8_tp4_nopf (PROTOCOL_TP4.md, step 3). Run id must start with builder-.
+name = "PORT"
+base_agent = "plain"
+overlays = ["S", "A1"]
+task = "port-b8-tp4"
+budget_minutes = 240
+max_concurrent_1gpu = 3
+claude_extra_args = []
+prompt = "goal_port_tp4.md"

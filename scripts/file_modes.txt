@@ -18,3 +18,5 @@ scripts/run_selftest.sh
 scripts/unpack_seed.sh
 scripts/verify_protocol.py
 scripts/fix_modes.sh
+scripts/run_main_tp4.sh
+scripts/freeze_seed.py

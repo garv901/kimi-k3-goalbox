@@ -137,7 +137,7 @@ Verification: see below. Applied with `python3.12 -m scaffold_search.trusted`.
 ## Operations
 ```sh
 # lease daemon / proxy (root, on the node)
-tmux new -d -s ss-lease "/srv/ss/bin/gpu_lease daemon 2>&1 | tee -a /srv/ss/logs/ss-lease.log"
+tmux new -d -s ss-lease "/srv/ss/bin/gpu_lease daemon --ngpu 8 2>&1 | tee -a /srv/ss/logs/ss-lease.log"   # --ngpu 4 on a TP4 slot
 tmux new -d -s ss-proxy "cd /srv/ss/harness && python3.12 -m scaffold_search.isolation proxy 2>&1 | tee -a /srv/ss/logs/ss-proxy.log"
 /srv/ss/bin/gpu_lease status
 # one run

@@ -25,7 +25,7 @@ IMPORT_PATTERNS = [
 ]
 
 
-def review_reports(reports):
+def review_reports(reports, ranks=8):
     issues, seeds = [], []
     for i, rec in enumerate(reports):
         if rec is None:
@@ -34,7 +34,7 @@ def review_reports(reports):
             issues.append(f'rescore run {i}: status {rec.get("status")}')
         la = (rec.get('launch_audit') or {}).get('per_rank') or []
         counts = [r.get('gpu_kernel_count') for r in la]
-        if len(counts) != 8 or any(c != 1 for c in counts):
+        if len(counts) != ranks or any(c != 1 for c in counts):
             issues.append(f'rescore run {i}: launches per rank {counts}')
         for rk in (rec.get('correctness') or {}).get('per_rank') or []:
             for t in rk.get('trials') or []:

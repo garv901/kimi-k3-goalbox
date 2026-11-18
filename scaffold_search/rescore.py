@@ -4,16 +4,18 @@
 
 1. Candidates: passing snapshots (snapshots/index.jsonl) ordered by the agent-measured p50.
 2. For the best one: extract into a fresh `make_agent_workspace` tree (trusted evaluator, no build
-   cache), run the stock ./check_candidate `reps` times, each on an 8-GPU lease, as the run user.
+   cache), run the stock ./check_candidate `reps` times, each on a full-node lease (the task's gpus:
+   8 for TP8, 4 for TP4), as the run user.
    L = median of the per-run p50 (gpu_noise `fast_p50_ms` of that run, not the cross-run history).
-3. Automated review (review.py): every rescore run ok_provisional, 1 launch on each of the 8 ranks,
+3. Automated review (review.py): every rescore run ok_provisional, 1 launch on each of the case's ranks,
    every trial (fresh random seeds drawn by the evaluator, never seen by the agent) passing; sources
    reachable from submission.py load no tensors from files and import no reference/oracle. If it
    fails, the next-best snapshot is tried (at most 3). No valid snapshot -> the run scores the
    seed: L = this run's calibration measurement of the seed.
 4. Final tree (the workspace at the end): one check, unless its source digest equals the chosen
    snapshot's.
-5. result.json: primary score 28.95/L, AUC (mean over the budget of log(28.95 / best passing L so
+5. result.json: primary score b3/L (b3 = the task's b3_ms: 28.95 ms for TP8; unset -> 1.0 and the flag
+   'b3_unset'), AUC (mean over the budget of log(b3 / best passing L so
    far), agent-measured p50s, seed latency before the first pass), final-tree score and secondary
    metrics from telemetry.json; written to <run_dir>/result.json and pushed to branch `results`
    as results/<run_id>/.
@@ -22,7 +24,7 @@ import argparse, calendar, fcntl, glob, hashlib, json, math, os, shutil, statist
 
 from scaffold_search import isolation, snapshot, review, telemetry, workspace
 
-B3_MS = 28.95
+B3_MS = 28.95  # TP8 (task improve-b8); other tasks: workspace.TASKS[task]['b3_ms']
 RESULTS_REPO = '/srv/ss/results/repo'
 LOCK = '/srv/ss/results/.lock'
 PY = '/usr/bin/python3.12'
@@ -82,11 +84,23 @@ def fresh_tree(run_id, run_dir, name, populate):
     return ws
 
 
+def task_info(run_dir):
+    """the run's task entry (case, seed, gpus, b3_ms) from logs/workspace.json."""
+    info = snapshot.run_info(run_dir)
+    return workspace.TASKS.get(info.get('task')) or workspace.task_of_case(info['case'])
+
+
+def b3_of(run_dir):
+    """(b3 used for score/AUC, flag): unset b3_ms -> 1.0 so score = 1/L (ratios between arms unchanged)."""
+    b3 = task_info(run_dir).get('b3_ms')
+    return (b3, None) if b3 else (1.0, 'b3_unset: score = 1/L (1/ms); set TASKS[task][\'b3_ms\'] per PROTOCOL_TP4.md')
+
+
 def run_check(run_id, run_dir, ws, tag):
-    """one stock check_candidate on an 8-GPU lease, as the run user."""
+    """one stock check_candidate on a full-node lease (the task's gpus), as the run user."""
     env = isolation.agent_env(run_id, run_dir)
     t0 = time.time()
-    p = subprocess.run(['/srv/ss/bin/gpu_lease', 'run', '-v', '--gpus', '8', '--max-minutes', '30', '--',
+    p = subprocess.run(['/srv/ss/bin/gpu_lease', 'run', '-v', '--gpus', str(task_info(run_dir)['gpus']), '--max-minutes', '30', '--',
                         './check_candidate'], cwd=ws, env=env, preexec_fn=isolation.demote(run_id),
                        capture_output=True, text=True)
     out = p.stdout + p.stderr
@@ -129,23 +143,23 @@ def extract(tar_path):
     return populate
 
 
-def copy_seed(seed):
+def copy_seed(seed, ngpu=8):
     def populate(ws):
         shutil.copytree(f'{workspace.REPO}/seeds/{seed}/src', ws, dirs_exist_ok=True)
-        workspace.wexec(f'{ws}/prebuild', workspace.SEED_PREBUILD.replace('{ws}', ws))
+        workspace.wexec(f'{ws}/prebuild', workspace.render(workspace.SEED_PREBUILD.replace('{ws}', ws), ngpu))
     return populate
 
 
 def calibrate(run_id, run_dir):
     info = snapshot.run_info(run_dir)
-    res, recs = check_n(run_id, run_dir, 'calibration', copy_seed(info['seed']), 1)
+    res, recs = check_n(run_id, run_dir, 'calibration', copy_seed(info['seed'], task_info(run_dir)['gpus']), 1)
     out = {'L_ms': res['L_ms'], 'status': res['runs'][0].get('status'), 'minutes': res['runs'][0]['minutes'],
            'n_processes': res['runs'][0].get('n_processes'), 'probe_errors': res['runs'][0].get('probe_errors')}
     json.dump(out, open(f'{run_dir}/logs/calibration.json', 'w'), indent=1)
     return out
 
 
-def auc(snaps, seed_L, t0, budget_min):
+def auc(snaps, seed_L, t0, budget_min, b3=B3_MS):
     """time-average of log(B3 / best-so-far) over [t0, t0 + budget]."""
     T = budget_min * 60
     pts = []
@@ -160,10 +174,10 @@ def auc(snaps, seed_L, t0, budget_min):
     best, last, acc = seed_L, 0.0, 0.0
     for t, L in pts:
         t = min(max(t, 0.0), T)
-        acc += (t - last) * math.log(B3_MS / best)
+        acc += (t - last) * math.log(b3 / best)
         last = t
         best = min(best, L)
-    acc += (T - last) * math.log(B3_MS / best)
+    acc += (T - last) * math.log(b3 / best)
     return acc / T
 
 
@@ -201,11 +215,13 @@ def rescore_run(run_dir, reps=3, final=True, push=True, max_candidates=3):
         if os.path.exists(f'{run_dir}/snapshots/index.jsonl') else []
     cal = run.get('calibration') or {}
     seed_L = cal.get('L_ms')
+    ranks = task_info(run_dir)['gpus']
+    b3, b3_flag = b3_of(run_dir)
     ranked = sorted((s for s in snaps if s.get('p50_ms')), key=lambda s: s['p50_ms'])
     tried, chosen = [], None
     for s in ranked[:max_candidates]:
         res, recs = check_n(run_id, run_dir, f'snap{s["n"]:03d}', extract(f'{run_dir}/snapshots/{s["tar"]}'), reps)
-        rv = review.review_reports(recs)
+        rv = review.review_reports(recs, ranks)
         src = review.review_sources(res['ws'])
         entry = {'snapshot': s['tar'], 'agent_p50_ms': s['p50_ms'], 'sha256': s['sha256'], 'rescore_p50s': res['p50s'],
                  'L_ms': res['L_ms'], 'review_reports': rv, 'review_sources': {k: src[k] for k in ('ok', 'disqualifying')},
@@ -243,7 +259,7 @@ def rescore_run(run_dir, reps=3, final=True, push=True, max_candidates=3):
             first_imp = round((te - t0) / 60, 2); break
     tr = tel['transcript']
     cost = tr.get('cost_usd') or 0
-    score = B3_MS / L if L else None
+    score = b3 / L if L else None
     result = {
         'schema': 'scaffold-search/result/v1',
         'run_id': run_id, 'arm': info['arm'], 'task': info['task'], 'case': info['case'],
@@ -255,9 +271,10 @@ def rescore_run(run_dir, reps=3, final=True, push=True, max_candidates=3):
         'calibration': cal,
         'primary': {'score': round(score, 4) if score else None, 'L_ms': L, 'source': source,
                     'snapshot': chosen['snapshot'] if chosen else None,
-                    'rescore_p50s_ms': chosen['rescore_p50s'] if chosen else None, 'b3_ms': B3_MS},
-        'auc': round(auc(snaps, seed_for_auc, t0, budget), 5) if t0 and budget else None,
-        'final_tree': final_res and {**final_res, 'score': round(B3_MS / final_res['L_ms'], 4) if final_res.get('L_ms') else None},
+                    'rescore_p50s_ms': chosen['rescore_p50s'] if chosen else None,
+                    'b3_ms': None if b3_flag else b3, 'b3_flag': b3_flag},
+        'auc': round(auc(snaps, seed_for_auc, t0, budget, b3), 5) if t0 and budget else None,
+        'final_tree': final_res and {**final_res, 'score': round(b3 / final_res['L_ms'], 4) if final_res.get('L_ms') else None},
         'candidates_tried': tried,
         'secondary': {
             'time_to_first_improvement_min': first_imp,

@@ -105,8 +105,23 @@ def gpu_summary(run_dir):
             'bypass_pids': sorted(bypass)}
 
 
-def lease_summary(run_id, t0=None, t1=None):
-    """lease covariates of one run inside [t0, t1]; wait_share_8gpu = 8-GPU wait / phase length."""
+def _full_n(run_dir):
+    try:
+        info = json.load(open(f'{run_dir}/logs/workspace.json'))
+    except (OSError, ValueError):
+        return 8
+    if info.get('gpus'):
+        return int(info['gpus'])
+    from scaffold_search import workspace
+    try:
+        return workspace.task_of_case(info['case'])['gpus']
+    except KeyError:
+        return 8
+
+
+def lease_summary(run_id, t0=None, t1=None, full_n=8):
+    """lease covariates of one run inside [t0, t1]; wait_share_8gpu = full-node (full_n GPUs: 8 on TP8, 4 on
+    a TP4 slot) wait / phase length. The *_8gpu key names are kept for the result schema."""
     rows = []
     if os.path.exists(LEASE_LOG):
         for line in open(LEASE_LOG):
@@ -123,14 +138,15 @@ def lease_summary(run_id, t0=None, t1=None):
     by_n = collections.Counter(e['n'] for e in rel)
     return {'leases': len(rel), 'by_gpus': dict(by_n),
             'wait_min_total': round(sum(e['wait_s'] for e in rel) / 60, 2),
-            'wait_min_8gpu': round(sum(e['wait_s'] for e in rel if e['n'] == 8) / 60, 2),
+            'wait_min_8gpu': round(sum(e['wait_s'] for e in rel if e['n'] == full_n) / 60, 2),
             'max_wait_min': round(max([e['wait_s'] for e in rel] or [0]) / 60, 2),
             'hold_min_total': round(sum(e['hold_s'] for e in rel) / 60, 2),
             'gpu_min_held': round(sum(e['hold_s'] * e['n'] for e in rel) / 60, 2),
-            'wait_share_8gpu': round(sum(e['wait_s'] for e in rel if e['n'] == 8) / (t1 - t0), 4) if t0 and t1 else None,
-            'util_mean_8gpu': (round(sum(e['util_mean'] * e['hold_s'] for e in rel if e['n'] == 8 and e.get('util_mean') is not None)
-                                     / max(1e-9, sum(e['hold_s'] for e in rel if e['n'] == 8 and e.get('util_mean') is not None)), 1)
-                               if any(e['n'] == 8 and e.get('util_mean') is not None for e in rel) else None),
+            'wait_share_8gpu': round(sum(e['wait_s'] for e in rel if e['n'] == full_n) / (t1 - t0), 4) if t0 and t1 else None,
+            'util_mean_8gpu': (round(sum(e['util_mean'] * e['hold_s'] for e in rel if e['n'] == full_n and e.get('util_mean') is not None)
+                                     / max(1e-9, sum(e['hold_s'] for e in rel if e['n'] == full_n and e.get('util_mean') is not None)), 1)
+                               if any(e['n'] == full_n and e.get('util_mean') is not None for e in rel) else None),
+            'full_lease_gpus': full_n,
             'expired': sum(1 for e in rel if e.get('reason') == 'expired'),
             'preempted': sum(1 for e in rel if e.get('reason') == 'preempted'),
             'preempted_min_lost': round(sum(e['hold_s'] * e['n'] for e in rel if e.get('reason') == 'preempted') / 60, 2),
@@ -202,7 +218,7 @@ def summarize(run_dir, run_id):
         if os.path.exists(f'{run_dir}/snapshots/checks.jsonl') else []
     agent_logs = [f'{run_dir}/logs/agent.jsonl', f'{run_dir}/logs/resume.jsonl']
     tel = {'run_id': run_id, 'gpu': gpu_summary(run_dir),
-           'lease': lease_summary(run_id, run.get('t_agent_start'), run.get('t_end')),
+           'lease': lease_summary(run_id, run.get('t_agent_start'), run.get('t_end'), full_n=_full_n(run_dir)),
            'transcript': transcript_summary(agent_logs),
            'checks': {'n': len(checks), 'passing': sum(1 for c in checks if c.get('passing'))},
            'snapshots': [{k: s.get(k) for k in ('n', 'id', 'start', 'end', 'status', 'p50_ms', 'tar', 'sha256')}

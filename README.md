@@ -1,5 +1,14 @@
 # Scaffold search: which workspace scaffolding helps agents write faster megakernels?
 
+> **Branch `scaffold-search-dsv41-tp4`: the TP4 protocol.** This branch adds a second protocol,
+> [PROTOCOL_TP4.md](PROTOCOL_TP4.md): the same four arms on the TP4 case (`dsv41-flash-dspark-step-k5-ctx2k-b8-tp4`),
+> one run per 4-GPU slot (E4a, 4 arms x 6 runs, Latin-square schedule over 4 slots) plus a contention
+> ablation (E4b, A1/A3 x 4 with 3 runs per slot). Start there: preparation steps, `scripts/run_main_tp4.sh`,
+> `scripts/freeze_seed.py`. The harness now takes the GPU count from the task (`scaffold_search/workspace.py`
+> `TASKS`) and the node size from `SS_NGPU`; on 8 GPUs it writes the same workspace files as before.
+> The TP8 experiment below (PROTOCOL.md) stays frozen on branch `scaffold-search-dsv41`. Run it from that
+> branch: here `gpu_lease.py`, `harness_files` and overlays A1/A3 differ from its manifest.
+
 Autonomous Claude Code agents are each given 2 hours to make a correct single-launch CUDA
 megakernel faster (DeepSeek-V4.1-Flash + DSpark speculative iteration, batch 8, TP8 on 8x B300).
 Four arms differ only in what is added to the agent's workspace. You run 16 agent runs

@@ -2,6 +2,7 @@
 
   python3.12 -m scaffold_search.run_arm --arm A0S --run-id r01 [--budget-minutes N] [--fake-agent]
          [--no-calibrate] [--no-rescore] [--no-push] [--rescore-reps 3]
+(TP4 protocol: --arm tp4/A0S etc. on a 4-GPU slot; see PROTOCOL_TP4.md.)
 
 Steps: node lockdown (idempotent) -> run user -> workspace (arm + seed + overlays) -> seed
 calibration check (1x, before the clock starts) -> `claude -p "<goal prompt>"` as the run user
@@ -55,6 +56,11 @@ class Runner:
     def setup(self):
         if os.path.exists(self.run_dir):
             sys.exit(f'{self.run_dir} exists; pick a new run id')
+        want = workspace.TASKS[self.arm['task']]['gpus']
+        node = node_ngpu()
+        if node is not None and node != want:
+            sys.exit(f'task {self.arm["task"]} needs a {want}-GPU node/slot; this one has SS_NGPU={node} '
+                     f'({SS}/node.env, written by bootstrap_node.sh)')
         isolation.setup_node()
         uid, gid = isolation.create_user(self.run_id, self.run_dir)
         self.uid = uid
@@ -157,12 +163,13 @@ class Runner:
         t_int = t0 + (self.budget - self.lead) * 60
         t_end = t0 + self.budget * 60
         deadline = utc(t_int)
-        prompt = open(f'{REPO}/prompts/goal_improve.md').read().strip().replace('{DEADLINE}', deadline)
+        prompt_path = f'{REPO}/prompts/{self.arm["prompt"]}'
+        prompt = open(prompt_path).read().strip().replace('{DEADLINE}', deadline)
         assert len(prompt) < 4000, len(prompt)
         open(f'{self.run_dir}/logs/prompt.txt', 'w').write(prompt)
         self.run.update({'t_agent_start': t0, 'agent_start_utc': utc(t0), 'deadline_in_prompt': deadline,
-                         'interrupt_utc': utc(t_int), 'prompt_sha256': hashlib.sha256(
-                             open(f'{REPO}/prompts/goal_improve.md', 'rb').read()).hexdigest()})
+                         'interrupt_utc': utc(t_int), 'prompt': self.arm['prompt'], 'prompt_sha256': hashlib.sha256(
+                             open(prompt_path, 'rb').read()).hexdigest()})
         self.save()
         sampler = telemetry.GpuSampler(self.run_dir, self.uid); sampler.start()
         if self.a.fake_agent:
@@ -246,6 +253,17 @@ class Runner:
                 snapshot.push(self.run_dir, 'result')
         isolation.retire_user(self.run_id, self.run_dir)
         self.log('done')
+
+
+def node_ngpu():
+    """GPU count of this node/slot as configured by bootstrap_node.sh (SS_NGPU in /srv/ss/node.env)."""
+    try:
+        for line in open(f'{SS}/node.env'):
+            if line.startswith('SS_NGPU='):
+                return int(line.split('=', 1)[1])
+    except (OSError, ValueError):
+        pass
+    return None
 
 
 def telemetry_gpu_pids():
