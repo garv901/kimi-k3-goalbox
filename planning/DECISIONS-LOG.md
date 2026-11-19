@@ -261,3 +261,38 @@ named by their tray number on rack 10 (Kubernetes) or rack 3 (Slurm, Docker).
   snapshots the submission's directory before scanning and grading so what was scanned is what ran. The
   `--tiny` evaluator flag exists for CPU self-tests only; its records carry `tiny_self_test: true` and it
   is never in `GOALBOX_GRADE_ARGS`.
+
+## L21. Export audit of CUDA allocations handed to the candidate (D-I1, D-I5)
+
+- Observed: a CUDA IPC handle maps the whole `cudaMalloc` segment that contains a tensor. With the default
+  caching allocator, inputs, reference outputs and the hash key can share one segment, so the candidate
+  could read what it must not see.
+- Decision: inputs are allocated in a dedicated `torch.cuda.MemPool` (`transport.input_pool`); before the
+  candidate runs, `transport.audit_exports` walks the allocator snapshot and requires that every segment
+  containing an input belongs to that pool and holds only input blocks; otherwise the trial fails as
+  `evaluator_error` (never a pass). Expandable segments are refused (not exportable). The record keeps the
+  audit (`export_audit`). Frames received from the runner are decoded with a restricted unpickler (no
+  globals), capped in size, and every CUDA tensor description is checked (dtype allow-list, shape/nbytes
+  consistency, bounds within the mapped allocation); the GPU grader refuses by-value tensors. The static
+  argument is complete for the allocator; its GPU confirmation is C2 step 4.
+
+## L22. Measurement-contamination policy
+
+- Decision: a timing figure is reported only when the rank completed every repetition, the last outputs
+  graded correct, the inputs were unchanged, the audit ran, and nothing failed; otherwise the figures are
+  kept as `invalid_timing` evidence and the group result carries no `candidate_timing`. The grader records
+  GPU health counters before and after each grade and samples the compute-process count during it; an
+  uncorrected ECC change, a pending page retirement, a required reset, a missing GPU or more processes than
+  the job accounts for turn a passing grade into `CONTAMINATED` (exit 9) and tag any other state
+  `+CONTAMINATED`. Candidate crashes, OOM, NCCL failures and timeouts already end the timing phase without a
+  figure. Tolerances and budgets are untouched.
+
+## L23. GPU scheduling and the audit of record
+
+- Observed (read-only, 2026-11-19): every GPU node of the cluster carries the `nvidia.com/gpu` taint; the
+  GPU worker pods had no toleration and would stay Pending. Added `tolerations` for that taint and a
+  manifest check. Device plugin v0.19.2 with a config manager; whether `NVIDIA_VISIBLE_DEVICES=all` grants
+  an unprivileged second container the pod's GPUs is C2 step 1.
+- Observed: the nsys audit of record traces the evaluator's process tree, which no longer contains the
+  candidate. Blocker B-C2-1 (C2-GPU-SMOKE-PLAN.md); until resolved the launch-budget verdict in remote mode
+  is advisory and labelled so.

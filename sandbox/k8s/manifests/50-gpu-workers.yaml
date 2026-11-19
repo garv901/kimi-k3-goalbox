@@ -35,6 +35,8 @@ spec:
   hostname: goalbox-gpu-a
   subdomain: goalbox-gpu
   runtimeClassName: nvidia
+  tolerations:
+    - {key: nvidia.com/gpu, operator: Exists, effect: NoSchedule}   # every GPU node carries this taint
   restartPolicy: Always
   serviceAccountName: goalbox-gpu
   automountServiceAccountToken: false
@@ -123,6 +125,8 @@ spec:
   hostname: goalbox-gpu-b
   subdomain: goalbox-gpu
   runtimeClassName: nvidia
+  tolerations:
+    - {key: nvidia.com/gpu, operator: Exists, effect: NoSchedule}   # every GPU node carries this taint
   restartPolicy: Always
   serviceAccountName: goalbox-gpu
   automountServiceAccountToken: false

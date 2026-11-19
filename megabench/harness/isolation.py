@@ -235,7 +235,7 @@ class CandidateProcess:
         raw_send, raw_recv = self.conn.send, self.conn.recv
         self._mappings: dict = {}
         self.conn.send = lambda msg: raw_send(transport.encode(msg, self._keep))       # type: ignore[assignment]
-        self.conn.recv = lambda: transport.decode(raw_recv(), self._mappings)          # type: ignore[assignment]
+        self.conn.recv = lambda: transport.decode(raw_recv(), self._mappings, allow_cpu_tensors=not self.cuda)   # type: ignore[assignment]
 
     def _alive(self) -> bool:
         return self.process.is_alive() if self.process is not None else True   # remote: liveness is channel EOF

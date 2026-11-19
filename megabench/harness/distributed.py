@@ -36,6 +36,7 @@ from ..workloads import make_inputs, reference
 from .benchmark import _measure, classify_events, measure_candidate
 from .correctness import changed_inputs, compare, new_key, snapshot, structural_check
 from .deadlines import Deadlines, for_case
+from . import transport
 from .isolation import CandidateProcess
 from .launch import Topology, topology_from_env
 from .status import EvaluationFailure, Incorrect, InputMutation, classify, merge_group
@@ -142,13 +143,29 @@ def _rank_worker(local_rank: int, contract: dict, submission: str, device_kind: 
         result["build_ms"] = candidate.build_ms
         result["correctness"] = {"status": "pass", "trials": []}
         with torch.inference_mode():
+            pool = transport.input_pool()
+            result["export_audit"] = []
+
+            def pooled_inputs(case_, seed_, device_):
+                if pool is None:
+                    return make_inputs(case_, seed_, device_)
+                with torch.cuda.use_mem_pool(pool):
+                    return make_inputs(case_, seed_, device_)
+
+            def audited(inputs_):
+                record = transport.audit_exports(inputs_, pool, device)     # D-I5: only input segments are exported
+                result["export_audit"].append(record)
+                return record
+
             for trial in range(trials):
                 seed = shared_seed()
-                inputs, own_failure = phase("inputs", make_inputs, case, seed, device)
+                inputs, own_failure = phase("inputs", pooled_inputs, case, seed, device)
                 agree(own_failure)
                 originals, own_failure = phase("snapshot", snapshot, inputs, key)
                 agree(own_failure)
                 expected, own_failure = phase("reference", reference, case, inputs)
+                agree(own_failure)
+                _, own_failure = phase("export_audit", audited, inputs)
                 agree(own_failure)
                 first_start = time.perf_counter() if trial == 0 else None
                 run, own_failure = phase("candidate", candidate.run, inputs, deadlines.trial_s)
@@ -166,11 +183,13 @@ def _rank_worker(local_rank: int, contract: dict, submission: str, device_kind: 
                 del inputs, originals, expected, actual
             # Timing on a fresh seed; the last timed outputs are graded (poisoned buffers would fail).
             seed = shared_seed()
-            perf_inputs, own_failure = phase("inputs", make_inputs, case, seed, device)
+            perf_inputs, own_failure = phase("inputs", pooled_inputs, case, seed, device)
             agree(own_failure)
             originals, own_failure = phase("snapshot", snapshot, perf_inputs, key)
             agree(own_failure)
             expected, own_failure = phase("reference", reference, case, perf_inputs)
+            agree(own_failure)
+            _, own_failure = phase("export_audit", audited, perf_inputs)
             agree(own_failure)
             dist.barrier()
             timed, own_failure = phase("timing", measure_candidate, candidate, perf_inputs, warmup, reps,
@@ -222,6 +241,7 @@ def _rank_worker(local_rank: int, contract: dict, submission: str, device_kind: 
             result["candidate_stderr_tail"] = candidate.stderr_tail()
             candidate.close()
         result["deadlines_s"] = deadlines.to_dict()
+        result["measurement"] = measurement_validity(result, reps)
         with (Path(output_dir) / f"rank-{rank}.json").open("x") as file:
             json.dump(result, file)
         if initialized:
@@ -233,6 +253,31 @@ def _rank_worker(local_rank: int, contract: dict, submission: str, device_kind: 
             except Exception as exc:  # noqa: BLE001 - a broken group only loses the remote records
                 (Path(output_dir) / f"gather-failed-rank{rank}.txt").write_text(f"{type(exc).__name__}: {exc}")
             dist.destroy_process_group()
+
+
+def measurement_validity(result: dict, reps: int) -> dict:
+    """Contamination policy (DECISIONS-LOG L22): a timing figure is reported only when this rank completed
+    every timed repetition, the outputs of the last repetition graded correct, the inputs were unchanged,
+    the audit ran, and nothing failed on the rank. Otherwise the timing is kept as evidence under
+    `invalid_timing` and never as `candidate_timing`."""
+    reasons = []
+    timing = result.get("candidate_timing")
+    if result.get("status") != "pass":
+        reasons.append(f"rank status {result.get('status')}")
+    if result.get("failure"):
+        reasons.append(f"failure in phase {result['failure'].get('phase')}")
+    if timing is None:
+        reasons.append("no timing")
+    elif timing.get("reps", reps) != reps:
+        reasons.append(f"{timing.get('reps')} of {reps} repetitions")
+    if result.get("timed_outputs_grade") is None:
+        reasons.append("timed outputs not graded")
+    if timing is not None and "launch_audit_advisory" not in result:
+        reasons.append("audit did not run after timing")
+    valid = not reasons
+    if not valid and timing is not None:
+        result["invalid_timing"] = result.pop("candidate_timing")
+    return {"valid": valid, "reasons": reasons}
 
 
 def worst_rank_timing(ranks: list[dict], key: str) -> dict:
@@ -253,6 +298,8 @@ def worst_rank_timing(ranks: list[dict], key: str) -> dict:
         result[prefix + "_ms"] = values
         result[prefix + "_p50_ms"] = statistics.median(values)
         result[prefix + "_p95_ms"] = ordered[lo] + (ordered[min(lo + 1, len(values) - 1)] - ordered[lo]) * (at - lo)
+    reps = {r[key].get("reps") for r in ranks if key in r}
+    result["reps"] = reps.pop() if len(reps) == 1 else None          # None: ranks disagree (invalid by L22 anyway)
     return result
 
 
@@ -290,10 +337,17 @@ def evaluate_distributed(case: Case, submission: Path, *, device: str, trials: i
                           "failure": {"status": "infrastructure", "message": "no record from this rank (process or gather failed)"}})
         ranks.sort(key=lambda r: r["rank"])
     group = merge_group(ranks)
+    invalid = [r["rank"] for r in ranks if not r.get("measurement", {}).get("valid")]
     result = {"ranks": ranks, "topology": topo_record, "deadlines_s": deadlines.to_dict(),
-              "candidate_stderr_tail": stderr_tails}
+              "candidate_stderr_tail": stderr_tails,
+              "measurement": {"valid": not invalid, "ranks_invalid": invalid,
+                              "policy": "every rank must complete all repetitions with correct, unmutated outputs; "
+                                        "otherwise no candidate_timing is reported (L22)"}}
     if group["status"] != "pass":
         return result | {"status": group["status"], "reason": group.get("message", ""), "group_failure": group}
+    if invalid:
+        return result | {"status": "evaluator_error", "reason": f"ranks {invalid} passed without a valid measurement",
+                         "group_failure": {"status": "evaluator_error", "ranks_with_status": invalid}}
     result |= {"status": "correctness_only" if selected.type == "cpu" else "ok_provisional",
                "build_ms": max(r["build_ms"] for r in ranks),
                "correctness": {"status": "pass", "per_rank": [r["correctness"] for r in ranks]},

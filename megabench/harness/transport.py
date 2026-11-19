@@ -32,6 +32,26 @@ class TransportError(RuntimeError):
     pass
 
 
+MAX_FRAME = int(os.environ.get("GOALBOX_TRANSPORT_MAX_FRAME", str(256 << 20)))     # control messages and CPU tensors only
+DTYPES = ("float32", "float16", "bfloat16", "float64", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32",
+          "uint64", "bool", "float8_e4m3fn", "float8_e5m2", "float8_e4m3fnuz", "float8_e5m2fnuz")
+
+
+class _RestrictedUnpickler(pickle.Unpickler):
+    """Plain containers and scalars only. Any global lookup (the vector for code execution through pickle)
+    is refused: messages from the candidate side are untrusted."""
+
+    def find_class(self, module, name):
+        raise pickle.UnpicklingError(f"refused global {module}.{name} in a transport frame")
+
+    def persistent_load(self, pid):
+        raise pickle.UnpicklingError("refused persistent id in a transport frame")
+
+
+def safe_loads(data: bytes) -> Any:
+    return _RestrictedUnpickler(io.BytesIO(data)).load()
+
+
 # --------------------------------------------------------------------------------------------- channel
 class Channel:
     """Length-prefixed pickle frames over a (read fd, write fd) pair. Not thread-safe."""
@@ -70,9 +90,9 @@ class Channel:
     def recv(self, timeout_s: float | None = None) -> Any:
         deadline = None if timeout_s is None else time.monotonic() + timeout_s
         (length,) = struct.unpack(">Q", self._read_exact(8, deadline))
-        if length > (64 << 30):
-            raise TransportError(f"frame of {length} bytes refused")
-        return pickle.loads(self._read_exact(length, deadline))
+        if length > MAX_FRAME:
+            raise TransportError(f"frame of {length} bytes refused (limit {MAX_FRAME})")
+        return safe_loads(self._read_exact(length, deadline))
 
     def close(self) -> None:
         for fd in (self.read_fd, self.write_fd):
@@ -225,24 +245,55 @@ def encode(obj: Any, keep: KeepAlive) -> Any:
     return out
 
 
-def decode(obj: Any, mappings: dict | None = None) -> Any:
-    """Inverse of encode. `mappings` caches IPC mappings by handle for the lifetime of the message set."""
+def _validated(d: Any) -> dict:
+    """A CUDA tensor description from the other side: every field checked before any driver call."""
+    import math
+
+    if not isinstance(d, dict) or not isinstance(d.get("handle"), bytes) or len(d["handle"]) != 64:
+        raise TransportError("bad IPC handle")
+    if d.get("dtype") not in DTYPES:
+        raise TransportError(f"refused dtype {d.get('dtype')!r}")
+    shape = d.get("shape")
+    if not isinstance(shape, tuple) or not all(isinstance(n, int) and 0 <= n < (1 << 40) for n in shape) or len(shape) > 8:
+        raise TransportError("bad shape")
+    import torch
+    element = torch.empty((), dtype=getattr(torch, d["dtype"])).element_size()
+    nbytes, offset, device = d.get("nbytes"), d.get("offset"), d.get("device")
+    if not (isinstance(nbytes, int) and isinstance(offset, int) and isinstance(device, int)) or nbytes < 0 or offset < 0 or device < 0:
+        raise TransportError("bad tensor geometry")
+    if nbytes != math.prod(shape) * element:
+        raise TransportError("nbytes does not match shape and dtype")
+    return d
+
+
+def decode(obj: Any, mappings: dict | None = None, *, allow_cpu_tensors: bool = True) -> Any:
+    """Inverse of encode. `mappings` caches IPC mappings by handle for the lifetime of the message set.
+    `allow_cpu_tensors=False` (the grader on a GPU) refuses by-value tensors: torch.load on untrusted bytes
+    is a larger attack surface than this protocol needs there."""
     import torch
 
     cache = mappings if mappings is not None else {}
 
     def dec(x):
         if isinstance(x, tuple) and len(x) == 2 and x[0] == "__tensor_cpu__":
+            if not allow_cpu_tensors:
+                raise TransportError("by-value tensor refused on this side")
+            if not isinstance(x[1], bytes) or len(x[1]) > MAX_FRAME:
+                raise TransportError("bad by-value tensor")
             return torch.load(io.BytesIO(x[1]), weights_only=True)
         if isinstance(x, tuple) and len(x) == 2 and x[0] == "__tensor_cuda__":
-            d = x[1]
+            d = _validated(x[1])
             key = (d["handle"], d["device"])
             if key not in cache:
                 cache[key] = _IpcMapping(d["handle"], d["device"])
-            view = _View(cache[key], d["offset"], d["nbytes"])
+            mapping = cache[key]
+            if mapping.size is not None and d["offset"] + d["nbytes"] > mapping.size:
+                raise TransportError("tensor lies outside its IPC allocation")
+            if not d["nbytes"]:
+                return torch.empty(d["shape"], dtype=getattr(torch, d["dtype"]), device=f"cuda:{d['device']}")
+            view = _View(mapping, d["offset"], d["nbytes"])
             raw = torch.as_tensor(view, device=f"cuda:{d['device']}")
-            return raw.view(getattr(torch, d["dtype"])).view(*d["shape"]) if d["nbytes"] else \
-                torch.empty(d["shape"], dtype=getattr(torch, d["dtype"]), device=f"cuda:{d['device']}")
+            return raw.view(getattr(torch, d["dtype"])).view(*d["shape"])
         if isinstance(x, dict):
             return {k: dec(v) for k, v in x.items()}
         if isinstance(x, list):
@@ -252,3 +303,64 @@ def decode(obj: Any, mappings: dict | None = None) -> Any:
         return x
 
     return dec(obj)
+
+
+# ------------------------------------------------------------------------------- export audit (D-I5)
+def input_pool():
+    """A dedicated caching-allocator pool for the tensors handed to the candidate. A CUDA IPC handle covers
+    the whole cudaMalloc segment that holds a tensor, so inputs must never share a segment with the reference
+    outputs, the hash coefficients or any other evaluator tensor. Allocating the inputs inside their own
+    pool gives them their own segments. Returns None on the CPU or when the torch build lacks MemPool."""
+    import torch
+
+    if not torch.cuda.is_available() or not hasattr(torch, "cuda") or not hasattr(torch.cuda, "MemPool"):
+        return None
+    return torch.cuda.MemPool()
+
+
+def audit_exports(inputs: dict, pool, device) -> dict:
+    """Check, from the allocator's own snapshot, that every segment containing an input tensor belongs to the
+    input pool and holds only active blocks that are input tensors. Raises TransportError otherwise. The
+    returned record lists the segments (address, size, blocks) for the verdict. No-op on the CPU."""
+    import torch
+
+    dev = torch.device(device)
+    if dev.type != "cuda":
+        return {"device": str(dev), "checked": False, "reason": "cpu"}
+    conf = os.environ.get("PYTORCH_CUDA_ALLOC_CONF", "")
+    if "expandable_segments:True" in conf.replace(" ", ""):
+        raise TransportError("expandable segments are not IPC-exportable; unset PYTORCH_CUDA_ALLOC_CONF")
+    ptrs = {}
+    for name, value in inputs.items():
+        if isinstance(value, torch.Tensor) and value.device.type == "cuda" and value.numel():
+            ptrs[value.data_ptr()] = (name, value.numel() * value.element_size())
+    pool_id = tuple(pool.id) if pool is not None else None
+    segments = []
+    covered = set()
+    for seg in torch.cuda.memory_snapshot():
+        if seg.get("device") != dev.index:
+            continue
+        start, size = seg["address"], seg["total_size"]
+        mine = [p for p in ptrs if start <= p < start + size]
+        if not mine:
+            continue
+        if seg.get("is_expandable"):
+            raise TransportError("input tensor in an expandable segment")
+        if pool_id is not None and tuple(seg.get("segment_pool_id", (0, 0))) != pool_id:
+            raise TransportError(f"input {ptrs[mine[0]][0]} lives outside the input pool")
+        foreign = []
+        addr = start
+        for block in seg["blocks"]:
+            if block["state"] == "active_allocated" and addr not in ptrs:
+                foreign.append({"address": addr, "size": block["size"]})
+            addr += block["size"]
+        if foreign:
+            raise TransportError(f"segment holding {[ptrs[p][0] for p in mine]} also holds {len(foreign)} evaluator block(s)")
+        covered.update(mine)
+        segments.append({"address": start, "size": size, "inputs": [ptrs[p][0] for p in mine],
+                         "blocks": len(seg["blocks"])})
+    missing = [ptrs[p][0] for p in ptrs if p not in covered]
+    if missing:
+        raise TransportError(f"inputs not found in any segment: {missing}")
+    return {"device": str(dev), "checked": True, "pool": pool_id, "segments": segments,
+            "exported_bytes": sum(s["size"] for s in segments), "input_bytes": sum(v[1] for v in ptrs.values())}

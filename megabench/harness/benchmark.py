@@ -21,7 +21,7 @@ def summarize(host_ms: list[float], event_ms: list[float | None]) -> dict:
     events = [v for v in event_ms if v is not None]
     host = _percentiles(host_ms)
     event = _percentiles(events)
-    return {"host_ms": host_ms, "host_p50_ms": host["p50_ms"], "host_p95_ms": host["p95_ms"],
+    return {"reps": len(host_ms), "host_ms": host_ms, "host_p50_ms": host["p50_ms"], "host_p95_ms": host["p95_ms"],
             "cuda_event_ms": events, "cuda_event_p50_ms": event["p50_ms"], "cuda_event_p95_ms": event["p95_ms"]}
 
 

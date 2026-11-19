@@ -156,3 +156,16 @@ Conditional GO for C1 received after commit 361a053 was accepted. Done locally (
 - Mishap: a first version of the killer control candidate killed every process of my uid on the shared
   rack 3 host (my own ssh session included; no other users affected). The control now goes uid-wide only
   inside a private pid namespace whose pid 1 is the spawner.
+
+## 2026-11-19 (night): C2 readiness, CPU-only
+
+- Verdict channel accepted at `9dd45f7`. Read-only recon of rack 10: every GPU node tainted `nvidia.com/gpu`
+  (toleration added to the worker pods, L23), device plugin v0.19.2, driver 595.71.05, tray15 free of GPU pods.
+- L21: dedicated input memory pool and export audit of every CUDA segment handed to the candidate;
+  restricted unpickler and validated tensor descriptions for frames from the runner.
+- L22: contamination policy. Per-rank `measurement.valid`, group `candidate_timing` only when every rank is
+  valid; grader-side GPU health counters and process sampling, `CONTAMINATED` exit 9.
+- Blocker B-C2-1 opened: nsys audit of record does not see remote candidate kernels; advisory until decided.
+- C1b operator command file `reports/gb300/C1B-OPERATOR-COMMANDS.md`; C1 script and manifests confirmed
+  unchanged since the review (rendered hashes identical). C2 plan `sandbox/k8s/C2-GPU-SMOKE-PLAN.md`:
+  tray15, 4 GPUs, 4 h maximum lease, 11 steps with pass criteria.

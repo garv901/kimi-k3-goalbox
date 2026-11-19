@@ -37,6 +37,7 @@ import shutil
 import signal
 import socket
 import subprocess
+import threading
 import sys
 import time
 from pathlib import Path
@@ -103,6 +104,68 @@ def gpu_processes() -> list[str]:
     except (OSError, subprocess.SubprocessError):
         return []
     return [line.strip() for line in out.splitlines() if line.strip()]
+
+
+HEALTH_FIELDS = ("index", "ecc.errors.uncorrected.volatile.total", "retired_pages.pending", "clocks.sm", "temperature.gpu",
+                 "clocks_event_reasons.active", "reset_status.reset_required")
+HEALTH_INVALIDATING = ("ecc.errors.uncorrected.volatile.total", "retired_pages.pending", "reset_status.reset_required")
+
+
+def gpu_health() -> dict:
+    """Per-GPU counters whose change across a job invalidates its timing (L22). Fields unknown to this
+    nvidia-smi are dropped one by one; GOALBOX_LEFTOVER_CHECK=0 or no nvidia-smi gives {}."""
+    if os.environ.get("GOALBOX_LEFTOVER_CHECK", "1") == "0" or not shutil.which("nvidia-smi"):
+        return {}
+    fields = list(HEALTH_FIELDS)
+    while fields:
+        try:
+            proc = subprocess.run(["nvidia-smi", f"--query-gpu={','.join(fields)}", "--format=csv,noheader,nounits"],
+                                  capture_output=True, text=True, timeout=30)
+        except (OSError, subprocess.SubprocessError):
+            return {}
+        if proc.returncode == 0:
+            rows = [[c.strip() for c in line.split(",")] for line in proc.stdout.splitlines() if line.strip()]
+            return {row[0]: dict(zip(fields[1:], row[1:])) for row in rows if len(row) == len(fields)}
+        bad = next((f for f in fields[1:] if f in proc.stderr), None)
+        if bad is None:
+            return {}
+        fields.remove(bad)
+    return {}
+
+
+def contamination(before: dict, after: dict, samples: list[int], expected_procs: int) -> list[str]:
+    """Reasons that invalidate a job's timing: an invalidating counter changed on any GPU, a GPU disappeared,
+    or more compute processes than this job accounts for were seen on the GPUs while it ran."""
+    reasons = []
+    for gpu, counters in before.items():
+        if gpu not in after:
+            reasons.append(f"GPU {gpu} missing after the job")
+            continue
+        for field in HEALTH_INVALIDATING:
+            if field in counters and counters[field] != after[gpu].get(field):
+                reasons.append(f"GPU {gpu} {field}: {counters[field]} -> {after[gpu].get(field)}")
+    if samples and expected_procs and max(samples) > expected_procs:
+        reasons.append(f"up to {max(samples)} compute processes on the GPUs during the job, {expected_procs} expected")
+    return reasons
+
+
+class ProcessSampler(threading.Thread):
+    """Counts NVML compute processes every few seconds while a job runs (interference evidence)."""
+
+    def __init__(self, interval_s: float = 5.0):
+        super().__init__(daemon=True)
+        self.samples: list[int] = []
+        self._halt = threading.Event()
+        self.interval = interval_s
+
+    def run(self) -> None:
+        while not self._halt.wait(self.interval):
+            self.samples.append(len(gpu_processes()))
+
+    def stop(self) -> list[int]:
+        self._halt.set()
+        self.join(timeout=35)
+        return self.samples
 
 
 def request_runner_restart(reason: str) -> None:
@@ -331,12 +394,16 @@ def run_job(rid: str) -> None:
         finish(rid, 8, "INFRA_RUNNER_DOWN", kind, kind == "grade"); return
     deadline = time.time() + 60 * minutes + 60
     gpu_before = gpu_processes()
+    health_before = gpu_health()
+    sampler = ProcessSampler()
+    sampler.start()
     try:
         code, state, extra = (run_grade if kind == "grade" else run_exec)(rid, req, out, deadline)
     except Exception as exc:  # noqa: BLE001 - never leave a job without a done record
         log(f"{rid} grader exception: {type(exc).__name__}: {exc}")
         out.write(f"grader: internal error {type(exc).__name__}: {exc}\n")
         code, state, extra = 7, "GRADER_FAILED", {}
+    samples = sampler.stop()
     job = extra.pop("job", None)
     cleanup = None
     if job is not None:
@@ -361,6 +428,16 @@ def run_job(rid: str) -> None:
         out.write("grader: WEIGHT FILES CHANGED during the job\n")
         state += "+WEIGHTS_CHANGED"
         code = code or 3
+    if kind == "grade":
+        # L22: a grade whose GPUs saw an uncorrected error, a reset, or foreign processes carries no timing
+        expected = 2 * int(req.get("gpus") or 0) + len(gpu_before)        # evaluator rank + candidate rank per GPU
+        reasons = contamination(health_before, gpu_health(), samples, expected)
+        extra["gpu_health"] = {"before": health_before, "after_changed": bool(reasons), "process_samples": samples}
+        if reasons:
+            out.write("grader: MEASUREMENT CONTAMINATED: " + "; ".join(reasons) + "\n")
+            extra["contamination"] = reasons
+            state = "CONTAMINATED" if code == 0 else state + "+CONTAMINATED"
+            code = 9 if code == 0 else code
     out.close()
     if job is not None:
         discard_job_dir(job)

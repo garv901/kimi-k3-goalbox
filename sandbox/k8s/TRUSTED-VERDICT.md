@@ -119,6 +119,25 @@ heartbeat is stale before a job.
 - `sandbox/k8s/c1/local/verdict_test.sh`: the two-container layout on Docker with the real image; every
   hostile attempt denied (results: `reports/gb300/verdict-channel-20261119/`).
 
+## Export audit (L21): what the candidate can map
+
+Only tensors the evaluator sends are exported, and a CUDA IPC handle covers the whole allocation segment
+around each one. Inputs are therefore allocated in their own `torch.cuda.MemPool`; before each candidate
+run `transport.audit_exports` checks from the allocator snapshot that every segment holding an input is in
+that pool and contains no other live block (reference outputs, hash key, evaluator scratch all live in
+the default pool). Expandable segments are refused. The audit record is part of the verdict. The static
+argument covers the caching allocator; the GPU confirmation is C2 step 4 (`C2-GPU-SMOKE-PLAN.md`).
+Frames from the runner are decoded with a restricted unpickler, size-capped and field-validated; the GPU
+grader refuses by-value tensors.
+
+## Measurement-contamination policy (L22)
+
+No timing figure leaves a rank unless all repetitions completed, the last outputs graded correct, the
+inputs were unchanged and the audit ran (`measurement.valid`); the group reports `candidate_timing` only
+when every rank is valid. The grader adds GPU health counters before and after each grade and a
+compute-process count sampled during it; changes in uncorrected ECC, pending retirements, required resets,
+a missing GPU or extra processes make the grade `CONTAMINATED` (exit 9), never a score.
+
 ## Live tests still required (GPU phase, before any real-weight validation)
 
 1. **GPU visibility in the runner.** The grader container requests `nvidia.com/gpu: 4`; the runner relies
@@ -133,7 +152,10 @@ heartbeat is stale before a job.
    check kept.
 3. **Admission.** Kyverno must accept the two-container pod with `IPC_LOCK` and the liveness probe.
 4. **Kubelet restart path.** `/job/RESTART-RUNNER` → probe failure → container restart → flag cleared.
-5. **Interprocess CUDA events and NVTX** across the boundary (timing fidelity unchanged), and the nsys
-   trace of the grader's process tree including the remote candidate processes (`nsys_candidate` must
-   trace the runner's processes: to be revisited; the audit of record may need `nsys` launched by the
-   spawner on the candidate process and the report handed back as a file the grader re-audits).
+5. **Interprocess CUDA events and NVTX** across the boundary (timing fidelity unchanged).
+6. **Launch audit of record** (blocker B-C2-1, `C2-GPU-SMOKE-PLAN.md`): the nsys trace no longer contains
+   the candidate's kernels when taken in the grader; until a trusted path is decided the launch-budget
+   verdict in remote mode is advisory.
+7. **Export audit on the GPU** (L21, C2 step 4) and the **taint toleration** (L23, C2 step 0).
+
+Plan, budget, pass/fail criteria and lease limit: `sandbox/k8s/C2-GPU-SMOKE-PLAN.md`.

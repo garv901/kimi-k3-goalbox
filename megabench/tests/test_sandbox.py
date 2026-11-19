@@ -327,6 +327,9 @@ class GradeProtocolTests(unittest.TestCase):
                 verdict = json.loads((ctl / "results/gpu/node-a/verdict/20261119-000001-1.json").read_text())
                 self.assertEqual(verdict["record"]["status"], "correctness_only")
                 self.assertTrue(verdict["record"].get("tiny_self_test"))
+                self.assertTrue(verdict["record"]["measurement"]["valid"])                   # L22 on a clean run
+                self.assertEqual(verdict["record"]["candidate_timing"]["reps"], 1)                 # --reps 1 in grade_args
+                self.assertEqual(verdict["record"]["ranks"][0]["export_audit"][0]["checked"], False)   # CPU: nothing exported
                 self.assertEqual(verdict["harness_args"], grade_args.split())           # the broker's options, not the agent's
                 self.assertEqual(verdict["graded_snapshot"]["files"], 3)              # the submission's directory, as scanned
                 out = (run / "home/.gpu/out/20261119-000001-1.log").read_text()
@@ -407,3 +410,50 @@ class TransportTests(unittest.TestCase):
             self.assertTrue(torch.equal(got["msg"][1]["x"], x)); self.assertEqual(got["msg"][1]["x"].dtype, torch.bfloat16)
             self.assertTrue(torch.equal(reply[1]["y"], x * 2))
             parent.close()
+
+    def test_untrusted_frames_are_validated(self):
+        """Messages from the runner side are untrusted: no globals in pickles, no oversized frames, no CUDA
+        tensor description that could map memory outside its allocation or alias a dtype (L21)."""
+        import pickle, torch
+        transport = load(REPO / "megabench/harness/transport.py", "transport")
+        with self.assertRaises(pickle.UnpicklingError):
+            transport.safe_loads(pickle.dumps(os.system))                   # a global: code execution vector
+        with self.assertRaises(pickle.UnpicklingError):
+            transport.safe_loads(pickle.dumps(torch.tensor([1])))           # torch reductions are globals too
+        self.assertEqual(transport.safe_loads(pickle.dumps(("run", {"a": (1, 2.5, b"x", None, True)}))),
+                         ("run", {"a": (1, 2.5, b"x", None, True)}))
+        good = {"handle": b"\0" * 64, "device": 0, "offset": 0, "nbytes": 12, "dtype": "float32", "shape": (3,)}
+        self.assertEqual(transport._validated(good), good)
+        for bad in ({**good, "nbytes": 16}, {**good, "dtype": "complex64"}, {**good, "shape": (-1,)},
+                    {**good, "handle": b"\0" * 63}, {**good, "offset": -8}, {**good, "shape": "3"}):
+            with self.assertRaises(transport.TransportError, msg=str(bad)):
+                transport._validated(bad)
+        with self.assertRaises(transport.TransportError):
+            transport.decode(("__tensor_cpu__", b"anything"), allow_cpu_tensors=False)      # the GPU grader refuses by-value tensors
+        # no export audit on the CPU, but the pool/audit API exists and reports so
+        self.assertIsNone(transport.input_pool()) if not torch.cuda.is_available() else None
+        self.assertEqual(transport.audit_exports({"x": torch.zeros(4)}, None, "cpu")["checked"], False)
+
+    def test_measurement_validity_and_contamination_rules(self):
+        """L22: timing is reported only from complete, correct, unmutated runs; GPU counter changes or foreign
+        processes during a grade invalidate it on the grader's side."""
+        import importlib
+        distributed = importlib.import_module("megabench.harness.distributed")
+        ok = {"status": "pass", "candidate_timing": {"reps": 10}, "timed_outputs_grade": {}, "launch_audit_advisory": {}}
+        self.assertEqual(distributed.measurement_validity(dict(ok), 10), {"valid": True, "reasons": []})
+        short = dict(ok, candidate_timing={"reps": 7})
+        m = distributed.measurement_validity(short, 10)
+        self.assertFalse(m["valid"]); self.assertIn("7 of 10 repetitions", m["reasons"])
+        self.assertNotIn("candidate_timing", short); self.assertEqual(short["invalid_timing"], {"reps": 7})
+        failed = dict(ok, status="candidate_error", failure={"phase": "timing"})
+        m = distributed.measurement_validity(failed, 10)
+        self.assertFalse(m["valid"]); self.assertNotIn("candidate_timing", failed)
+        self.assertFalse(distributed.measurement_validity({"status": "pass"}, 10)["valid"])
+        os.environ["GOALBOX_JOB_DIR"] = tempfile.mkdtemp()
+        executor = load(REPO / "sandbox/lib/executor.py", "executor_rules")
+        before = {"0": {"ecc.errors.uncorrected.volatile.total": "0", "retired_pages.pending": "No", "clocks.sm": "1800"}}
+        self.assertEqual(executor.contamination(before, {"0": dict(before["0"], **{"clocks.sm": "900"})}, [2, 2], 2), [])
+        self.assertEqual(len(executor.contamination(before, {"0": dict(before["0"], **{"ecc.errors.uncorrected.volatile.total": "1"})}, [], 2)), 1)
+        self.assertEqual(len(executor.contamination(before, {}, [], 2)), 1)
+        self.assertIn("3 compute processes", executor.contamination(before, before, [1, 3, 2], 2)[0])
+        self.assertEqual(executor.contamination(before, before, [1, 3, 2], 0), [])        # unknown expectation: no claim

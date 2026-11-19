@@ -141,6 +141,8 @@ def check(directory: Path) -> list[str]:
             shared = {m["name"] for m in g_mounts.values() if not m.get("readOnly")} & {m["name"] for m in r_mounts.values() if not m.get("readOnly")}
             need(shared <= {"job"}, f"{label}: volumes writable from both containers: {shared}")
             need("livenessProbe" in runner, f"{label}: runner has no liveness probe (restart channel)")
+            need(any(t.get("key") == "nvidia.com/gpu" for t in spec.get("tolerations", [])),
+                 f"{label}: no toleration for the nvidia.com/gpu taint carried by every GPU node")
             need(spec.get("runtimeClassName") == "nvidia", f"{label}: runtimeClassName")
             need("secret" not in vols.values(), f"{label}: a Secret is mounted in a GPU pod")
             c = containers[0]
