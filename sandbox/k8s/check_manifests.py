@@ -18,10 +18,12 @@ PRIVATE = {"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16", "1
 
 def load(directory: Path) -> list[dict]:
     docs = []
-    for path in sorted(directory.glob("*.yaml")):
+    files = sorted(directory.glob("*.yaml")) + sorted((directory.parent / "c1").glob("*.yaml"))
+    for path in files:
         for doc in yaml.safe_load_all(path.read_text()):
             if doc:
                 doc["_file"] = path.name
+                doc["_c1"] = path.parent.name == "c1"
                 docs.append(doc)
     return docs
 
@@ -51,6 +53,7 @@ def check(directory: Path) -> list[str]:
             problems.append(msg)
 
     kinds = {d["kind"] for d in docs}
+    from_c1 = {(d["kind"], d["metadata"].get("name")): d["_c1"] for d in docs}
     need(not kinds & {"ClusterRole", "ClusterRoleBinding"}, "cluster-scoped RBAC objects are not allowed")
     for doc in docs:
         if doc["kind"] != "Namespace":
@@ -63,8 +66,10 @@ def check(directory: Path) -> list[str]:
         if doc["kind"] == "Role":
             for rule in doc["rules"]:
                 need("secrets" not in rule["resources"], f"Role {doc['metadata']['name']} grants secrets")
-                need(not ({"create", "delete", "patch", "update", "*"} & set(rule["verbs"]) and {"pods", "*"} & set(rule["resources"])),
-                     f"Role {doc['metadata']['name']} can create or change pods")
+                mutating = {"create", "delete", "patch", "update", "*"} & set(rule["verbs"])
+                if mutating and {"pods", "*"} & set(rule["resources"]):
+                    need(set(rule["verbs"]) == {"delete"} and rule.get("resourceNames") == ["goalbox-agent"],
+                         f"Role {doc['metadata']['name']} can create or change pods beyond deleting goalbox-agent")
                 need("*" not in rule["verbs"] and "*" not in rule["resources"], f"Role {doc['metadata']['name']} has a wildcard")
     sa_automount = {d["metadata"]["name"]: d.get("automountServiceAccountToken") for d in docs if d["kind"] == "ServiceAccount"}
     for name, spec, kind in pods(docs):
@@ -99,6 +104,8 @@ def check(directory: Path) -> list[str]:
                     need(mount.get("readOnly") is True or is_cache, f"{clabel}: hostPath {mount['mountPath']} mounted read-write")
         # Per-role rules
         mounts = {c["name"]: [m["name"] for m in c.get("volumeMounts", [])] for c in containers}
+        if name.startswith("c1-"):
+            need(set(vols.values()) <= {"configMap", "emptyDir"}, f"{label}: test pod mounts {set(vols.values())}")
         if name == "goalbox-agent":
             need("hostPath" not in vols.values(), f"{label}: hostPath volume present")
             need("records" not in mounts.get("agent", []), f"{label}: agent container mounts records")
@@ -114,6 +121,9 @@ def check(directory: Path) -> list[str]:
             need(spec.get("enableServiceLinks") is False, f"{label}: service links would leak cluster addresses")
         if "gpu" in name and kind == "Pod":
             need("records" not in vols, f"{label}: records volume present")
+            ctl_mounts = [m for c in containers for m in c.get("volumeMounts", []) if m["name"] == "ctl"]
+            need(any(m.get("subPath") == "req" and m.get("readOnly") for m in ctl_mounts), f"{label}: request spool not mounted read-only")
+            need(all(m.get("subPath") in ("req", "results") for m in ctl_mounts), f"{label}: ctl mounted without a subPath")
             need(spec.get("runtimeClassName") == "nvidia", f"{label}: runtimeClassName")
             need("secret" not in vols.values(), f"{label}: a Secret is mounted in a GPU pod")
             c = containers[0]
@@ -121,7 +131,8 @@ def check(directory: Path) -> list[str]:
         if name == "goalbox-controller":
             need("secret" not in vols.values() and "hostPath" not in vols.values(), f"{label}: Secret or hostPath volume")
         if name == "goalbox-proxy":
-            need(set(vols.values()) <= {"emptyDir"}, f"{label}: proxy mounts {set(vols.values())}")
+            allowed = {"emptyDir", "configMap"} if from_c1.get((kind, name)) else {"emptyDir"}   # C1 overlay: code from a ConfigMap
+            need(set(vols.values()) <= allowed, f"{label}: proxy mounts {set(vols.values())}")
     # Network policies
     pols = {d["metadata"]["name"]: d["spec"] for d in docs if d["kind"] == "NetworkPolicy"}
     need("default-deny" in pols and pols["default-deny"]["podSelector"] == {} and set(pols["default-deny"]["policyTypes"]) == {"Ingress", "Egress"},
@@ -156,6 +167,18 @@ def check(directory: Path) -> list[str]:
     for rule in gpu.get("ingress", []):
         for peer in rule["from"]:
             need(peer.get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/component") == "gpu-worker", f"GPU ingress from {peer}")
+    cnps = {d["metadata"]["name"]: d["spec"] for d in docs if d["kind"] == "CiliumNetworkPolicy"}
+    ctrl = cnps.get("controller")
+    need(ctrl is not None and ctrl["endpointSelector"]["matchLabels"].get("app.kubernetes.io/component") == "controller",
+         "no CiliumNetworkPolicy for the controller")
+    for rule in (ctrl or {}).get("egress", []):
+        need("toCIDR" not in rule and "toCIDRSet" not in rule, "controller egress to a CIDR")
+        for entity in rule.get("toEntities", []):
+            need(entity == "kube-apiserver", f"controller egress to entity {entity}")
+        for ep in rule.get("toEndpoints", []):
+            need(ep["matchLabels"].get("k8s-app") == "kube-dns", f"controller egress to endpoints {ep}")
+    for name_, spec_ in cnps.items():
+        need("ingress" not in spec_ or not spec_["ingress"], f"CiliumNetworkPolicy {name_} allows ingress")
     # Every pod role has a policy selecting it
     for name, spec, kind in pods(docs):
         comp = None
@@ -164,7 +187,8 @@ def check(directory: Path) -> list[str]:
                 labels = (doc["metadata"].get("labels") if kind == "Pod" else doc["spec"]["template"]["metadata"].get("labels")) or {}
                 comp = labels.get("app.kubernetes.io/component")
         selected = [p for p, s in pols.items() if s["podSelector"].get("matchLabels", {}).get("app.kubernetes.io/component") == comp]
-        need(selected or comp == "conversion", f"{kind} {name} (component {comp}) has no NetworkPolicy of its own")
+        selected += [p for p, s in cnps.items() if s["endpointSelector"].get("matchLabels", {}).get("app.kubernetes.io/component") == comp]
+        need(selected or comp in ("conversion", None), f"{kind} {name} (component {comp}) has no NetworkPolicy of its own")
     # Secret manifest has no data
     for doc in docs:
         if doc["kind"] == "Secret":

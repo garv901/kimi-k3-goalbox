@@ -1,0 +1,29 @@
+== candidate running as uid 1000 in /work
+denied    alter own request time limit
+denied    inject a new request
+denied    inject a request for node-b
+denied    modify grading code
+denied    modify the oracle
+denied    modify the executor
+denied    modify weights
+denied    write to /records
+WRITABLE  read the executor environment
+WRITABLE  write own results (expected)
+WRITABLE  write /work (expected)
+done record: {"exit": 0, "state": "COMPLETED", "node": "node-a", "finished_utc": 1795076360.6090531}
+executor (pid 1) still running: true
+host view, request spool unchanged: j1.json j1.sh  node-a 
+RESULT: protected paths denied, own results and /work writable (as designed)
+mount exit=0
+
+== job 1
+stray started: 1 process(es) in their own session
+executor: killed 3 leftover process(es)
+done: {"exit": 0, "state": "COMPLETED+STRAYS_KILLED", "node": "node-a", "finished_utc": 1795076365.0286539}
+stray processes left after the sweep: 0
+executor (pid 1) still running: true
+== job 2
+second job ran after the sweep
+executor: killed 3 leftover process(es)
+RESULT: stray killed, executor survived, next job served
+cleanup exit=0

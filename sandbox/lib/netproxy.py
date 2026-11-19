@@ -13,9 +13,15 @@ from pathlib import Path
 
 RUN = Path(sys.argv[1]).resolve()
 GB = Path(__file__).resolve().parents[1]
-ALLOW_CONNECT = {"api.anthropic.com", "files.pythonhosted.org"}
-# Hugging Face: model cards, configs, modeling code and weights (hub API, LFS and Xet storage).
-ALLOW_PATTERNS = ("huggingface.co", "*.huggingface.co", "hf.co", "*.hf.co")
+ALLOW_CONNECT = {"api.anthropic.com", "files.pythonhosted.org",
+                 # Hugging Face: hub API, LFS and Xet storage. Explicit names, no wildcards: a wildcard such as
+                 # *.huggingface.co would let the agent make this proxy resolve arbitrary subdomains (a DNS
+                 # side channel). Denied names are logged, so a missing legitimate host shows up in net.log.
+                 "huggingface.co", "cdn-lfs.huggingface.co", "cdn-lfs-us-1.huggingface.co", "cdn-lfs-eu-1.huggingface.co",
+                 "cdn-lfs.hf.co", "cdn-lfs-us-1.hf.co", "cdn-lfs-eu-1.hf.co",
+                 "cas-bridge.xethub.hf.co", "cas-server.xethub.hf.co", "transfer.xethub.hf.co", "hf.co"}
+ALLOW_PATTERNS = ()
+HOST_RE = re.compile(r"^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)*$")
 BLOCKED = [l.split("#")[0].strip() for l in (GB / "blocked-packages.txt").read_text().splitlines()]
 BLOCKED = [p for p in BLOCKED if p]
 LOG = (RUN / "net.log").open("a", buffering=1)
@@ -67,7 +73,8 @@ async def handle(cr, cw):
     headers = {k.lower(): v.strip() for k, _, v in (l.partition(":") for l in lines[1:] if l)}
     if method == "CONNECT":
         host, _, port = target.rpartition(":")
-        if (host in ALLOW_CONNECT or any(fnmatch.fnmatch(host.lower(), p) for p in ALLOW_PATTERNS)) and port == "443":
+        host = host.lower()
+        if HOST_RE.match(host) and (host in ALLOW_CONNECT or any(fnmatch.fnmatch(host, p) for p in ALLOW_PATTERNS)) and port == "443":
             try:
                 ur, uw = await asyncio.open_connection(host, 443)
             except OSError as e:

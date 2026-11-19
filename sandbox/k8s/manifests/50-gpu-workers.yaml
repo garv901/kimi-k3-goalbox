@@ -6,7 +6,9 @@
 # (CUDA pinned memory / NCCL). SYS_PTRACE is not needed: nsys and ncu trace the processes they launch
 # themselves. /dev/shm is a memory emptyDir (CUDA IPC, NCCL). IMEX channel 0 and NCCL MNNVL come from
 # the SGLang deployment on this cluster (DECISIONS section 3).
-# The converted weights are a host path mounted read-only at /weights; the records volume is absent.
+# The converted weights are a host path mounted read-only at /weights; the records volume is absent. The
+# control volume is mounted twice: the request side read-only (candidate code in this pod cannot create
+# or alter jobs), the results side read-write (DECISIONS-LOG L13).
 apiVersion: v1
 kind: Service
 metadata: {name: goalbox-gpu, namespace: goalbox-k3}
@@ -37,7 +39,8 @@ spec:
       command: [python3, /goalbox/sandbox/lib/executor.py]
       env:
         - {name: GOALBOX_NODE_NAME, value: goalbox-gpu-a}
-        - {name: GOALBOX_CTL, value: /ctl}
+        - {name: GOALBOX_CTL_REQ, value: /ctl-req}
+        - {name: GOALBOX_CTL_RESULTS, value: /ctl-results}
         - {name: GOALBOX_GPUS_HERE, value: "4"}
         - {name: GOALBOX_EXECUTOR_KILL_ALL_UID, value: "1"}
         - {name: KIMI_K3_WEIGHTS, value: /weights}
@@ -54,7 +57,8 @@ spec:
       volumeMounts:
         - {name: work, mountPath: /work}
         - {name: work, mountPath: /home/agent, subPath: home}
-        - {name: ctl, mountPath: /ctl}
+        - {name: ctl, mountPath: /ctl-req, subPath: req, readOnly: true}      # requests: only the controller writes
+        - {name: ctl, mountPath: /ctl-results, subPath: results}               # results: untrusted, reported to the agent
         - {name: weights, mountPath: /weights, readOnly: true}
         - {name: dshm, mountPath: /dev/shm}
         - {name: tmp, mountPath: /tmp}
@@ -88,7 +92,8 @@ spec:
       command: [python3, /goalbox/sandbox/lib/executor.py]
       env:
         - {name: GOALBOX_NODE_NAME, value: goalbox-gpu-b}
-        - {name: GOALBOX_CTL, value: /ctl}
+        - {name: GOALBOX_CTL_REQ, value: /ctl-req}
+        - {name: GOALBOX_CTL_RESULTS, value: /ctl-results}
         - {name: GOALBOX_GPUS_HERE, value: "4"}
         - {name: GOALBOX_EXECUTOR_KILL_ALL_UID, value: "1"}
         - {name: KIMI_K3_WEIGHTS, value: /weights}
@@ -105,7 +110,8 @@ spec:
       volumeMounts:
         - {name: work, mountPath: /work}
         - {name: work, mountPath: /home/agent, subPath: home}
-        - {name: ctl, mountPath: /ctl}
+        - {name: ctl, mountPath: /ctl-req, subPath: req, readOnly: true}      # requests: only the controller writes
+        - {name: ctl, mountPath: /ctl-results, subPath: results}               # results: untrusted, reported to the agent
         - {name: weights, mountPath: /weights, readOnly: true}
         - {name: dshm, mountPath: /dev/shm}
         - {name: tmp, mountPath: /tmp}

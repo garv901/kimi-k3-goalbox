@@ -1,0 +1,28 @@
+# Three CephFS volumes (RWX), one per trust level:
+#   goalbox-work     agent rw, GPU workers rw (candidate code and builds), controller rw (spool status)
+#   goalbox-ctl      controller rw, GPU workers rw (their job spool only); never mounted in the agent pod
+#   goalbox-records  controller rw, capture sidecar rw; never mounted in the agent container or GPU pods
+# Reclaim policy of the storage class is Retain: deleting the namespace keeps the records.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: goalbox-work, namespace: goalbox-k3}
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: csi-cephfs-sc-k8s
+  resources: {requests: {storage: 500Gi}}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: goalbox-ctl, namespace: goalbox-k3}
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: csi-cephfs-sc-k8s
+  resources: {requests: {storage: 200Gi}}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: goalbox-records, namespace: goalbox-k3}
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: csi-cephfs-sc-k8s
+  resources: {requests: {storage: 200Gi}}

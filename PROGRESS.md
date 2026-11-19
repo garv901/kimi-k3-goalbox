@@ -117,3 +117,23 @@ Development log of the `gb300-tp4-synthetic` branch: validating the kimi-k3-goal
 - Sandbox on Kubernetes (`sandbox/k8s/`): aarch64 image (CUDA 13.4.1 devel, nsys 2026.3.2, ncu 2026.3.0, torch 2.14.1+cu130 venv, Claude Code 2.1.322, the harness, sandbox scripts, bring-up tools and goal text baked in read-only; `IMAGE-BUILD.txt`), manifests for namespace `goalbox-k3`, four ServiceAccounts with one namespace Role (controller: pods get/list/watch, pods/log get), default-deny network policies plus the minimum per role, three CephFS PVCs by trust level, proxy Deployment, two 4-GPU worker Pods pinned to the trays, controller Pod, agent Pod with capture sidecar (uid 2000, agent home read-only, records read-write) and `activeDeadlineSeconds` = 48 h + 5 min, Secret by name only, conversion Job with a three-capability init container; `render.sh` (node names, API CIDR, image, host paths are rendered, not committed); `check_manifests.py` static checks; `agent-entry.sh` (headless `claude -p "/goal …" --output-format stream-json --verbose --permission-mode auto --model claude-opus-5-5 --effort high --disallowedTools WebSearch,WebFetch`), `controller.sh` (broker k8s mode, stdout stream capture into records, budget warning). `sandbox/lib/executor.py` (GPU-pod job executor), `broker.py` k8s mode (two-tray dispatch, output merge), `netproxy.py --tcp`, `capture.py` + `verify_records.py` (append-only transcript copies with sha256 manifest, rewrite handling, final digest comparison), `tools/compile_transcript.py` (conversation-compiler fallback with redaction), `tools/conversion_sizing.py`, `planning/bringup/{verify_conversion,conversion_manifest,nccl_smoke}.py` ported.
 - CPU evidence `reports/gb300/cpu-hardening-20261119/`: 31 unit tests OK on rack 3 (oracle 7, hardened evaluator 17 including seven gloo end-to-end controls on tiny TP1/TP2 geometry, sandbox pieces 7), manifest checks ok, TP8 conversion sizing (1 640 GB output, 1 712 GB peak disk with temporaries, about 39 GB RSS per worker), nsys schema probe, nvcc check of the timer header. Contract digest of the new evaluator: see `planning/DECISIONS-LOG.md`.
 - Still waiting on the operator: registry push (vccr.io login returns 401), tray 14/15 reservation confirmation, Claude credential, and authorization for the first cluster-changing step (`kubectl apply` of namespace, RBAC, network, storage and proxy, then the RBAC `can-i` verification).
+
+## 2026-11-19 (later): Phase C1 preparation, namespace and security validation
+
+Conditional GO for C1 received after commit 361a053 was accepted. Done locally (no cluster change):
+
+- Control spool split (requests read-only in the GPU pods, results read-write); broker and executor updated;
+  verifier follows the new layout (DECISIONS-LOG L13).
+- Trajectory stream moved off stdout into an emptyDir captured by the sidecar; capture/verifier generalized to
+  several sources; controller Role: pods get/list/watch + delete `goalbox-agent` only (L14, L15).
+- Run-time budget ledger `sandbox/lib/budget.py` with interruption accounting; controller rewritten around it;
+  agent pod deadline 72 h backstop (L15).
+- Proxy allowlist explicit (no wildcards), CONNECT:443 only (L16).
+- Controller egress as a CiliumNetworkPolicy to the `kube-apiserver` entity (no CIDR to render).
+- C1 overlay: proxy on a public python image + ConfigMap (L17), two disposable test pods, in-pod network test
+  `c1_net_tests.py`, operator script `c1-validate.sh`, Docker-based local tests for proxy / mount layout /
+  uid-wide cleanup; `check_manifests.py` extended; render.sh has a `c1` mode.
+- Evidence: `reports/gb300/c1-security-prep-20261119/` (32 tests OK, 18 proxy cases, 11 candidate-write
+  probes, cleanup regression, rendered manifests with sha256, read-only can-i recon).
+- Blocked on the operator: creating the namespace and running `c1-validate.sh` need an identity that can create
+  resources; the build agent's credential cannot (L18) and the Rancher identity is reserved for the operator.

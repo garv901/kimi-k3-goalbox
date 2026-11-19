@@ -38,7 +38,7 @@ class CaptureTests(unittest.TestCase):
             proj.mkdir(parents=True)
             main = proj / "main.jsonl"
             main.write_text('{"type":"user","message":{"role":"user","content":"hi"}}\n')
-            cap = capture.Capture(home, records)
+            cap = capture.Capture(home / ".claude/projects", records)
             self.assertEqual(cap.pass_once()["copied"], 1)
             main.write_text(main.read_text() + '{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"ok"}]}}\n')
             (proj / "subagents").mkdir()
@@ -46,6 +46,12 @@ class CaptureTests(unittest.TestCase):
             summary = cap.pass_once()
             self.assertEqual((summary["copied"], summary["unchanged"]), (2, 0))
             copy = records / "transcripts/-work/sess/main.jsonl"
+            # a second source (the stream-json emptyDir) goes under its own name
+            stream_dir = Path(d) / "stream"; stream_dir.mkdir()
+            (stream_dir / "agent-1.jsonl").write_text('{"type":"system"}\n{"type":"result"}\n')
+            stream_cap = capture.Capture(stream_dir, records, "stream")
+            self.assertEqual(stream_cap.pass_once()["copied"], 1)
+            self.assertTrue((records / "stream/agent-1.jsonl").exists())
             self.assertEqual(copy.read_bytes(), main.read_bytes())
             # A rewrite of already-copied bytes is kept as a separate file, never lost.
             main.write_text("X" + main.read_text()[1:])
@@ -54,11 +60,14 @@ class CaptureTests(unittest.TestCase):
             self.assertEqual(copy.read_bytes(), main.read_bytes())
             final = cap.final()
             self.assertEqual(final["mismatched"], [])
+            self.assertEqual(stream_cap.final()["mismatched"], [])
             lines = [json.loads(l) for l in (records / "transcripts/MANIFEST.jsonl").read_text().splitlines()]
+            self.assertTrue(all(l["copy"].startswith("transcripts/") for l in lines))
             self.assertTrue(all(len(l["sha256"]) == 64 for l in lines if "sha256" in l))
             self.assertEqual(sum(1 for l in lines if l.get("event") == "rewritten"), 1)
-            result = verify_records.check(records, home)
+            result = verify_records.check(records, home, {"stream": stream_dir})
             self.assertTrue(result["ok"], result["problems"])
+            self.assertEqual(sorted(result["sources"]), ["stream", "transcripts"])
             # Tampering with a copy is detected.
             copy.write_bytes(copy.read_bytes()[:-1] + b"?")
             self.assertFalse(verify_records.check(records)["ok"])
@@ -70,9 +79,9 @@ class CaptureTests(unittest.TestCase):
             proj.mkdir(parents=True)
             src = proj / "s.jsonl"
             src.write_text("a" * 1000 + "\n")
-            capture.Capture(home, records).pass_once()
+            capture.Capture(home / ".claude/projects", records).pass_once()
             src.write_text(src.read_text() + "b" * 500 + "\n")
-            again = capture.Capture(home, records)       # fresh process, state from STATE.json
+            again = capture.Capture(home / ".claude/projects", records)       # fresh process, state from STATE.json
             self.assertEqual(again.pass_once()["copied"], 1)
             self.assertEqual((records / "transcripts/p/s.jsonl").read_bytes(), src.read_bytes())
 
@@ -116,8 +125,11 @@ class SpoolProtocolTests(unittest.TestCase):
                        GOALBOX_MAX_GPUS="8", GOALBOX_MASTER_PORT="29500")
             broker = subprocess.Popen([PY, str(REPO / "sandbox/lib/broker.py"), str(run)], env=env)
             execs = [subprocess.Popen([PY, str(REPO / "sandbox/lib/executor.py")],
-                                      env=dict(os.environ, GOALBOX_CTL=str(ctl), GOALBOX_NODE_NAME=n, GOALBOX_GPUS_HERE="4"))
+                                      env=dict(os.environ, GOALBOX_CTL_REQ=str(ctl / "req"), GOALBOX_CTL_RESULTS=str(ctl / "results"),
+                                               GOALBOX_NODE_NAME=n, GOALBOX_GPUS_HERE="4"))
                      for n in ("node-a", "node-b")]
+            # An unrelated process of the same uid, in its own session, must survive the job cleanup (C1 test 7).
+            bystander = subprocess.Popen(["sleep", "600"], start_new_session=True)
             try:
                 work = root / "work"; work.mkdir()
                 rid = "20261118-000000-1"
@@ -138,6 +150,7 @@ class SpoolProtocolTests(unittest.TestCase):
                 self.assertIn("node_rank=0 nnodes=2 master=node-a:29500 gpus=0,1,2,3", out)
                 self.assertIn("node_rank=1 nnodes=2 master=node-a:29500 gpus=0,1,2,3", out)
                 self.assertIn("killed 1 leftover", out)
+                self.assertIsNone(bystander.poll(), "the cleanup killed an unrelated same-uid process")
                 # a 6-GPU request is rejected; a 2-GPU request goes to node-a only
                 for rid2, gpus, expect in (("20261118-000000-2", 6, "rejected"), ("20261118-000000-3", 2, "done 0")):
                     (run / "home/.gpu/req" / f"{rid2}.sh").write_text("echo single=$GOALBOX_NNODES gpus=$CUDA_VISIBLE_DEVICES\n")
@@ -149,9 +162,10 @@ class SpoolProtocolTests(unittest.TestCase):
                         time.sleep(0.2)
                     self.assertIn(expect, st.read_text())
                 self.assertIn("single= gpus=0,1", (run / "home/.gpu/out/20261118-000000-3.log").read_text())
-                self.assertFalse((ctl / "gpu/node-b/req/20261118-000000-3.json").exists())
+                self.assertFalse((ctl / "req/gpu/node-b/req/20261118-000000-3.json").exists())
+                self.assertTrue((ctl / "results/gpu/node-a/done/20261118-000000-3.json").exists())
             finally:
-                for p in [broker] + execs:
+                for p in [broker, bystander] + execs:
                     p.kill(); p.wait()
 
 
@@ -205,3 +219,52 @@ class SizingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+budget = load(REPO / "sandbox/lib/budget.py", "budget")
+
+
+class BudgetLedgerTests(unittest.TestCase):
+    """C1 test 9: the 48 h are run time; interruptions and controller gaps do not count; events fire once."""
+
+    def test_interruptions_and_gaps_are_not_counted_and_state_survives_restart(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "budget.json"
+            ledger = budget.Ledger(path, budget_s=3600, warn_before_s=600, max_gap_s=100)
+            t = 1000.0
+            self.assertIsNone(ledger.observe(t, running=False, reason="not started"))   # nothing counted before the first run
+            self.assertEqual(ledger.run_s, 0)
+            t += 30
+            self.assertIsNone(ledger.observe(t, running=True))
+            self.assertEqual(ledger.run_s, 0)                                           # previous tick was not running
+            for _ in range(40):                                                         # 40 x 30 s running = 1200 s
+                t += 30
+                ledger.observe(t, running=True)
+            self.assertAlmostEqual(ledger.run_s, 1200)
+            # infrastructure interruption: 10 min not running
+            t += 30; ledger.observe(t, running=False, reason="agent=Pending workers_ready=1")
+            self.assertAlmostEqual(ledger.run_s, 1230)                                  # the last running interval counted
+            for _ in range(20):
+                t += 30; ledger.observe(t, running=False, reason="agent=Pending workers_ready=1")
+            t += 30; ledger.observe(t, running=True)
+            self.assertAlmostEqual(ledger.run_s, 1230)
+            self.assertEqual(len(ledger.state["interruptions"]), 1)
+            self.assertAlmostEqual(ledger.state["interruptions"][0]["s"], 630)
+            # controller restart with a long gap: not counted, recorded
+            again = budget.Ledger(path, budget_s=3600, warn_before_s=600, max_gap_s=100)
+            self.assertAlmostEqual(again.run_s, 1230)
+            t += 500; again.observe(t, running=True)
+            self.assertAlmostEqual(again.run_s, 1230)
+            self.assertEqual(len(again.state["controller_gaps"]), 1)
+            # warn once at budget - 600, stop once at budget
+            events = []
+            while again.run_s < 3600 + 60:
+                t += 30
+                events.append(again.observe(t, running=True))
+            self.assertEqual([e for e in events if e], ["warn", "stop"])
+            warn_at = next(i for i, e in enumerate(events) if e == "warn")
+            stop_at = next(i for i, e in enumerate(events) if e == "stop")
+            self.assertAlmostEqual((stop_at - warn_at) * 30, 600, delta=30)
+            summary = again.summary()
+            self.assertTrue(summary["stopped"] and summary["warned"])
+            self.assertGreaterEqual(summary["interrupted_s"], 600)

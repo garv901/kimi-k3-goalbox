@@ -168,3 +168,68 @@ named by their tray number on rack 10 (Kubernetes) or rack 3 (Slurm, Docker).
   item 17 is now detected by the keyed hash (test_harness.KeyedHashTests).
 - Not possible without GPUs (deferred to validation step 2 on one tray): the nsys trace of a real
   candidate, the device-side-launch and CUDA-graph controls on real binaries, CUDA IPC event timing.
+
+## L13. Control spool split: requests read-only in the GPU pods (C1 test 6)
+
+- Observed: candidate code runs in the GPU worker pod as the executor's uid, so anything the executor can
+  write, the candidate can write. With one read-write control mount the candidate could inject or alter
+  requests (time limits, GPU counts, commands for the other tray).
+- Decision: the control PVC is mounted twice in the GPU pods: `req/` read-only (only the controller writes
+  it; the kernel enforces the read-only bind mount regardless of uid) and `results/` read-write. The broker
+  treats results as untrusted content: it only reports them back to the agent that submitted the job, keeps
+  its own list of dispatched jobs, and tolerates malformed done records. Residual: a candidate can forge or
+  delay its own job's results (it fools only the agent), and can kill the executor (the container restarts).
+  Grading of record and the harness code are outside its reach (image, read-only), as are weights (read-only
+  hostPath) and records (not mounted). Shown with `sandbox/k8s/c1/local/mount_test.sh`.
+
+## L14. The trajectory stream does not go through pod stdout
+
+- Observed (read-only, 2026-11-19): the shared cluster account can `list pods --all-namespaces` and `get
+  pods/log` in every namespace, including a new one. A trajectory on the agent container's stdout would be
+  readable by every user of the shared account (section 18: raw records are private).
+- Decision: `agent-entry.sh` writes the stream-json to a pod-local emptyDir (`/stream`, read-write for the
+  agent, read-only for the capture sidecar, which copies it into the records with the same append-only
+  manifest as the session transcripts). Stdout carries two marker lines. The controller no longer needs
+  `pods/log`; its Role is pods get/list/watch plus delete on the single pod `goalbox-agent` (L15).
+  Residual: the agent can rewrite its own stream file before the sidecar's next pass (30 s); the sidecar
+  records rewrites and keeps both copies, and the session JSONL under `~/.claude` is captured independently,
+  so a tampered stream is detectable. Pod specs stay readable by the shared account (no secrets in them).
+
+## L15. Run-time budget: controller ledger, not a wall-clock deadline (C1 test 9)
+
+- Section 16: the run ends at 48 h of *run time*; after an infrastructure outage the run resumes. A pod
+  `activeDeadlineSeconds` is wall-clock and restarts with the pod, so it cannot implement the pause policy.
+- Decision: `sandbox/lib/budget.py` keeps a ledger on the records volume: a 30 s tick counts only while the
+  agent pod is Running, both GPU workers are Ready and the broker is alive; otherwise the interval is an
+  interruption (recorded with its reason); a gap between ticks longer than 5 min (controller down) is not
+  counted either. At 48 h - 30 min the controller writes `/work/STOP-REQUESTED`; at 48 h it deletes the
+  agent pod (Role: delete, resourceNames `goalbox-agent`). The pod's `activeDeadlineSeconds` is 72 h as a
+  backstop only. Unit test: `BudgetLedgerTests`.
+
+## L16. Proxy allowlist without wildcards (C1 test 4)
+
+- Observed: `*.huggingface.co` in the allowlist would let the agent make the proxy resolve arbitrary names
+  (`<data>.huggingface.co`), a DNS side channel, and would admit any future Hugging Face host.
+- Decision: explicit host names only (hub, LFS CDNs, Xet storage, PyPI files, Anthropic API), port 443 only,
+  CONNECT only; the only plain-HTTP route is `GET http://pypi.goalbox/simple/<name>/` with the blocked-package
+  list. Denied names are logged so a missing legitimate host is visible. The tunnel is opaque TLS to the
+  allowed host: those hosts are download-only for an anonymous client (no Hugging Face token, PyPI files
+  host), and the Anthropic API is the agent's own channel, so no unrestricted relay exists through them.
+
+## L17. Phase C1 runs the proxy from a public image with a ConfigMap (temporary)
+
+- Observed: the project image cannot be pushed (registry login 401), and the namespace validation should not
+  wait for it. The cluster already pulls from docker.io.
+- Decision: for C1 only, `sandbox/k8s/c1/40-proxy-c1.yaml` runs `netproxy.py` from a ConfigMap on
+  `docker.io/library/python:3.12-slim` with the same Service, labels, ServiceAccount, security context and
+  policies. The production proxy manifest (image with the code baked in, L10) replaces it once the image is
+  in the registry; `check_manifests.py` allows the ConfigMap only for the C1 overlay.
+
+## L18. Who applies the C1 manifests
+
+- Observed (read-only `kubectl auth can-i`, 2026-11-19): the only non-Rancher credential available to the
+  build agent is the shared account's ServiceAccount token, which cannot create namespaces, Roles,
+  RoleBindings, NetworkPolicies, PVCs or pods in `goalbox-k3` (and must not be given rights there, L1).
+- Decision: the build agent prepares and checks the rendered manifests and the validation script
+  (`sandbox/k8s/c1/c1-validate.sh`); the operator runs the script with their own identity and hands the
+  evidence directory back for redaction and commit. No new credential is created.

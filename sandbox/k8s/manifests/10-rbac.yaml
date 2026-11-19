@@ -1,6 +1,8 @@
 # ServiceAccounts and the one Role. No ClusterRole, no ClusterRoleBinding.
-# - goalbox-controller: the only account with API rights: read pods and stream pod logs in this namespace
-#   (the agent container's stdout is the stream-json trajectory; the controller copies it to records).
+# - goalbox-controller: the only account with API rights: read pods in this namespace (to see whether the
+#   agent pod and the GPU workers are running, for the run-time budget ledger) and delete exactly one pod,
+#   goalbox-agent, when the 48 h of run time are used up. No pods/log: the trajectory does not go through
+#   stdout (the shared cluster account can read pod logs cluster-wide; DECISIONS-LOG L14).
 # - goalbox-agent, goalbox-gpu, goalbox-proxy: no API token is mounted (automountServiceAccountToken: false)
 #   and no Role is bound, so a process in those pods has no Kubernetes identity at all.
 # The shared `dc` ServiceAccount (inference-wideep/wideep-session) has no binding here; the check in
@@ -33,8 +35,9 @@ rules:
     resources: [pods]
     verbs: [get, list, watch]
   - apiGroups: [""]
-    resources: [pods/log]
-    verbs: [get]
+    resources: [pods]
+    resourceNames: [goalbox-agent]
+    verbs: [delete]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

@@ -57,16 +57,17 @@ spec:
     - to: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}, podSelector: {matchLabels: {k8s-app: kube-dns}}}]
       ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]
 ---
-# Controller: egress to the API server (to stream the agent's stdout) and DNS. The API server CIDR is
-# rendered from the environment (render.sh), not committed.
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+# Controller: egress to the API server and DNS only. Cilium's `kube-apiserver` entity names the API server
+# endpoints without a CIDR (a plain NetworkPolicy ipBlock would need the endpoint addresses, which change).
+# The default-deny NetworkPolicy above still applies to this pod; this policy only adds the two allows.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
 metadata: {name: controller, namespace: goalbox-k3}
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/component: controller}}
-  policyTypes: [Ingress, Egress]
+  endpointSelector: {matchLabels: {app.kubernetes.io/component: controller}}
   egress:
-    - to: [{ipBlock: {cidr: "${API_SERVER_CIDR}"}}]
-      ports: [{protocol: TCP, port: 6443}, {protocol: TCP, port: 443}]
-    - to: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}, podSelector: {matchLabels: {k8s-app: kube-dns}}}]
-      ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]
+    - toEntities: [kube-apiserver]
+      toPorts: [{ports: [{port: "6443", protocol: TCP}, {port: "443", protocol: TCP}]}]
+    - toEndpoints:
+        - matchLabels: {k8s-app: kube-dns, io.kubernetes.pod.namespace: kube-system}
+      toPorts: [{ports: [{port: "53", protocol: UDP}, {port: "53", protocol: TCP}]}]

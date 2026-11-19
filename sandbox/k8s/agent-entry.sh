@@ -32,14 +32,20 @@ fi
 export PATH=/work/.venv/bin:/goalbox/bin:/goalbox/sandbox/agent-tools:$PATH
 [ -s "$GOAL_FILE" ] || { echo "goal file $GOAL_FILE missing" >&2; exit 2; }
 SESSION_ID=${GOALBOX_SESSION_ID:-$(cat /proc/sys/kernel/random/uuid)}
-echo "{\"type\":\"goalbox\",\"event\":\"start\",\"session_id\":\"$SESSION_ID\",\"utc\":\"$(date -u +%FT%TZ)\",\"claude_code\":\"$(claude --version 2>/dev/null | head -1)\"}"
+# The stream-json trajectory goes to a pod-local emptyDir that the capture sidecar copies into the records,
+# not to stdout: pod logs are readable by the shared cluster account (DECISIONS-LOG L14). Stdout keeps only
+# these two marker lines.
+STREAM_DIR=${GOALBOX_STREAM_DIR:-/stream}
+STREAM=$STREAM_DIR/agent-$SESSION_ID-$(date -u +%Y%m%dT%H%M%SZ).jsonl
+echo "{\"type\":\"goalbox\",\"event\":\"start\",\"session_id\":\"$SESSION_ID\",\"utc\":\"$(date -u +%FT%TZ)\",\"claude_code\":\"$(claude --version 2>/dev/null | head -1)\",\"stream\":\"$(basename "$STREAM")\"}"
 set +e
 cd /work
 claude -p "/goal $(cat "$GOAL_FILE")" \
   --output-format stream-json --verbose --include-partial-messages --forward-subagent-text \
   --permission-mode auto --model claude-opus-5-5 --effort high --session-id "$SESSION_ID" \
   --disallowedTools "WebSearch,WebFetch" \
-  ${GOALBOX_MAX_BUDGET_USD:+--max-budget-usd "$GOALBOX_MAX_BUDGET_USD"}
+  ${GOALBOX_MAX_BUDGET_USD:+--max-budget-usd "$GOALBOX_MAX_BUDGET_USD"} \
+  >> "$STREAM" 2>> "$STREAM_DIR/agent-stderr.txt"
 code=$?
 set -e
 echo "{\"type\":\"goalbox\",\"event\":\"exit\",\"code\":$code,\"utc\":\"$(date -u +%FT%TZ)\"}"

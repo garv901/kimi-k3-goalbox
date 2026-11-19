@@ -14,7 +14,12 @@ every source file as it is at that moment, so verify_records.py can show that th
 (D-T3). A source that shrank or changed bytes it had already copied is recorded as "rewritten" and the
 original copy is kept under a new name; nothing is ever deleted from RECORDS.
 
-    capture.py --home /agent-home --records /records [--interval 30] [--once] [--final]
+    capture.py --home /agent-home --records /records [--source stream=/agent-stream ...] [--interval 30] [--once] [--final]
+
+Sources: `transcripts` = HOME/.claude/projects (always), plus every `--source NAME=DIR` (for example the
+harness's stream-json written by the agent container into a pod-local emptyDir that this sidecar sees
+read-only). Each source is copied under RECORDS/<name>/ with its own MANIFEST.jsonl, STATE.json and
+FINAL.json; `path` in a manifest line is the source-relative path, `copy` the records-relative copy.
 """
 from __future__ import annotations
 
@@ -34,29 +39,30 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-def sources(home: Path) -> list[Path]:
-    root = home / ".claude" / "projects"
+def files_under(root: Path) -> list[Path]:
     if not root.is_dir():
         return []
     return sorted(p for p in root.rglob("*") if p.is_file())
 
 
 class Capture:
-    def __init__(self, home: Path, records: Path):
-        self.home, self.records = home, records
-        self.out = records / "transcripts"
+    """One source directory copied under records/<name>/ (append-only, with manifest)."""
+
+    def __init__(self, source: Path, records: Path, name: str = "transcripts"):
+        self.source, self.records, self.name = Path(source), records, name
+        self.out = records / name
         self.out.mkdir(parents=True, exist_ok=True)
         self.state_path = self.out / "STATE.json"
         self.state = json.loads(self.state_path.read_text()) if self.state_path.exists() else {}
         self.manifest_path = self.out / "MANIFEST.jsonl"
 
     def target(self, src: Path) -> Path:
-        return self.out / src.relative_to(self.home / ".claude" / "projects")
+        return self.out / src.relative_to(self.source)
 
     def pass_once(self) -> dict:
         copied = rewritten = unchanged = 0
-        for src in sources(self.home):
-            key = str(src.relative_to(self.home))
+        for src in files_under(self.source):
+            key = str(src.relative_to(self.source))
             size = src.stat().st_size
             known = self.state.get(key, {"copied": 0, "head_sha": None})
             dst = self.target(src)
@@ -75,7 +81,7 @@ class Capture:
                         dst.rename(kept)
                     with self.manifest_path.open("a") as manifest:
                         manifest.write(json.dumps({"utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "path": key,
-                                                   "event": "rewritten", "kept_as": kept.name}) + "\n")
+                                                   "copy": f"{self.name}/{key}", "event": "rewritten", "kept_as": kept.name}) + "\n")
                     known = {"copied": 0, "head_sha": None}
                     rewritten += 1
                 file.seek(known["copied"])
@@ -90,7 +96,7 @@ class Capture:
             self.state[key] = {"copied": size, "head_sha": head}
             with self.manifest_path.open("a") as manifest:
                 manifest.write(json.dumps({"utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "path": key,
-                                           "size": size, "sha256": digest}) + "\n")
+                                           "copy": f"{self.name}/{key}", "size": size, "sha256": digest}) + "\n")
         tmp = self.state_path.with_suffix(".tmp")
         tmp.write_text(json.dumps(self.state))
         os.replace(tmp, self.state_path)
@@ -110,9 +116,9 @@ class Capture:
 
     def final(self) -> dict:
         summary = self.pass_once()
-        entries = {str(src.relative_to(self.home)): {"size": src.stat().st_size, "sha256": sha256_file(src),
-                                                     "copy_sha256": sha256_file(self.target(src))}
-                   for src in sources(self.home)}
+        entries = {str(src.relative_to(self.source)): {"size": src.stat().st_size, "sha256": sha256_file(src),
+                                                       "copy_sha256": sha256_file(self.target(src))}
+                   for src in files_under(self.source)}
         mismatched = [k for k, v in entries.items() if v["sha256"] != v["copy_sha256"]]
         record = {"utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "files": entries, "mismatched": mismatched,
                   "summary": summary}
@@ -124,24 +130,31 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--home", required=True, type=Path)
     parser.add_argument("--records", required=True, type=Path)
+    parser.add_argument("--source", action="append", default=[], help="NAME=DIR, an extra directory to capture")
     parser.add_argument("--interval", type=float, default=30)
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--final", action="store_true")
     parser.add_argument("--stop-file", type=Path, help="exit (after a final pass) when this file appears")
     args = parser.parse_args()
-    capture = Capture(args.home, args.records)
+    captures = [Capture(args.home / ".claude" / "projects", args.records, "transcripts")]
+    for item in args.source:
+        name, _, directory = item.partition("=")
+        captures.append(Capture(Path(directory), args.records, name))
     if args.final:
-        record = capture.final()
-        print(json.dumps({"final": True, "files": len(record["files"]), "mismatched": record["mismatched"]}))
-        return 1 if record["mismatched"] else 0
+        records = [c.final() for c in captures]
+        mismatched = [m for r in records for m in r["mismatched"]]
+        print(json.dumps({"final": True, "files": sum(len(r["files"]) for r in records), "mismatched": mismatched}))
+        return 1 if mismatched else 0
     if args.once:
-        print(json.dumps(capture.pass_once()))
+        print(json.dumps([c.pass_once() for c in captures]))
         return 0
     while True:
-        capture.pass_once()
-        (capture.out / "HEARTBEAT").write_text(str(time.time()))
+        for c in captures:
+            c.pass_once()
+        (args.records / "HEARTBEAT").write_text(str(time.time()))
         if args.stop_file and args.stop_file.exists():
-            capture.final()
+            for c in captures:
+                c.final()
             return 0
         time.sleep(args.interval)
 

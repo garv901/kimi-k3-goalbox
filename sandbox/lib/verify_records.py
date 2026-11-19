@@ -32,10 +32,9 @@ def sha256_prefix(path: Path, size: int) -> str:
     return h.hexdigest()
 
 
-def check(records: Path, home: Path | None = None) -> dict:
-    problems: list[str] = []
-    transcripts = records / "transcripts"
-    manifest = transcripts / "MANIFEST.jsonl"
+def check_source(records: Path, out: Path, source: Path | None, problems: list[str]) -> tuple[int, int]:
+    """One captured source (records/<name>/): manifest prefixes, FINAL.json, optional live comparison."""
+    manifest = out / "MANIFEST.jsonl"
     lines = manifest.read_text().splitlines() if manifest.exists() else []
     checked = 0
     pending: dict[str, list[dict]] = {}
@@ -55,28 +54,47 @@ def check(records: Path, home: Path | None = None) -> dict:
 
     for line in lines:
         entry = json.loads(line)
-        relative = Path(entry["path"]).relative_to(".claude/projects")
+        copy_rel = entry.get("copy") or f"{out.name}/{entry['path']}"
         if entry.get("event") == "rewritten":
-            verify(pending.pop(entry["path"], []), transcripts / relative.parent / entry["kept_as"], f"{entry['path']} (kept copy {entry['kept_as']})")
+            kept = (records / copy_rel).parent / entry["kept_as"]
+            verify(pending.pop(entry["path"], []), kept, f"{out.name}:{entry['path']} (kept copy {entry['kept_as']})")
             continue
         pending.setdefault(entry["path"], []).append(entry)
     for path, entries in pending.items():
-        verify(entries, transcripts / Path(path).relative_to(".claude/projects"), path)
-    final = transcripts / "FINAL.json"
+        copy_rel = entries[0].get("copy") or f"{out.name}/{path}"
+        verify(entries, records / copy_rel, f"{out.name}:{path}")
+    final = out / "FINAL.json"
     if not final.exists():
-        problems.append("no FINAL.json (capture did not finish)")
-    else:
-        record = json.loads(final.read_text())
-        if record["mismatched"]:
-            problems.append(f"FINAL.json reports mismatches: {record['mismatched'][:5]}")
-        if home is not None:
-            for key, value in record["files"].items():
-                src = home / key
-                if not src.exists():
-                    problems.append(f"source gone {key}")
-                elif hashlib.sha256(src.read_bytes()).hexdigest() != value["sha256"]:
-                    problems.append(f"source changed after FINAL {key}")
-    streams = sorted((records / "stream").glob("*.jsonl")) if (records / "stream").is_dir() else []
+        problems.append(f"{out.name}: no FINAL.json (capture did not finish)")
+        return checked, 0
+    record = json.loads(final.read_text())
+    if record["mismatched"]:
+        problems.append(f"{out.name}: FINAL.json reports mismatches: {record['mismatched'][:5]}")
+    if source is not None:
+        for key, value in record["files"].items():
+            src = source / key
+            if not src.exists():
+                problems.append(f"{out.name}: source gone {key}")
+            elif hashlib.sha256(src.read_bytes()).hexdigest() != value["sha256"]:
+                problems.append(f"{out.name}: source changed after FINAL {key}")
+    return checked, len(record["files"])
+
+
+def check(records: Path, home: Path | None = None, sources: dict[str, Path] | None = None) -> dict:
+    problems: list[str] = []
+    live = dict(sources or {})
+    if home is not None:
+        live["transcripts"] = home / ".claude" / "projects"
+    checked = files = 0
+    captured = [d for d in records.iterdir() if d.is_dir() and (d / "MANIFEST.jsonl").exists()] if records.is_dir() else []
+    if not captured:
+        problems.append("no captured source with a MANIFEST.jsonl")
+    for out in sorted(captured):
+        c, f = check_source(records, out, live.get(out.name), problems)
+        checked += c
+        files += f
+    streams = sorted((records / "stream").glob("agent-*.jsonl")) if (records / "stream").is_dir() else []
+    complete = 0
     for stream in streams:
         last = None
         for number, raw in enumerate(stream.read_text().splitlines(), 1):
@@ -84,26 +102,29 @@ def check(records: Path, home: Path | None = None) -> dict:
                 last = json.loads(raw)
             except json.JSONDecodeError:
                 problems.append(f"{stream.name}:{number} not JSON")
-        if last is None or last.get("type") != "result":
-            problems.append(f"{stream.name}: last event is {None if last is None else last.get('type')!r}, not 'result'")
+        complete += int(last is not None and last.get("type") == "result")   # a run stopped at the deadline ends without one
     gpu = records / "gpu"
     jobs = 0
-    if gpu.is_dir():
-        for node in gpu.iterdir():
+    if (gpu / "results").is_dir():
+        for node in (gpu / "results" / "gpu").iterdir() if (gpu / "results" / "gpu").is_dir() else []:
             for done in (node / "done").glob("*.json") if (node / "done").is_dir() else []:
                 jobs += 1
-                for d, suffix in (("req", ".json"), ("req", ".sh"), ("out", ".log")):
-                    if not (node / d / (done.stem + suffix)).exists():
-                        problems.append(f"gpu job {done.stem} on {node.name}: missing {d}/{done.stem}{suffix}")
-    return {"ok": not problems, "problems": problems, "manifest_entries": checked, "streams": len(streams), "gpu_jobs": jobs}
+                for d, suffix in (("req", ".json"), ("req", ".sh")):
+                    if not (gpu / "req" / "gpu" / node.name / d / (done.stem + suffix)).exists():
+                        problems.append(f"gpu job {done.stem} on {node.name}: missing request {done.stem}{suffix}")
+                if not (node / "out" / (done.stem + ".log")).exists():
+                    problems.append(f"gpu job {done.stem} on {node.name}: missing output log")
+    return {"ok": not problems, "problems": problems, "manifest_entries": checked, "captured_files": files,
+            "sources": [d.name for d in captured], "streams": len(streams), "streams_with_result": complete, "gpu_jobs": jobs}
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("records", type=Path)
     parser.add_argument("--home", type=Path)
+    parser.add_argument("--source", action="append", default=[], help="NAME=DIR live source to compare with")
     args = parser.parse_args()
-    result = check(args.records, args.home)
+    result = check(args.records, args.home, {k: Path(v) for k, _, v in (x.partition("=") for x in args.source)})
     print(json.dumps(result, indent=1))
     return 0 if result["ok"] else 1
 

@@ -5,8 +5,10 @@ GOALBOX_GPU_MODE=slurm (default when sbatch exists): each request becomes an sba
 GOALBOX_GPU_MODE=local: the broker runs each request itself on this machine's GPUs
 (GOALBOX_LOCAL_GPUS, default all), one request at a time, killed at its time limit.
 GOALBOX_GPU_MODE=k8s (controller pod, DECISIONS-LOG L2): the broker copies each request into the
-controller-owned spool GOALBOX_CTL/gpu/<node>/req for the executor (executor.py) in the GPU worker
-pods named in GOALBOX_GPU_NODES (comma list, 4 GPUs each). 1..4 GPUs run on the first worker; 8 GPUs
+controller-owned spool GOALBOX_CTL/req/gpu/<node>/req (mounted read-only in the GPU pods) for the
+executor (executor.py) in the GPU worker pods named in GOALBOX_GPU_NODES (comma list, 4 GPUs each),
+and reads their results under GOALBOX_CTL/results/gpu/<node> (read-write in the GPU pods, so
+untrusted: it is only ever reported back to the agent). 1..4 GPUs run on the first worker; 8 GPUs
 run on both with GOALBOX_NNODES=2, node ranks 0/1 and the first worker as rendezvous master
 (GOALBOX_MASTER_PORT, default 29500). The two outputs are concatenated into one log.
 
@@ -127,9 +129,10 @@ def submit_k8s(rid, minutes, gpus, cwd):
         status(rid, "rejected: not enough GPU workers configured"); status(rid, "done 2 REJECTED"); return None
     script = (SPOOL / "req" / f"{rid}.sh").read_bytes()
     for index, node in enumerate(nodes):
-        spool = CTL / "gpu" / node
-        for d in ("req", "status", "out", "done"):
-            (spool / d).mkdir(parents=True, exist_ok=True)
+        spool = CTL / "req" / "gpu" / node
+        (spool / "req").mkdir(parents=True, exist_ok=True)
+        for d in ("status", "out", "done"):
+            (CTL / "results" / "gpu" / node / d).mkdir(parents=True, exist_ok=True)
         topology = ({"GOALBOX_NNODES": 2, "GOALBOX_NODE_RANK": index, "GOALBOX_MASTER_ADDR": nodes[0],
                      "GOALBOX_MASTER_PORT": MASTER_PORT} if len(nodes) == 2 else {})
         (spool / "req" / f"{rid}.sh").write_bytes(script)
@@ -144,18 +147,24 @@ def submit_k8s(rid, minutes, gpus, cwd):
 
 def k8s_state(rid):
     nodes = K8S[rid]
-    done = [CTL / "gpu" / n / "done" / f"{rid}.json" for n in nodes]
+    done = [CTL / "results" / "gpu" / n / "done" / f"{rid}.json" for n in nodes]
     if not all(p.exists() for p in done):
         running = [n for n, p in zip(nodes, done) if not p.exists()]
         return "active", "RUNNING on " + " ".join(running)
-    records = [json.loads(p.read_text()) for p in done]
+    try:
+        records = [json.loads(p.read_text()) for p in done]
+        codes = [int(r["exit"]) for r in records]
+    except (ValueError, KeyError, TypeError) as e:   # results are untrusted content
+        log(f"{rid} malformed done record: {e}")
+        records = [{"exit": 3, "state": "MALFORMED_RESULT"} for _ in nodes]
+        codes = [3 for _ in nodes]
     with (SPOOL / "out" / f"{rid}.log").open("w") as out:
         for node, record in zip(nodes, records):
-            out.write(f"===== {node} (exit {record['exit']} {record['state']})\n")
-            src = CTL / "gpu" / node / "out" / f"{rid}.log"
+            out.write(f"===== {node} (exit {record.get('exit')} {str(record.get('state'))[:40]})\n")
+            src = CTL / "results" / "gpu" / node / "out" / f"{rid}.log"
             out.write(src.read_text(errors="replace") if src.exists() else "(no output)\n")
-    code = max(r["exit"] for r in records)
-    return "done", f"{code} {'COMPLETED' if code == 0 else '+'.join(sorted({r['state'] for r in records}))}"
+    code = max(codes)
+    return "done", f"{code} {'COMPLETED' if code == 0 else '+'.join(sorted({str(r.get('state'))[:40] for r in records}))}"
 
 
 def local_state(rid):

@@ -1,0 +1,38 @@
+ok   proxy_other_port                         blocked(ConnectionRefusedError) proxy pod on a port other than 3128
+ok   proxy_reachable                          200                            CONNECT api.anthropic.com:443 through the proxy
+ok   proxy_tls_anthropic                      tls_ok:404                     TLS handshake to api.anthropic.com inside the tunnel
+ok   proxy_connect_huggingface                200                            CONNECT huggingface.co:443
+ok   proxy_connect_pypi_files                 200                            CONNECT files.pythonhosted.org:443
+ok   proxy_connect_github                     403                            CONNECT github.com:443 (not allowlisted)
+ok   proxy_connect_pypi_org                   403                            CONNECT pypi.org:443 (index only via pypi.goalbox)
+ok   proxy_connect_wildcard_hf                403                            CONNECT to an arbitrary huggingface.co subdomain
+ok   proxy_connect_allowed_host_other_port    403                            CONNECT allowed host on port 22
+ok   proxy_connect_allowed_host_port_80       403                            CONNECT allowed host on port 80
+ok   proxy_connect_ip                         403                            CONNECT to a raw IP
+ok   proxy_connect_metadata                   403                            CONNECT to the metadata address
+ok   proxy_plain_http_external                403                            plain HTTP GET to an external site
+ok   proxy_plain_http_anthropic               403                            plain HTTP GET to an allowed host
+ok   proxy_post_index                         403                            POST to the package index
+ok   proxy_pypi_index_allowed                 200                            GET pypi.goalbox/simple/numpy/
+ok   proxy_pypi_index_blocked_pkg             403                            GET pypi.goalbox/simple/vllm/ (blocked package)
+ok   proxy_pypi_index_blocked_pkg2            403                            GET blocked package flashinfer
+(json summary omitted)
+== proxy decisions (net.log)
+2026-11-19 08:12:49 start tcp :3128 allow=['api.anthropic.com', 'cas-bridge.xethub.hf.co', 'cas-server.xethub.hf.co', 'cdn-lfs-eu-1.hf.co', 'cdn-lfs-eu-1.huggingface.co', 'cdn-lfs-us-1.hf.co', 'cdn-lfs-us-1.huggingface.co', 'cdn-lfs.hf.co', 'cdn-lfs.huggingface.co', 'files.pythonhosted.org', 'hf.co', 'huggingface.co', 'transfer.xethub.hf.co']+() blocked=51 patterns
+2026-11-19 08:15:34 allow CONNECT api.anthropic.com:443
+2026-11-19 08:15:34 allow CONNECT api.anthropic.com:443
+2026-11-19 08:15:34 allow CONNECT huggingface.co:443
+2026-11-19 08:15:34 allow CONNECT files.pythonhosted.org:443
+2026-11-19 08:15:34 DENY  CONNECT github.com:443
+2026-11-19 08:15:34 DENY  CONNECT pypi.org:443
+2026-11-19 08:15:34 DENY  CONNECT exfil-data.huggingface.co:443
+2026-11-19 08:15:34 DENY  CONNECT api.anthropic.com:22
+2026-11-19 08:15:34 DENY  CONNECT api.anthropic.com:80
+2026-11-19 08:15:34 DENY  CONNECT <ip>:443
+2026-11-19 08:15:34 DENY  CONNECT <ip>:443
+2026-11-19 08:15:34 DENY  GET http://example.com/
+2026-11-19 08:15:34 DENY  GET http://api.anthropic.com/
+2026-11-19 08:15:34 DENY  POST http://pypi.goalbox/simple/numpy/
+2026-11-19 08:15:34 allow pypi numpy
+2026-11-19 08:15:34 DENY  pypi vllm
+2026-11-19 08:15:34 DENY  pypi flashinfer-python

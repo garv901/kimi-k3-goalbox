@@ -3,7 +3,9 @@
 # goalbox-claude-token mounted as the file /goalbox/token (mode 0400) in this container only; the
 # entrypoint exports it into the agent's environment (the agent process can read it, see
 # DECISIONS-LOG L9 for the exposure boundary). The `capture` sidecar runs as another uid with the
-# agent's home read-only and the records volume read-write; the agent container has no records mount.
+# agent's home and the stream emptyDir read-only and the records volume read-write; the agent container has
+# no records mount. The stream-json trajectory is written to the stream emptyDir, not to stdout, because the
+# shared cluster account can read pod logs in every namespace (DECISIONS-LOG L14).
 apiVersion: v1
 kind: Pod
 metadata:
@@ -11,10 +13,10 @@ metadata:
   namespace: goalbox-k3
   labels: {app.kubernetes.io/component: agent}
 spec:
-  # The 48 h budget (DECISIONS section 16) is enforced by Kubernetes itself: the pod is killed after
-  # 48 h + 5 min (the extra minutes let the capture sidecar take its last pass after the agent's 30-min warning
-  # and 15-min commit window, which the controller signals through /work/STOP-REQUESTED).
-  activeDeadlineSeconds: 173100
+  # The 48 h budget (DECISIONS section 16) is *run time*, kept by the controller's ledger (sandbox/lib/budget.py:
+  # interruptions do not count, the controller warns through /work/STOP-REQUESTED and deletes this pod at the
+  # end). activeDeadlineSeconds is only a wall-clock backstop against a controller failure: 72 h.
+  activeDeadlineSeconds: 259200
   restartPolicy: Never
   serviceAccountName: goalbox-agent
   automountServiceAccountToken: false
@@ -39,27 +41,31 @@ spec:
         - {name: DISABLE_AUTOUPDATER, value: "1"}
         - {name: CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC, value: "1"}
         - {name: GOALBOX_GOAL_FILE, value: /goalbox/goal/kimi-k3-tp8.txt}
+        - {name: GOALBOX_STREAM_DIR, value: /stream}
       securityContext: {runAsUser: 1000, runAsGroup: 1000, allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
       resources: {requests: {cpu: "8", memory: 32Gi}, limits: {cpu: "32", memory: 128Gi}}
       volumeMounts:
         - {name: work, mountPath: /work}
         - {name: work, mountPath: /home/agent, subPath: home}
         - {name: token, mountPath: /goalbox/token, subPath: token, readOnly: true}
+        - {name: stream, mountPath: /stream}
         - {name: tmp, mountPath: /tmp}
     - name: capture
       image: "${IMAGE}"
       imagePullPolicy: IfNotPresent
-      command: [python3, /goalbox/sandbox/lib/capture.py, --home, /agent-home, --records, /records, --interval, "30", --stop-file, /agent-home/.goalbox-finished]
+      command: [python3, /goalbox/sandbox/lib/capture.py, --home, /agent-home, --records, /records, --source, stream=/agent-stream, --interval, "30", --stop-file, /agent-home/.goalbox-finished]
       securityContext: {runAsUser: 2000, runAsGroup: 2000, allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
       resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "1", memory: 2Gi}}
       volumeMounts:
         - {name: work, mountPath: /agent-home, subPath: home, readOnly: true}
+        - {name: stream, mountPath: /agent-stream, readOnly: true}
         - {name: records, mountPath: /records}
         - {name: capture-tmp, mountPath: /tmp}
   volumes:
     - {name: work, persistentVolumeClaim: {claimName: goalbox-work}}
     - {name: records, persistentVolumeClaim: {claimName: goalbox-records}}
     - {name: token, secret: {secretName: goalbox-claude-token, defaultMode: 0400, items: [{key: token, path: token}]}}
+    - {name: stream, emptyDir: {sizeLimit: 20Gi}}
     - {name: tmp, emptyDir: {sizeLimit: 50Gi}}
     - {name: capture-tmp, emptyDir: {sizeLimit: 1Gi}}
   imagePullSecrets: [{name: vccr-creds}]

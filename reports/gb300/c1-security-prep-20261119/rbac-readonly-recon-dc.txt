@@ -1,0 +1,19 @@
+# Read-only reconnaissance with the shared account's ServiceAccount token (kubectl auth can-i), 2026-11-19,
+# before any resource existed. Subject: system:serviceaccount:inference-wideep:wideep-session.
+# (The namespace goalbox-k3 does not exist yet; can-i answers are RBAC-only and hold once it does.)
+create namespaces                                   no
+create pods            -n goalbox-k3                no
+create roles           -n goalbox-k3                no
+create rolebindings    -n goalbox-k3                no
+create networkpolicies -n goalbox-k3                no
+create persistentvolumeclaims -n goalbox-k3         no
+create serviceaccounts -n goalbox-k3                no
+get secrets            -n goalbox-k3                no
+get pods               -n goalbox-k3                yes   <- cluster-wide pod read (see "unresolved")
+get pods/log           -n goalbox-k3                yes   <- cluster-wide log read: trajectory moved off stdout (L14)
+list pods --all-namespaces                          yes
+get nodes / list nodes                              yes
+list services -n kube-system                        no
+get endpoints kubernetes -n default                 no
+# Cluster: rke2 v1.35.x, Cilium CNI, Kyverno admission controller (admission/background/cleanup controllers)
+# and KEDA admission webhooks present; kube-dns pods labelled k8s-app=kube-dns; nodes carry the nvidia.com/gpu taint.

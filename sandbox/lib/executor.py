@@ -2,18 +2,24 @@
 """GPU job executor: runs inside each long-lived GPU worker pod (Kubernetes mode, DECISIONS-LOG L2).
 
 The agent never reaches this pod. The controller's broker (broker.py, GOALBOX_GPU_MODE=k8s) copies an
-accepted request into the controller-owned spool volume at CTL/gpu/<node>/req/<id>.{json,sh}; this
+accepted request into the controller-owned spool at CTL_REQ/gpu/<node>/req/<id>.{json,sh}; this
 process picks it up, runs the command with the job's environment (topology for two-tray jobs,
-CUDA_VISIBLE_DEVICES for the requested GPU count), writes CTL/gpu/<node>/out/<id>.log and
-CTL/gpu/<node>/status/<id>, and finally CTL/gpu/<node>/done/<id>.json {"exit": code, "state": ...}.
+CUDA_VISIBLE_DEVICES for the requested GPU count), writes CTL_RESULTS/gpu/<node>/out/<id>.log and
+CTL_RESULTS/gpu/<node>/status/<id>, and finally CTL_RESULTS/gpu/<node>/done/<id>.json {"exit": ..}.
+
+Two mounts, because candidate code runs in this pod as the same uid: the request side is mounted
+read-only here (only the controller writes it), so candidate code cannot inject or alter requests
+(time limits, GPU counts, commands); the results side is read-write and therefore untrusted content
+to the broker, which only ever reports it back to the agent that submitted the job.
 
 Before writing the done record it kills every process left in the job's session (a stray candidate
 process could otherwise keep running into the next job) and, when GOALBOX_WEIGHTS_MANIFEST is set,
 checks the weight files it names are unchanged (size + mtime) as a cheap tamper tripwire; the real
 check is the read-only mount.
 
-Settings: GOALBOX_CTL (spool root, default /ctl), GOALBOX_NODE_NAME (this worker's name, default
-hostname), GOALBOX_GPUS_HERE (default 4), GOALBOX_WORK (default /work).
+Settings: GOALBOX_CTL_REQ (request root, default /ctl-req), GOALBOX_CTL_RESULTS (results root,
+default /ctl-results), GOALBOX_NODE_NAME (this worker's name, default hostname), GOALBOX_GPUS_HERE
+(default 4), GOALBOX_EXECUTOR_KILL_ALL_UID (1 inside the pod: sweep every process of the uid).
 """
 from __future__ import annotations
 
@@ -27,10 +33,10 @@ import sys
 import time
 from pathlib import Path
 
-CTL = Path(os.environ.get("GOALBOX_CTL", "/ctl"))
 NODE = os.environ.get("GOALBOX_NODE_NAME") or socket.gethostname()
 GPUS_HERE = int(os.environ.get("GOALBOX_GPUS_HERE", "4"))
-SPOOL = CTL / "gpu" / NODE
+REQ = Path(os.environ.get("GOALBOX_CTL_REQ", "/ctl-req")) / "gpu" / NODE / "req"       # read-only mount in the pod
+SPOOL = Path(os.environ.get("GOALBOX_CTL_RESULTS", "/ctl-results")) / "gpu" / NODE     # read-write mount
 ID_RE = re.compile(r"[A-Za-z0-9_-]{1,64}")
 PASS_ENV = ("PATH", "HOME", "LANG", "TERM", "CUDA_HOME", "PYTHONPATH", "KIMI_K3_WEIGHTS", "NVIDIA_IMEX_CHANNELS",
             "NCCL_MNNVL_ENABLE", "NCCL_DEBUG", "NCCL_SOCKET_IFNAME", "LD_LIBRARY_PATH", "TMPDIR",
@@ -53,7 +59,7 @@ def weights_fingerprint(manifest: Path) -> dict:
 
 
 def run_job(rid: str) -> None:
-    req = json.loads((SPOOL / "req" / f"{rid}.json").read_text())
+    req = json.loads((REQ / f"{rid}.json").read_text())
     minutes, gpus = int(req["minutes"]), int(req["gpus"])
     cwd = req["cwd"]
     topo = req.get("topology") or {}
@@ -70,7 +76,7 @@ def run_job(rid: str) -> None:
            (f", node_rank {topo.get('GOALBOX_NODE_RANK')} of {topo.get('GOALBOX_NNODES')}" if topo else ""))
     log(f"{rid} start cwd={cwd} gpus={gpus} topo={topo}")
     try:
-        proc = subprocess.Popen(["bash", str(SPOOL / "req" / f"{rid}.sh")], cwd=cwd if os.path.isdir(cwd) else str(SPOOL),
+        proc = subprocess.Popen(["bash", str(REQ / f"{rid}.sh")], cwd=cwd if os.path.isdir(cwd) else str(SPOOL),
                                 stdout=out, stderr=subprocess.STDOUT, env=env, start_new_session=True)
     except OSError as exc:
         out.write(f"executor: could not start: {exc}\n"); out.close()
@@ -156,17 +162,21 @@ def finish(rid: str, code: int, state: str) -> None:
 
 
 def main() -> None:
-    for d in ("req", "status", "out", "done"):
+    for d in ("status", "out", "done"):
         (SPOOL / d).mkdir(parents=True, exist_ok=True)
+    try:
+        REQ.mkdir(parents=True, exist_ok=True)      # tests on a host; in the pod the mount is read-only and pre-created
+    except OSError:
+        pass
     (SPOOL / "READY").write_text(json.dumps({"node": NODE, "gpus": GPUS_HERE, "pid": os.getpid(), "started_utc": time.time()}))
     log(f"executor start node={NODE} gpus={GPUS_HERE}")
     seen = {p.stem for p in (SPOOL / "done").glob("*.json")}
     while True:
-        reqs = sorted((p for p in (SPOOL / "req").glob("*.json") if p.stem not in seen), key=lambda p: p.stat().st_mtime)
+        reqs = sorted((p for p in REQ.glob("*.json") if p.stem not in seen), key=lambda p: p.stat().st_mtime)
         for req in reqs[:1]:
             rid = req.stem
             seen.add(rid)
-            if not ID_RE.fullmatch(rid) or not (SPOOL / "req" / f"{rid}.sh").is_file():
+            if not ID_RE.fullmatch(rid) or not (REQ / f"{rid}.sh").is_file():
                 log(f"bad request {rid!r}"); finish(rid, 2, "REJECTED"); continue
             run_job(rid)
         (SPOOL / "HEARTBEAT").write_text(str(time.time()))

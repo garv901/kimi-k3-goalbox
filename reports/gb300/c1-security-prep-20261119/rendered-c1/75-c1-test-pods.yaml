@@ -1,0 +1,59 @@
+# C1 only: two disposable, GPU-free test pods, deleted at the end of the validation.
+#   c1-agentlike  carries the agent's label and ServiceAccount, so the `agent` NetworkPolicy applies: it must
+#                 reach the proxy and DNS and nothing else (c1_net_tests.py --role agent).
+#   c1-unlabeled  no component label: only default-deny applies; it must reach nothing, and the proxy must
+#                 refuse it (c1_net_tests.py --role unlabeled).
+# Both run as the agent uid with the agent's hardening; the test script comes from a ConfigMap.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: c1-agentlike
+  namespace: goalbox-k3
+  labels: {app.kubernetes.io/component: agent, goalbox.io/c1: "test"}
+spec:
+  restartPolicy: Never
+  activeDeadlineSeconds: 7200
+  serviceAccountName: goalbox-agent
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  securityContext: {runAsNonRoot: true, runAsUser: 1000, runAsGroup: 1000, fsGroup: 1000, seccompProfile: {type: RuntimeDefault}}
+  containers:
+    - name: test
+      image: "docker.io/library/python:3.12-slim"
+      imagePullPolicy: IfNotPresent
+      command: [sleep, "7200"]
+      securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+      resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: "1", memory: 512Mi}}
+      volumeMounts:
+        - {name: tests, mountPath: /c1, readOnly: true}
+        - {name: tmp, mountPath: /tmp}
+  volumes:
+    - {name: tests, configMap: {name: goalbox-c1-tests}}
+    - {name: tmp, emptyDir: {sizeLimit: 1Gi}}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: c1-unlabeled
+  namespace: goalbox-k3
+  labels: {goalbox.io/c1: "test"}
+spec:
+  restartPolicy: Never
+  activeDeadlineSeconds: 7200
+  serviceAccountName: goalbox-agent
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  securityContext: {runAsNonRoot: true, runAsUser: 1000, runAsGroup: 1000, fsGroup: 1000, seccompProfile: {type: RuntimeDefault}}
+  containers:
+    - name: test
+      image: "docker.io/library/python:3.12-slim"
+      imagePullPolicy: IfNotPresent
+      command: [sleep, "7200"]
+      securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+      resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: "1", memory: 512Mi}}
+      volumeMounts:
+        - {name: tests, mountPath: /c1, readOnly: true}
+        - {name: tmp, mountPath: /tmp}
+  volumes:
+    - {name: tests, configMap: {name: goalbox-c1-tests}}
+    - {name: tmp, emptyDir: {sizeLimit: 1Gi}}
