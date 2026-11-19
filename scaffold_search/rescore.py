@@ -28,9 +28,13 @@ from scaffold_search import isolation, snapshot, review, telemetry, workspace
 # ratios and differences of medians, which do not depend on this constant). Replace with the TP4
 # baseline once it is measured (PROTOCOL.md, Outcomes) and regenerate the manifest.
 B3_MS = 28.95
-# Seed latency used for the AUC when a run has no calibration measurement: unknown for TP4 until the
-# first calibration check (Gate F); None = AUC not computed (result.json 'auc': null, 'auc_note').
-SEED_L_FALLBACK_MS = None
+# Seed latency used for the AUC when a run has no calibration measurement. TP4 value from the Gate E
+# calibration smoke (2026-11-19, rack 10 tray18, 4x GB300, stock check_candidate on a 4-GPU lease,
+# --processes 1, 3 trials): seed dsv41_b8_tp4_nopf cuda-event p50 28.02 ms (per rank 28.013-28.024 ms),
+# evidence docs/scaffold-search-dsv41-tp4-gateE-2026-11-19.md of the workspace repo. A run that has
+# its own calibration check uses that measurement instead (seed_L); this constant only fills in when
+# the calibration is missing. None would omit the AUC (result.json 'auc': null, 'auc_note').
+SEED_L_FALLBACK_MS = 28.02
 RESULTS_REPO = '/srv/ss/results/repo'
 LOCK = '/srv/ss/results/.lock'
 PY = '/usr/bin/python3.12'

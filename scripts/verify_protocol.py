@@ -5,7 +5,7 @@
 
 Recomputes, with the method used for the PROTOCOL.md manifest:
   - file hashes: arms/*.toml, prompts/goal_improve.md, scaffold_search/gpu_lease.py,
-    scaffold_search/patches/gpu_noise_multirank.patch
+    scaffold_search/rescore.py (scoring constants), scaffold_search/patches/gpu_noise_multirank.patch
   - tree hashes: overlays/{S,A1,A2,A3}, scaffold_search/harness_files
     (sha256 over `relpath \\0 sha256(file) \\n`, walking directories in sorted os.walk order)
   - seed: sha256 of seeds/dsv41_b8_tp4_nopf/MANIFEST.sha256 (= SEED_SHA256), and, if src/ is unpacked,
@@ -58,6 +58,9 @@ def main():
                    lambda: th(f'{ROOT}/scaffold_search/harness_files')))
     checks.append(('scaffold_search/gpu_lease.py', t['scaffold_search/gpu_lease.py'],
                    lambda: fh(f'{ROOT}/scaffold_search/gpu_lease.py')))
+    # scoring constants (B3_MS, SEED_L_FALLBACK_MS) and the AUC/score code are frozen too
+    checks.append(('scaffold_search/rescore.py', t['scaffold_search/rescore.py'],
+                   lambda: fh(f'{ROOT}/scaffold_search/rescore.py')))
     checks.append(('prompts/goal_improve.md', t['prompts/goal_improve.md'], lambda: fh(f'{ROOT}/prompts/goal_improve.md')))
     checks.append(('patches/gpu_noise_multirank.patch', want_patch,
                    lambda: fh(f'{ROOT}/scaffold_search/patches/gpu_noise_multirank.patch')))

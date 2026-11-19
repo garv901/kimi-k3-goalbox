@@ -96,15 +96,20 @@ one calibration check of the seed on that node (covariate).
 - Rate-limit stalls count as lost time; no selective reruns. A run is rerun (under a new id, logged
   in the ledger) only for a harness failure: no result.json, or a node/daemon fault in the logs.
 
-## Calibration items (to be filled from the GPU gates before `run_main.sh start`)
+## Calibration items (filled from the Gate E smoke; the rest after the Gate F/G/H GPU tests)
 These are not known until the TP4 seed has run on the tray (Gates E-I of the test plan). Filling
 them changes `rescore.py`/this file and therefore the manifest; do that once, before the campaign.
+Gate E (2026-11-19 01:06-01:29 UTC, rack 10 tray18, image sha256:17e7d211..., harness 594e818,
+trusted 4ac7da6a, seed c7a262e4...): `./check_candidate` on the seed, status `ok_provisional`,
+correctness pass on all 4 ranks x 3 trials, launches 1/1/1/1.
 | item | TP8 value | TP4 value |
 |---|---|---|
-| seed p50 (`./check_candidate`, 1 launch/rank) | ~21.2 ms on 8x B300 | **to be measured** (first calibration check) |
-| `rescore.SEED_L_FALLBACK_MS` (AUC seed when a run has no calibration) | 21.48 | None -> AUC omitted for such a run until set |
-| whole-node check duration (in-run / 3-process rescore) | ~2.5 / ~3.5 min | to be measured |
-| PyTorch baseline (score normalizer) | 28.95 ms (B3) | 28.95 kept; optional TP4 baseline = owner decision |
+| seed p50 (`./check_candidate`, 1 launch/rank) | ~21.2 ms on 8x B300 | **28.02 ms** (cuda-event p50; per rank 28.013-28.024 ms; eager TP4 reference 4440.7 ms) |
+| `rescore.SEED_L_FALLBACK_MS` (AUC seed when a run has no calibration) | 21.48 | **28.02** |
+| whole-node check duration (in-run / 3-process rescore) | ~2.5 / ~3.5 min | **5.8 min wall, 4.7 min on the lease** (in-run, `--processes 1`) / 3-process rescore: to be measured (Gate G) |
+| per-rank peak GPU memory of a check | - | 122.5 GiB allocated (torch), 150.3 GB used (nvidia-smi) of 284 GB |
+| PyTorch baseline (score normalizer) | 28.95 ms (B3) | 28.95 kept (seed score 28.95/28.02 = 1.033); optional TP4 baseline = owner decision |
+| numerical tolerances (`atol`/`rtol` 0.003, `bf16_rtol` 0.008, `noise_factor` 2) | same | unchanged (Gate E: logits relative error 0.0872 vs reference 0.0851) |
 
 ## Manifest (sha256)
 `scripts/verify_protocol.py` checks this table; `scripts/run_main.sh start` refuses to start on a
@@ -124,6 +129,7 @@ mismatch.
 | overlays/A2 (tree) | f4366b5a119e3e62120fcc7d14b52fd208d798e26bc4dc44ece6ac9bf5c5b2fd |
 | overlays/A3 (tree) | 34fe92536f52690725afed319bf5be54818c19227561201d3982b7b8e12ae364 |
 | scaffold_search/harness_files (tree) | 2f18b46dddf41e7c7d34419ad7837e041b100e5ed3ca87ae1088ddc0dd33ce59 |
+| scaffold_search/rescore.py | 781ca4930acd572276bf9a1cb6dd038d08fcb6d10b5ca37e69f7c8a1f5ae9c05 |
 | scaffold_search/gpu_lease.py | 7db8ac6991522135892fc2342f093cd69ccc193e48e7f65f3a9bd45a25e81804 |
 | Claude Code / model | 2.1.326 / claude-opus-5-5 |
 

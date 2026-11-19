@@ -91,15 +91,15 @@ workspace). With `SS_SNAPSHOT_REPO` set, the same is pushed to branches `run/<id
 ## Time and cost
 - Per run: 2 h agent budget + ~15-20 min of node time for calibration (1 check), rescore
   (3 checks) and the final-tree check.
-- 16 runs at K = 3: **~14 h of the tray** (TP8 estimate; TP4 check times are not calibrated yet).
+- 16 runs at K = 3: **~14-16 h of the tray** (TP8 estimate; a TP4 in-run check takes ~5.8 min wall / 4.7 min on the lease, Gate E).
 - Claude usage: roughly $10-120 per run at API prices; A3 runs use subagents and cost more.
   The self-test's fake-agent run uses no Claude.
 
 ## Things to know
 - **Run the self-test first.** The package has passed its CPU tests, but its container and
   bootstrap steps have not been exercised on your node.
-- **Checks hold the whole node:** an in-run check uses all 4 GPUs (~2.5 min at TP8; TP4 not yet
-  measured; ~3.5 min for the 3-process rescore check). With 3 runs at once, agents wait for 4-GPU
+- **Checks hold the whole node:** an in-run check uses all 4 GPUs (TP4, Gate E: 5.8 min wall, 4.7 min
+  on the lease, 1 process; the 3-process rescore check is not yet timed). With 3 runs at once, agents wait for 4-GPU
   leases a large share of the time; this is recorded per run (`lease.wait_share_node`) and is part
   of the protocol. Do not change K or the `GPU_LEASE_*` settings.
 - `./check_candidate` first runs `./prebuild` (nvcc) on the CPU outside the lease, so 3 runs
