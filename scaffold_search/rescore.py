@@ -213,7 +213,12 @@ def rescore_run(run_dir, reps=3, final=True, push=True, max_candidates=3):
         if os.path.exists(f'{run_dir}/snapshots/index.jsonl') else []
     cal = run.get('calibration') or {}
     seed_L = cal.get('L_ms')
-    ranked = sorted((s for s in snaps if s.get('p50_ms')), key=lambda s: s['p50_ms'])
+    failed = run.get('failed')   # set by run_arm containment: nothing of this run is rescored or accepted
+    ranked = [] if failed else sorted((s for s in snaps if s.get('p50_ms')), key=lambda s: s['p50_ms'])
+    if failed:
+        final = False
+        for s in snaps:
+            s['invalidated'] = failed
     tried, chosen = [], None
     for s in ranked[:max_candidates]:
         try:
@@ -262,7 +267,6 @@ def rescore_run(run_dir, reps=3, final=True, push=True, max_candidates=3):
             first_imp = round((te - t0) / 60, 2); break
     tr = tel['transcript']
     cost = tr.get('cost_usd') or 0
-    failed = run.get('failed')   # set by run_arm containment: the run is not scored (counts as a failed run)
     if failed:
         L, source = None, 'failed: ' + failed
     score = B3_MS / L if L else None
@@ -296,7 +300,7 @@ def rescore_run(run_dir, reps=3, final=True, push=True, max_candidates=3):
         },
         'transcript_scan': review.scan_transcript([f'{run_dir}/logs/agent.jsonl', f'{run_dir}/logs/resume.jsonl'],
                                                   f'{run_dir}/ws', run_dir),
-        'snapshots': tel['snapshots'],
+        'snapshots': [dict(x, invalidated=failed) for x in tel['snapshots']] if failed else tel['snapshots'],
     }
     json.dump(result, open(f'{run_dir}/result.json', 'w'), indent=1)
     if push:

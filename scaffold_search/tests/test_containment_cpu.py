@@ -62,7 +62,7 @@ def test_containment_kills_tree_records_and_fails_the_run():
     d = tempfile.mkdtemp(); os.makedirs(f'{d}/logs')
     r = run_arm.Runner.__new__(run_arm.Runner)
     r.run = {'abort_flags': []}; r.run_dir = d; r.logf = None; r.contained = set()
-    r.sampler = types.SimpleNamespace(last_bypass=[p.pid])
+    r.sampler = types.SimpleNamespace(last_bypass=[p.pid], first_seen={p.pid: time.time() - 2.5})
     r.a = types.SimpleNamespace(no_push=True, fake_agent=True)
     with mock.patch.object(run_arm.snapshot, 'process', lambda *a, **k: []):
         try:
@@ -78,6 +78,7 @@ def test_containment_kills_tree_records_and_fails_the_run():
     assert ev['still_alive'] == []
     assert 'sleep 600' in json.dumps(ev['cmdlines']) and str(p.pid) in ev['cmdlines']
     assert run['failed'].startswith('unauthorized GPU use') and run['abort_flags'][0].startswith('containment:')
+    assert 'detect_to_kill_s' in ev and ev['detect_to_kill_s'] >= 0 and ev['first_seen_utc'] <= ev['contained_utc']
     # idempotent: the same pids are not contained twice
     assert r.contain([p.pid]) is False and len(run['containment']) == 1
     p.wait(timeout=5)
@@ -100,4 +101,27 @@ def test_rescore_marks_a_contained_run_failed():
     assert res['failed'].startswith('unauthorized GPU use') and res['containment'] == [{'bypass_pids': [1234]}]
     assert res['primary']['score'] is None and res['primary']['L_ms'] is None
     assert res['primary']['source'].startswith('failed: ')
+    assert res['candidates_tried'] == [] and res['final_tree'] is None   # nothing of a failed run is rescored
     assert json.load(open(f'{d}/result.json'))['failed'] == res['failed']
+
+
+def test_rescore_invalidates_snapshots_of_a_contained_run():
+    from scaffold_search import rescore
+    d = tempfile.mkdtemp()
+    for sub in ('logs', 'snapshots', 'ws'):
+        os.makedirs(f'{d}/{sub}')
+    json.dump({'run_id': 'c2', 'arm': 'A0S', 'case': 'c', 'task': 't', 'seed': 's'}, open(f'{d}/logs/workspace.json', 'w'))
+    open(f'{d}/snapshots/index.jsonl', 'w').write(json.dumps({'n': 0, 'tar': '000-x.tgz', 'p50_ms': 20.0, 'sha256': 'ab',
+                                                               'end': '2026-11-19T14:48:46Z'}) + '\n')
+    json.dump({'run_id': 'c2', 'abort_flags': [], 'failed': 'unauthorized GPU use: test', 'containment': [],
+               'calibration': {'L_ms': 28.0, 'status': 'ok_provisional'}, 't_agent_start': 1.0, 'budget_minutes': 10},
+              open(f'{d}/logs/run.json', 'w'))
+    calls = []
+    with mock.patch.object(rescore, 'check_n', lambda *a, **k: calls.append(a) or None), \
+         mock.patch.object(rescore.telemetry, 'summarize', lambda *a: {'transcript': {}, 'gpu': {}, 'checks': [], 'lease': {},
+                                                                       'snapshots': [{'tar': '000-x.tgz', 'p50_ms': 20.0}]}), \
+         mock.patch.object(rescore.review, 'scan_transcript', lambda *a, **k: {}):
+        res = rescore.rescore_run(d, reps=3, final=True, push=False)
+    assert calls == []                       # no GPU rescore of any candidate or of the final tree
+    assert res['primary']['score'] is None and res['final_tree'] is None
+    assert res['snapshots'][0]['invalidated'] == 'unauthorized GPU use: test'

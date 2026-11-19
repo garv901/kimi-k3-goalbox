@@ -10,7 +10,8 @@ request: time, run, method, path, status, bytes in/out, duration.
 
   python3 claude_relay.py --listen 0.0.0.0:8443 --tokens tokens.json --key-file ./relay.key \\
       --allow-ip 10.13.84.14 --cert relay.pem --certkey relay-key.pem [--max-requests 4000] [--max-mb 2000]
-  tokens.json: {"ss-run-r01-<random>": "r01", ...}   (one token per run id; delete the line to revoke)
+  tokens.json: {"ss-run-r01-<random>": {"run": "r01", "exp": <unix seconds>}, ...}  (one token per run; a bare
+  run-id string means no expiry; delete the entry to revoke; the file is re-read on every request)
   The real key is read from --key-file (0600) once at start and kept only in memory.
 
 Test without the network: --upstream http://127.0.0.1:PORT (plain http stub).
@@ -40,6 +41,16 @@ class State:
             self.tokens = json.load(open(self.a.tokens))
         except (OSError, ValueError):
             pass
+
+    def run_for(self, tok):
+        """run id for a live token; None if unknown or expired. tokens.json values are either a run id
+        (no expiry) or {"run": id, "exp": unix seconds}."""
+        v = self.tokens.get(tok)
+        if isinstance(v, dict):
+            if v.get('exp') and time.time() > v['exp']:
+                return None
+            return v.get('run')
+        return v
 
     def record(self, **row):
         with self.lock:
@@ -71,9 +82,11 @@ class Handler(BaseHTTPRequestHandler):
             return self._deny(403, 'ip not allowed')
         tok = self.headers.get('x-api-key') or (self.headers.get('authorization') or '').removeprefix('Bearer ').strip()
         st.reload_tokens()
-        run = st.tokens.get(tok)
+        run = st.run_for(tok)
         if not run:
-            return self._deny(401, 'unknown run token')
+            v = st.tokens.get(tok)
+            return self._deny(401, 'expired run token' if isinstance(v, dict) else 'unknown run token',
+                              v.get('run') if isinstance(v, dict) else None)
         n = int(self.headers.get('Content-Length') or 0)
         body = self.rfile.read(n) if n else b''
         if not st.charge(run, n):

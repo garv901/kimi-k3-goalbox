@@ -1,7 +1,7 @@
 """Run one arm once, end to end (root).
 
   python3.12 -m scaffold_search.run_arm --arm A0S --run-id r01 [--budget-minutes N] [--fake-agent]
-         [--no-calibrate] [--no-rescore] [--no-push] [--rescore-reps 3]
+         [--fake-agent-script PATH] [--no-calibrate] [--no-rescore] [--no-push] [--rescore-reps 3]
 
 Steps: node lockdown (idempotent) -> run user -> workspace (arm + seed + overlays) -> seed
 calibration check (1x, before the clock starts) -> `claude -p "<goal prompt>"` as the run user
@@ -130,8 +130,11 @@ class Runner:
         tree = telemetry.descendants(new_pids)
         cmdlines = {str(p): telemetry.cmdline(p) for p in tree}   # before the kill: /proc/<pid>/cmdline empties
         killed, alive = telemetry.kill_tree(new_pids)
-        ev = {'t': utc(), 'bypass_pids': new_pids, 'tree': tree, 'killed': killed, 'still_alive': alive,
-              'cmdlines': cmdlines}
+        now = time.time()
+        first = min((getattr(self.sampler, 'first_seen', {}) or {}).get(p, now) for p in new_pids)
+        ev = {'t': utc(now), 'bypass_pids': new_pids, 'tree': tree, 'killed': killed, 'still_alive': alive,
+              'cmdlines': cmdlines, 'first_seen_utc': utc(first), 'contained_utc': utc(now),
+              'detect_to_kill_s': round(now - first, 2)}
         self.run.setdefault('containment', []).append(ev)
         if not self.run.get('failed'):
             self.run['failed'] = 'unauthorized GPU use: compute process of the run user outside a lease'
@@ -202,8 +205,9 @@ class Runner:
         self.sampler = sampler
         if self.a.fake_agent:
             fa = f'{self.run_dir}/fake_agent.sh'
-            open(fa, 'w').write(open(FAKE_AGENT).read()); os.chmod(fa, 0o755)
+            open(fa, 'w').write(open(self.a.fake_agent_script or FAKE_AGENT).read()); os.chmod(fa, 0o755)
             self.fake = fa
+            self.run['fake_agent_script'] = self.a.fake_agent_script or FAKE_AGENT
         argv = ['/bin/bash', self.fake, 'work'] if self.a.fake_agent else self.claude_argv(prompt)
         self.log(f'agent start; prompt deadline {deadline}; argv {argv[:2]}...')
         p, th = self.spawn(argv, 'agent')
@@ -312,6 +316,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--arm', required=True); ap.add_argument('--run-id', required=True)
     ap.add_argument('--budget-minutes', type=float); ap.add_argument('--fake-agent', action='store_true')
+    ap.add_argument('--fake-agent-script', help='stand-in script instead of fake_agent.sh (tests, e.g. fake_agent_bypass.sh)')
     ap.add_argument('--no-calibrate', action='store_true'); ap.add_argument('--no-rescore', action='store_true')
     ap.add_argument('--no-push', action='store_true'); ap.add_argument('--rescore-reps', type=int, default=3)
     a = ap.parse_args()

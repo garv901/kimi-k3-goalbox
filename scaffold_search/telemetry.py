@@ -105,6 +105,7 @@ class GpuSampler(threading.Thread):
         self.uid, self.interval = uid, interval
         self.stop_ev = threading.Event()
         self.last_bypass = []
+        self.first_seen = {}     # bypass pid -> time of the sample that first showed it
 
     def sample(self):
         gpus = []
@@ -129,7 +130,10 @@ class GpuSampler(threading.Thread):
                 if has_lease_env(pid) is False:
                     bypass.append(pid)
         self.last_bypass = bypass
-        return {'t': round(time.time(), 2), 'gpus': gpus, 'mine': sorted(set(x for x in mine if x is not None)),
+        now = time.time()
+        for pid in bypass:
+            self.first_seen.setdefault(pid, now)
+        return {'t': round(now, 2), 'gpus': gpus, 'mine': sorted(set(x for x in mine if x is not None)),
                 'bypass': bypass}
 
     def run(self):

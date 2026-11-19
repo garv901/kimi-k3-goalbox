@@ -43,7 +43,9 @@ def _start():
     threading.Thread(target=stub.serve_forever, daemon=True).start()
     d = tempfile.mkdtemp()
     open(f'{d}/key', 'w').write(REAL_KEY + '\n'); os.chmod(f'{d}/key', 0o600)
-    json.dump({'ss-run-r01-aaaa': 'r01', 'ss-run-r02-bbbb': 'r02'}, open(f'{d}/tokens.json', 'w'))
+    import time
+    json.dump({'ss-run-r01-aaaa': 'r01', 'ss-run-r02-bbbb': {'run': 'r02', 'exp': int(time.time()) + 3600},
+               'ss-run-r03-cccc': {'run': 'r03', 'exp': int(time.time()) - 1}}, open(f'{d}/tokens.json', 'w'))
     a = relay.parse(['--listen', '127.0.0.1:0', '--tokens', f'{d}/tokens.json', '--key-file', f'{d}/key',
                      '--allow-ip', '127.0.0.1', '--upstream', f'http://127.0.0.1:{stub.server_port}',
                      '--max-requests', '3', '--max-mb', '1', '--log', f'{d}/relay.jsonl'])
@@ -74,9 +76,10 @@ def test_relay_swaps_key_authenticates_runs_and_enforces_caps():
     # bearer form of the token works too
     st, _, _ = _post(port, '/v1/messages', None, auth='Bearer ss-run-r02-bbbb')
     assert st == 200 and SEEN[-1]['key'] == REAL_KEY
-    # unknown token / no token
+    # unknown token / no token / expired token
     assert _post(port, '/v1/messages', 'ss-run-r09-zzzz')[0] == 401
     assert _post(port, '/v1/messages', None)[0] == 401
+    assert _post(port, '/v1/messages', 'ss-run-r03-cccc')[0] == 401
     assert len(SEEN) == 2
     # streaming passthrough
     st, data, hdr = _post(port, '/v1/messages?stream', 'ss-run-r01-aaaa')
@@ -90,6 +93,7 @@ def test_relay_swaps_key_authenticates_runs_and_enforces_caps():
     assert _post(port, '/v1/messages', 'ss-run-r02-bbbb')[0] == 401
     log = open(f'{d}/relay.jsonl').read()
     assert REAL_KEY not in log and 'claude-opus-5-5' not in log and '"deny": "run cap exceeded"' in log
+    assert '"deny": "expired run token"' in log and 'ss-run-' not in log   # tokens are not logged either
     rows = [json.loads(l) for l in log.splitlines()]
     assert {r.get('run') for r in rows if r.get('status') == 200} == {'r01', 'r02'}
     assert all('bytes_in' in r for r in rows if r.get('status') == 200)
