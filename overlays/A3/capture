@@ -1,10 +1,11 @@
 #!/bin/bash
-# ./capture [--layers 1,8] [--seed 1234] [--trial 0] [--gpus N] [--cand DIR] [--cap-mb MB] [--flags "..."]
+# ./capture [--layers 1,8] [--seed 1234] [--trial 0] [--gpus N (default: case.json gpus = 4)] [--cand DIR] [--cap-mb MB] [--flags "..."]
 # Runs the candidate's -DSS_CAPTURE build on all ranks (./gpu_run -g N) and saves the SS_CAP records of
 # the selected layers to reports/capture-<stamp>/. See TASK.d/A3.md.
 set -e
 WS=$(cd "$(dirname "$0")" && pwd)
-GPUS=8
+# default: every rank of the case (case.json "gpus"; 4 on the TP4 protocol); --gpus N overrides
+GPUS=$(python3.12 -c "import json,sys; print(int(json.load(open(sys.argv[1]))['gpus']))" "$WS/case.json" 2>/dev/null || echo 4)
 ARGS=()
 while [ $# -gt 0 ]; do
   case "$1" in

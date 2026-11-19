@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import common  # noqa: E402
 
 NCU_CANDIDATES = ['/opt/nvidia/nsight-compute/2025.3.1/ncu', '/usr/local/cuda/bin/ncu']
-# replay passes measured on B300 (sm_103, TP8 setup): each pass = one full run of every rank (~1-1.5 min)
+# replay pass counts measured on B300 (sm_103) at TP8; a pass = one full run of every rank (~1-1.5 min; TP4 not yet timed)
 SETS = {
     'default': ['dram__bytes_read.sum', 'dram__bytes_write.sum', 'gpu__time_duration.sum', 'smsp__inst_executed.sum',
                 'sm__inst_executed_pipe_tensor.sum', 'sm__inst_executed_pipe_tc.sum'],                       # 1 pass

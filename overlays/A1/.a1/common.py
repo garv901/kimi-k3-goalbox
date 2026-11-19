@@ -36,8 +36,8 @@ def case_info() -> dict:
         q = WS / name
         if q.exists():
             m = re.search(r'--case\s+(\S+)', q.read_text())
-            if m:
-                return {'id': m.group(1), 'gpus': 8}
+            if m:   # no case.json: assume the protocol's whole node (dsv41-tp4-rack10-v1: 4 ranks)
+                return {'id': m.group(1), 'gpus': 4}
     raise SystemExit('no case.json in the workspace')
 
 
