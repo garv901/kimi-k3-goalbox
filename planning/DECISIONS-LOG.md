@@ -233,3 +233,31 @@ named by their tray number on rack 10 (Kubernetes) or rack 3 (Slurm, Docker).
 - Decision: the build agent prepares and checks the rendered manifests and the validation script
   (`sandbox/k8s/c1/c1-validate.sh`); the operator runs the script with their own identity and hands the
   evidence directory back for redaction and commit. No new credential is created.
+
+## L19. Trusted verdict channel: grader and runner containers (blocker B-C1-1)
+
+- Observed (C1-OPERATOR-SAFETY-REVIEW §7): with the evaluator and the candidate in one container as one
+  uid, and the results spool writable by both, a candidate could forge a pass, alter other jobs' results,
+  replace evaluator output or kill the evaluator. The broker checked the format of results, not their truth.
+- Decision: each GPU worker pod runs a `grader` container (uid 2000; evaluator, request spool read-only,
+  results spool read-write, /work read-only) and a `runner` container (uid 1000; candidate processes;
+  /work read-write; no control, results or records mount). They share one pod-local emptyDir and the GPUs;
+  separate pid namespaces. The harness's candidate process is started remotely (`GOALBOX_SPAWN_DIR`,
+  FIFOs, raw CUDA IPC in `megabench/harness/transport.py`); the protocol, the keyed hashes, the timing
+  events, the deadlines, the launch budget and the tolerances are unchanged. Verdicts are written only by
+  the grader; exec jobs are labelled candidate-reported. Leftover processes trigger a runner-container
+  restart through the liveness probe. Analysis of uid, mounts, pid namespaces, capabilities and shared
+  writable paths: `sandbox/k8s/TRUSTED-VERDICT.md`. Validation: CPU unit tests and a two-container Docker
+  regression; the GPU-specific parts (GPU visibility in the runner, cross-container CUDA IPC, admission,
+  kubelet restart, nsys of remote processes) are live tests before any real-weight validation.
+
+## L20. Grade requests: the agent chooses the case and the file, nothing else
+
+- Observed: the agent's `check_candidate` passed arbitrary arguments to the evaluator (`"${ARGS[@]}"`),
+  including controls-only flags such as `--no-scan`; the GPU count came from the agent's request.
+- Decision: `gpu-run --grade CASE [--submission PATH]` writes a grade request; the broker validates the
+  case against the case table (GPU count from it), requires the submission under /work, and attaches the
+  harness options from its own environment (`GOALBOX_GRADE_ARGS`, `GOALBOX_GRADE_DEVICE`). The grader
+  snapshots the submission's directory before scanning and grading so what was scanned is what ran. The
+  `--tiny` evaluator flag exists for CPU self-tests only; its records carry `tiny_self_test: true` and it
+  is never in `GOALBOX_GRADE_ARGS`.

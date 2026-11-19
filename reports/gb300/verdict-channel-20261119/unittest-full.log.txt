@@ -1,0 +1,49 @@
+test_band_accepts_oracle_and_fp32_and_rejects_noise (megabench.tests.test_kimi.KimiReferenceTests.test_band_accepts_oracle_and_fp32_and_rejects_noise) ... ok
+test_batch_rows_equal_single_sequence_oracle (megabench.tests.test_kimi.KimiReferenceTests.test_batch_rows_equal_single_sequence_oracle) ... ok
+test_every_case_shards_at_its_tp_and_has_a_floor (megabench.tests.test_kimi.KimiReferenceTests.test_every_case_shards_at_its_tp_and_has_a_floor) ... ok
+test_forced_routes_and_shortfall (megabench.tests.test_kimi.KimiReferenceTests.test_forced_routes_and_shortfall) ... ok
+test_kda_v_first_matches_closed_form_transition_over_rollout (megabench.tests.test_kimi.KimiReferenceTests.test_kda_v_first_matches_closed_form_transition_over_rollout) ... ok
+test_reset_ignores_state_and_inputs_are_preserved (megabench.tests.test_kimi.KimiReferenceTests.test_reset_ignores_state_and_inputs_are_preserved) ... ok
+test_synthetic_weights_match_declared_shapes (megabench.tests.test_kimi.KimiReferenceTests.test_synthetic_weights_match_declared_shapes) ... ok
+test_split (megabench.tests.test_harness.EventClassificationTests.test_split) ... ok
+test_candidate_exception_and_build_failure (megabench.tests.test_harness.GlooEndToEndTests.test_candidate_exception_and_build_failure) ... ok
+test_deadline_gives_timeout (megabench.tests.test_harness.GlooEndToEndTests.test_deadline_gives_timeout) ... ok
+test_mutation_is_input_mutation_on_every_rank (megabench.tests.test_harness.GlooEndToEndTests.test_mutation_is_input_mutation_on_every_rank) ... ok
+test_oracle_passes_tp1_and_tp2 (megabench.tests.test_harness.GlooEndToEndTests.test_oracle_passes_tp1_and_tp2) ... USDT:2026-11-19 17:01:26 <pid> SyncActivityProfilerHandler.cpp:39] profiler_start
+USDT:2026-11-19 17:01:26 <pid> SyncActivityProfilerHandler.cpp:46] profiler_stop
+ERROR:2026-11-19 17:01:26 <pid> DeviceProperties.cpp:56] gpuGetDeviceCount failed with code 100
+USDT:2026-11-19 17:01:31 <pid> SyncActivityProfilerHandler.cpp:39] profiler_start
+USDT:2026-11-19 17:01:31 <pid> SyncActivityProfilerHandler.cpp:39] profiler_start
+USDT:2026-11-19 17:01:31 <pid> SyncActivityProfilerHandler.cpp:46] profiler_stop
+ERROR:2026-11-19 17:01:31 <pid> DeviceProperties.cpp:56] gpuGetDeviceCount failed with code 100
+USDT:2026-11-19 17:01:31 <pid> SyncActivityProfilerHandler.cpp:46] profiler_stop
+ERROR:2026-11-19 17:01:31 <pid> DeviceProperties.cpp:56] gpuGetDeviceCount failed with code 100
+ok
+test_rank_local_structural_failure_names_the_rank (megabench.tests.test_harness.GlooEndToEndTests.test_rank_local_structural_failure_names_the_rank) ... ok
+test_scan_rejects_an_oracle_import_before_running (megabench.tests.test_harness.GlooEndToEndTests.test_scan_rejects_an_oracle_import_before_running) ... ok
+test_wrong_keys_is_incorrect (megabench.tests.test_harness.GlooEndToEndTests.test_wrong_keys_is_incorrect) ... ok
+test_small_and_fp8_tensors_take_the_exact_path (megabench.tests.test_harness.KeyedHashTests.test_small_and_fp8_tensors_take_the_exact_path) ... ok
+test_sum_preserving_pair_is_detected_on_the_hash_path (megabench.tests.test_harness.KeyedHashTests.test_sum_preserving_pair_is_detected_on_the_hash_path)
+Regression for ISSUES item 17: +d at word i and -d at word i+65521 passed the old linear checksums. ... ok
+test_counts_per_rep_and_device (megabench.tests.test_harness.NsysAuditTests.test_counts_per_rep_and_device) ... ok
+test_graph_launch_fails_and_clean_trace_passes (megabench.tests.test_harness.NsysAuditTests.test_graph_launch_fails_and_clean_trace_passes) ... ok
+test_rules (megabench.tests.test_harness.ScanTests.test_rules) ... ok
+test_classify_by_phase (megabench.tests.test_harness.StatusTests.test_classify_by_phase) ... ok
+test_exit_codes_cover_every_status_and_are_distinct_for_failures (megabench.tests.test_harness.StatusTests.test_exit_codes_cover_every_status_and_are_distinct_for_failures) ... ok
+test_merge_group_precedence_and_culprits (megabench.tests.test_harness.StatusTests.test_merge_group_precedence_and_culprits) ... ok
+test_single_host_and_two_trays (megabench.tests.test_harness.TopologyTests.test_single_host_and_two_trays) ... ok
+test_interruptions_and_gaps_are_not_counted_and_state_survives_restart (megabench.tests.test_sandbox.BudgetLedgerTests.test_interruptions_and_gaps_are_not_counted_and_state_survives_restart) ... ok
+test_append_only_copy_integrity_and_rewrite_detection (megabench.tests.test_sandbox.CaptureTests.test_append_only_copy_integrity_and_rewrite_detection) ... ok
+test_recovery_after_restart_continues_from_state (megabench.tests.test_sandbox.CaptureTests.test_recovery_after_restart_continues_from_state) ... ok
+test_compiles_and_redacts (megabench.tests.test_sandbox.CompilerTests.test_compiles_and_redacts) ... ok
+test_grade_verdicts_are_the_graders_not_the_candidates (megabench.tests.test_sandbox.GradeProtocolTests.test_grade_verdicts_are_the_graders_not_the_candidates) ... ok
+test_checker_catches_regressions (megabench.tests.test_sandbox.ManifestTests.test_checker_catches_regressions) ... ok
+test_static_checks_pass (megabench.tests.test_sandbox.ManifestTests.test_static_checks_pass) ... ok
+test_tp8_totals (megabench.tests.test_sandbox.SizingTests.test_tp8_totals) ... ok
+test_two_node_dispatch_and_merge (megabench.tests.test_sandbox.SpoolProtocolTests.test_two_node_dispatch_and_merge) ... ok
+test_channel_and_cpu_codec (megabench.tests.test_sandbox.TransportTests.test_channel_and_cpu_codec) ... ok
+
+----------------------------------------------------------------------
+Ran 34 tests in 135.466s
+
+OK

@@ -1,0 +1,51 @@
+== layout: grader uid 2000, runner uid 1000; runner sees ctl-results? no; runner sees grader pids? 0
+== 1. exec job: candidate shell probes the boundary
+   ATTACK forge_done_record: denied
+   ATTACK alter_pending_request: denied
+   ATTACK modify_records: denied
+   ATTACK modify_evaluator_code: denied
+   ATTACK write_job_root: WRITABLE
+   ATTACK alter_grader_pointer: denied
+   ATTACK enter_grader_root: denied
+   ATTACK modify_own_job_spec: denied
+   done: {"exit": 0, "state": "COMPLETED", "kind": "exec", "trusted": false, "node": "node-a", "finished_utc": 1795107484.246671, "reported_exit": 0}
+== 2. grade job: oracle (trusted pass)
+   done: {"exit": 0, "state": "correctness_only", "kind": "grade", "trusted": true, "node": "node-a", "finished_utc": 1795107502.7542052, "verdict_sha256": "47c6503b7da84d321f5c12dc7b616e1551298f1ef22971c6515bf4bf66eea7db", "status": "correctness_only"}
+   verdict: correctness_only tiny snapshot {'files': 3, 'bytes': 6717, 'sha256': 'ae2cc2afc2dd67a3876f4e7e0bd9772d4dd715d1d62a12514b8da7aedb4ac977'}
+== 3. grade job: hostile candidate (attacks from inside the candidate process)
+   done: {"exit": 0, "state": "correctness_only", "kind": "grade", "trusted": true, "node": "node-a", "finished_utc": 1795107521.2604277, "verdict_sha256": "8ece718605ee51c08877aaa5388d5b940fa8e487bac83937149ab4f08ca7896b", "status": "correctness_only"}
+   ATTACK forge_done_record: denied(30:OSError)
+   ATTACK forge_verdict: denied(30:OSError)
+   ATTACK replace_grader_output_log: denied(30:OSError)
+   ATTACK modify_other_job_result: denied(30:OSError)
+   ATTACK alter_pending_request: denied(30:OSError)
+   ATTACK inject_request: denied(30:OSError)
+   ATTACK modify_records: denied(30:OSError)
+   ATTACK modify_controller_state: denied(30:OSError)
+   ATTACK modify_evaluator_code: denied(30:OSError)
+   ATTACK alter_own_job_spec: denied(13:PermissionError)
+   ATTACK replace_graded_source: denied(13:PermissionError)
+   ATTACK add_file_to_job_dir: denied(13:PermissionError)
+   ATTACK fake_exit_file: WRITABLE
+   ATTACK see_grader_process: denied(not visible)
+   ATTACK magic_link_into_grader_root: denied(no such root)
+   no forged records in the results spool
+== 4. grade job: killer candidate (uid-wide SIGKILL from inside the runner)
+   done: {"exit": 4, "state": "incorrect", "kind": "grade", "trusted": true, "node": "node-a", "finished_utc": 1795107536.7663395, "verdict_sha256": "37e1538722607a59ff4cf7721790e1e98f386aa4fcaf2ce722cdcbbaf8943c11", "status": "incorrect"}
+   KILLER: wide=True
+   KILLER: killed 1 (b'python3\x00/goalbox/sandbox/lib/spawner.py\x00')
+   runner container still running: true; spawner (pid 1, signal-immune from inside) alive: yes
+   grader container still running: true
+   next job: {"exit": 0, "state": "correctness_only", "kind": "grade", "trusted": true, "node": "node-a", "finished_utc": 1795107555.2729928, "verdict_sha256": "69be7669787f3304d82e7d20f5e6c2df3e21ecef5ba3081bba95dca266ec7a10", "status": "correctness_only"}
+== 5. runner unresponsive (paused): infrastructure outcome, restart request, recovery
+   done: {"exit": 8, "state": "INFRA_RUNNER_DOWN", "kind": "grade", "trusted": true, "node": "node-a", "finished_utc": 1795107567.276034}
+   restart requested: {"utc": 1795107567.27588, "reason": "no heartbeat before job"}
+   liveness probe command exit in runner: 1  (1 = kubelet would restart the container)
+   after restart, flag cleared: yes
+   done: {"exit": 0, "state": "correctness_only", "kind": "grade", "trusted": true, "node": "node-a", "finished_utc": 1795107600.7854123, "verdict_sha256": "baa821ac05af14207d2976d2d0dd64cc2f408254c5ca3fb17d045b61218bf9f8", "status": "correctness_only"}
+== grader log tail
+   2026-11-19 16:59:27 runner restart requested: no heartbeat before job
+   2026-11-19 16:59:27 grade-5 done 8 INFRA_RUNNER_DOWN trusted=True
+   2026-11-19 16:59:39 runner restarted; restart flag cleared
+   2026-11-19 16:59:43 grade-6 start kind=grade gpus=1 topo={}
+   2026-11-19 17:00:00 grade-6 done 0 correctness_only trusted=True

@@ -114,8 +114,16 @@ def evaluate_case(case: Case, submission: Path, *, device: str, trials: int, war
     return record
 
 
+TINY_PARAMS = {"layers": 5, "hidden": 64, "latent_hidden": 64, "intermediate": 64, "dense_intermediate": 128,
+               "q_heads": 4, "head_dim": 16, "q_lora_rank": 32, "kv_lora_rank": 32, "qk_nope_dim": 8, "qk_rope_dim": 8,
+               "v_head_dim": 16, "vocab": 128, "experts": 8, "topk": 2, "context": 4, "attn_res_block_size": 2, "batch": 2}
+
+
 def _worker(args: argparse.Namespace) -> int:
     case = select_cases("all", [args.case])[0]
+    if getattr(args, "tiny", False):
+        from dataclasses import replace
+        case = replace(case, params=case.params | TINY_PARAMS)
     submission = Path(args.submission).resolve()
     try:
         result = evaluate_case(case, submission, device=args.device, trials=args.trials,
@@ -228,6 +236,8 @@ def _run_one(args: argparse.Namespace, case: Case, tempdir: Path) -> dict:
                "--reps", str(args.reps), "--result", str(result_path)]
         if args.no_scan:
             cmd.append("--no-scan")
+        if getattr(args, "tiny", False):
+            cmd.append("--tiny")
         if args.reference_reps is not None:
             cmd.extend(["--reference-reps", str(args.reference_reps)])
     try:
@@ -348,6 +358,8 @@ def main(argv: list[str] | None = None) -> int:
     evaluation.add_argument("--no-graph-baseline", dest="graph_baseline", action="store_false",
                             help="accepted for compatibility; no graph baseline exists for these cases")
     evaluation.add_argument("--no-scan", action="store_true", help="skip the automated source/artifact scan (controls only)")
+    evaluation.add_argument("--tiny", action="store_true",
+                            help="CPU self-test geometry (shrunk model); the result is marked and never a grade")
     evaluation.add_argument("--reference-reps", type=int, default=None,
                             help="timed repetitions of the eager oracle (default: 3 synthetic, 0 real weights)")
     evaluation.add_argument("--output")
@@ -367,6 +379,7 @@ def main(argv: list[str] | None = None) -> int:
     worker.add_argument("--result", required=True)
     worker.add_argument("--no-graph-baseline", dest="graph_baseline", action="store_false")
     worker.add_argument("--no-scan", action="store_true")
+    worker.add_argument("--tiny", action="store_true")
     worker.add_argument("--reference-reps", type=int, default=None)
     args = parser.parse_args(argv)
     if args.command == "_worker":
@@ -472,6 +485,8 @@ def main(argv: list[str] | None = None) -> int:
             result["session"] = {"id": args.session_id, "method": args.method,
                                  "case_id": case.id}
             result["contract_sha256"] = _contract_digest()
+            if getattr(args, "tiny", False):
+                result["tiny_self_test"] = True
             results.append(result)
             output.write(json.dumps(result) + "\n")
             output.flush()

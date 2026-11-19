@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 import os
 import subprocess
 import sys
@@ -124,10 +125,16 @@ class SpoolProtocolTests(unittest.TestCase):
             env = dict(os.environ, GOALBOX_GPU_MODE="k8s", GOALBOX_CTL=str(ctl), GOALBOX_GPU_NODES="node-a,node-b",
                        GOALBOX_MAX_GPUS="8", GOALBOX_MASTER_PORT="29500")
             broker = subprocess.Popen([PY, str(REPO / "sandbox/lib/broker.py"), str(run)], env=env)
-            execs = [subprocess.Popen([PY, str(REPO / "sandbox/lib/executor.py")],
-                                      env=dict(os.environ, GOALBOX_CTL_REQ=str(ctl / "req"), GOALBOX_CTL_RESULTS=str(ctl / "results"),
-                                               GOALBOX_NODE_NAME=n, GOALBOX_GPUS_HERE="4"))
-                     for n in ("node-a", "node-b")]
+            execs = []
+            for n in ("node-a", "node-b"):            # grader + spawner per node, sharing one "emptyDir"
+                job_dir = root / f"job-{n}"; job_dir.mkdir()
+                execs.append(subprocess.Popen([PY, str(REPO / "sandbox/lib/executor.py")],
+                                              env=dict(os.environ, GOALBOX_CTL_REQ=str(ctl / "req"), GOALBOX_CTL_RESULTS=str(ctl / "results"),
+                                                       GOALBOX_NODE_NAME=n, GOALBOX_GPUS_HERE="4", GOALBOX_JOB_DIR=str(job_dir),
+                                                       GOALBOX_GRADER_TMP=str(root / f"tmp-{n}"), GOALBOX_BENCH=str(REPO), PYTHONPATH=str(REPO),
+                                                       GOALBOX_LEFTOVER_CHECK="0")))
+                execs.append(subprocess.Popen([PY, str(REPO / "sandbox/lib/spawner.py")],
+                                              env=dict(os.environ, GOALBOX_JOB_DIR=str(job_dir), PYTHONPATH=str(REPO))))
             # An unrelated process of the same uid, in its own session, must survive the job cleanup (C1 test 7).
             bystander = subprocess.Popen(["sleep", "600"], start_new_session=True)
             try:
@@ -150,6 +157,8 @@ class SpoolProtocolTests(unittest.TestCase):
                 self.assertIn("node_rank=0 nnodes=2 master=node-a:29500 gpus=0,1,2,3", out)
                 self.assertIn("node_rank=1 nnodes=2 master=node-a:29500 gpus=0,1,2,3", out)
                 self.assertIn("killed 1 leftover", out)
+                self.assertIn("candidate-authored output", out)                     # exec output is labelled
+                self.assertIn("candidate-reported", text)                             # and so is its exit code
                 self.assertIsNone(bystander.poll(), "the cleanup killed an unrelated same-uid process")
                 # a 6-GPU request is rejected; a 2-GPU request goes to node-a only
                 for rid2, gpus, expect in (("20261118-000000-2", 6, "rejected"), ("20261118-000000-3", 2, "done 0")):
@@ -268,3 +277,133 @@ class BudgetLedgerTests(unittest.TestCase):
             summary = again.summary()
             self.assertTrue(summary["stopped"] and summary["warned"])
             self.assertGreaterEqual(summary["interrupted_s"], 600)
+
+
+class GradeProtocolTests(unittest.TestCase):
+    """A grade request end to end on the CPU: broker -> grader (executor.py) -> spawner -> remote candidate
+    process -> trusted verdict. Then a hostile and a killer candidate (B-C1-1 regressions, CPU part)."""
+
+    def _wait_done(self, status_path: Path, timeout_s: float = 240) -> str:
+        for _ in range(int(timeout_s / 0.25)):
+            if status_path.exists() and " done " in status_path.read_text():
+                return status_path.read_text()
+            time.sleep(0.25)
+        self.fail("job did not finish: " + (status_path.read_text() if status_path.exists() else "no status"))
+
+    def test_grade_verdicts_are_the_graders_not_the_candidates(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            run = root / "run"; (run / "home/.gpu/req").mkdir(parents=True)
+            ctl = root / "ctl"; work = root / "work"; work.mkdir(); job_dir = root / "job"; job_dir.mkdir()
+            candidates = REPO / "megabench/tests/candidates"
+            for name in ("oracle_candidate.py", "hostile_candidate.py", "killer_candidate.py"):
+                shutil.copy(candidates / name, work / name)
+            grade_args = "--trials 1 --warmup 0 --reps 1 --timeout 300 --no-scan --tiny --reference-reps 0"
+            broker = subprocess.Popen([PY, str(REPO / "sandbox/lib/broker.py"), str(run)],
+                                      env=dict(os.environ, GOALBOX_GPU_MODE="k8s", GOALBOX_CTL=str(ctl), GOALBOX_GPU_NODES="node-a",
+                                               GOALBOX_GRADE_ARGS=grade_args, GOALBOX_GRADE_DEVICE="cpu", GOALBOX_WORK_ROOT=str(work),
+                                               GOALBOX_BENCH=str(REPO), CUDA_VISIBLE_DEVICES=""))
+            grader_env = dict(os.environ, GOALBOX_CTL_REQ=str(ctl / "req"), GOALBOX_CTL_RESULTS=str(ctl / "results"),
+                              GOALBOX_NODE_NAME="node-a", GOALBOX_GPUS_HERE="1", GOALBOX_JOB_DIR=str(job_dir),
+                              GOALBOX_GRADER_TMP=str(root / "gtmp"), GOALBOX_BENCH=str(REPO), PYTHONPATH=str(REPO),
+                              GOALBOX_RUNNER_STALE_S="6", CUDA_VISIBLE_DEVICES="", GOALBOX_LEFTOVER_CHECK="0")
+            spawner_env = dict(os.environ, GOALBOX_JOB_DIR=str(job_dir), PYTHONPATH=str(REPO), CUDA_VISIBLE_DEVICES="",
+                               HOSTILE_RESULTS=str(ctl / "results/gpu/node-a"))
+            grader = subprocess.Popen([PY, str(REPO / "sandbox/lib/executor.py")], env=grader_env)
+            spawner = subprocess.Popen([PY, str(REPO / "sandbox/lib/spawner.py")], env=spawner_env)
+            try:
+                def request(rid, submission, kind="grade", case="kimi-k3-dev-l4-tp1-b8-s8192"):
+                    (run / "home/.gpu/req" / f"{rid}.sh").write_text("# grade\n")
+                    (run / "home/.gpu/req" / f"{rid}.json").write_text(json.dumps(
+                        {"kind": kind, "case": case, "submission": str(work / submission), "minutes": 3, "gpus": 0, "cwd": str(work)}))
+                    return self._wait_done(run / "home/.gpu/status" / rid)
+
+                # 1. oracle: a trusted pass
+                text = request("20261119-000001-1", "oracle_candidate.py")
+                self.assertIn("done 0 correctness_only", text)
+                self.assertNotIn("candidate-reported", text)
+                done = json.loads((ctl / "results/gpu/node-a/done/20261119-000001-1.json").read_text())
+                self.assertTrue(done["trusted"]); self.assertEqual(done["kind"], "grade")
+                verdict = json.loads((ctl / "results/gpu/node-a/verdict/20261119-000001-1.json").read_text())
+                self.assertEqual(verdict["record"]["status"], "correctness_only")
+                self.assertTrue(verdict["record"].get("tiny_self_test"))
+                self.assertEqual(verdict["harness_args"], grade_args.split())           # the broker's options, not the agent's
+                self.assertEqual(verdict["graded_snapshot"]["files"], 3)              # the submission's directory, as scanned
+                out = (run / "home/.gpu/out/20261119-000001-1.log").read_text()
+                self.assertIn("trusted grader verdict", out); self.assertIn("verdict: correctness_only", out)
+
+                # 2. hostile: writes everywhere it can; the verdict is still computed from its outputs, and its
+                #    attempts are preserved as candidate-authored evidence
+                text = request("20261119-000001-2", "hostile_candidate.py")
+                self.assertIn("done 0 correctness_only", text)
+                stderr_copies = list((ctl / "results/gpu/node-a/candidate/20261119-000001-2").glob("*.stderr"))
+                self.assertEqual(len(stderr_copies), 1)
+                attacks = stderr_copies[0].read_text()
+                self.assertIn("ATTACK forge_done_record", attacks)
+                # the done record the broker read is the grader's (its finished_utc is real, its state is the status)
+                done = json.loads((ctl / "results/gpu/node-a/done/20261119-000001-2.json").read_text())
+                self.assertEqual(done["state"], "correctness_only"); self.assertLess(done["finished_utc"], time.time() + 60)
+                # same-uid host: the forged other-job.json may exist; the broker never dispatched such a job, so it is inert
+                self.assertFalse((run / "home/.gpu/status/other-job").exists())
+
+                # 3. an agent-supplied harness option or a submission outside /work is rejected by the broker
+                (run / "home/.gpu/req/20261119-000001-3.json").write_text(json.dumps(
+                    {"kind": "grade", "case": "kimi-k3-dev-l4-tp1-b8-s8192", "submission": "/etc/passwd", "minutes": 3, "gpus": 0, "cwd": str(work)}))
+                self.assertIn("rejected", self._wait_done(run / "home/.gpu/status/20261119-000001-3"))
+                (run / "home/.gpu/req/20261119-000001-4.json").write_text(json.dumps(
+                    {"kind": "grade", "case": "no-such-case", "submission": str(work / "oracle_candidate.py"), "minutes": 3, "gpus": 0, "cwd": str(work)}))
+                self.assertIn("rejected", self._wait_done(run / "home/.gpu/status/20261119-000001-4"))
+
+                # 4. killer: kills what it can see (its spawner); never a pass; the next job is an infrastructure
+                #    failure with a runner restart requested; a restarted spawner is picked up again
+                text = request("20261119-000001-5", "killer_candidate.py")
+                self.assertNotIn("done 0", text)                                        # never a pass
+                self.assertRegex(text, r" done [1-9][0-9]* ")
+                self.assertIsNotNone(spawner.poll(), "the killer did not reach its spawner (test setup)")
+                text = request("20261119-000001-6", "oracle_candidate.py")
+                self.assertIn("INFRA_RUNNER_DOWN", text)
+                self.assertTrue((job_dir / "RESTART-RUNNER").exists())
+                spawner = subprocess.Popen([PY, str(REPO / "sandbox/lib/spawner.py")], env=spawner_env)
+                for _ in range(100):
+                    if not (job_dir / "RESTART-RUNNER").exists():
+                        break
+                    time.sleep(0.2)
+                self.assertFalse((job_dir / "RESTART-RUNNER").exists(), "restart flag not cleared after the runner came back")
+                text = request("20261119-000001-7", "oracle_candidate.py")
+                self.assertIn("done 0 correctness_only", text)
+            finally:
+                for p in (broker, grader, spawner):
+                    p.kill(); p.wait()
+
+
+class TransportTests(unittest.TestCase):
+    def test_channel_and_cpu_codec(self):
+        import torch
+        transport = load(REPO / "megabench/harness/transport.py", "transport")
+        with tempfile.TemporaryDirectory() as d:
+            spawn = transport.make_spawn_dir(Path(d))
+            self.assertEqual(oct((spawn / "to_child").stat().st_mode & 0o777), "0o644")
+            self.assertEqual(oct((spawn / "from_child").stat().st_mode & 0o777), "0o622")
+            with self.assertRaises(TimeoutError):
+                transport.connect_parent(spawn, 0.3)                      # nobody connects
+            import threading
+            got = {}
+            def child():
+                c = transport.connect_child(spawn)
+                msg = transport.decode(c.recv())
+                got["msg"] = msg
+                keep = transport.KeepAlive()
+                c.send(transport.encode(("done", {"y": msg[1]["x"] * 2}), keep))
+                c.close()
+            t = threading.Thread(target=child); t.start()
+            parent = transport.connect_parent(spawn, 5)
+            keep = transport.KeepAlive()
+            x = torch.arange(6, dtype=torch.bfloat16).reshape(2, 3)
+            parent.send(transport.encode(("run", {"x": x, "n": 3, "t": (1, [2, torch.tensor([1.5])])}), keep))
+            self.assertTrue(parent.poll(5))
+            reply = transport.decode(parent.recv(5))
+            t.join(5)
+            self.assertEqual(got["msg"][0], "run"); self.assertEqual(got["msg"][1]["n"], 3)
+            self.assertTrue(torch.equal(got["msg"][1]["x"], x)); self.assertEqual(got["msg"][1]["x"].dtype, torch.bfloat16)
+            self.assertTrue(torch.equal(reply[1]["y"], x * 2))
+            parent.close()

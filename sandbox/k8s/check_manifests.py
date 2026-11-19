@@ -121,9 +121,26 @@ def check(directory: Path) -> list[str]:
             need(spec.get("enableServiceLinks") is False, f"{label}: service links would leak cluster addresses")
         if "gpu" in name and kind == "Pod":
             need("records" not in vols, f"{label}: records volume present")
-            ctl_mounts = [m for c in containers for m in c.get("volumeMounts", []) if m["name"] == "ctl"]
-            need(any(m.get("subPath") == "req" and m.get("readOnly") for m in ctl_mounts), f"{label}: request spool not mounted read-only")
-            need(all(m.get("subPath") in ("req", "results") for m in ctl_mounts), f"{label}: ctl mounted without a subPath")
+            by_name = {c["name"]: c for c in spec.get("containers", [])}
+            need(set(by_name) == {"grader", "runner"}, f"{label}: containers {sorted(by_name)} (expected grader and runner)")
+            need(not spec.get("shareProcessNamespace"), f"{label}: shares the pid namespace between grader and runner")
+            need(not spec.get("hostPID") and not spec.get("hostIPC") and not spec.get("hostNetwork"), f"{label}: host namespace")
+            grader, runner = by_name.get("grader", {}), by_name.get("runner", {})
+            g_uid = grader.get("securityContext", {}).get("runAsUser"); r_uid = runner.get("securityContext", {}).get("runAsUser")
+            need(g_uid not in (None, 0) and r_uid not in (None, 0) and g_uid != r_uid, f"{label}: grader and runner must run as different non-root uids")
+            g_mounts = {m["mountPath"]: m for m in grader.get("volumeMounts", [])}
+            r_mounts = {m["mountPath"]: m for m in runner.get("volumeMounts", [])}
+            need(not any(m["name"] == "ctl" for m in r_mounts.values()), f"{label}: runner mounts the control volume")
+            need(not any(m["name"] == "records" for m in list(r_mounts.values()) + list(g_mounts.values())), f"{label}: records mounted")
+            ctl = [m for m in g_mounts.values() if m["name"] == "ctl"]
+            need(any(m.get("subPath") == "req" and m.get("readOnly") for m in ctl), f"{label}: request spool not mounted read-only in the grader")
+            need(all(m.get("subPath") in ("req", "results") for m in ctl), f"{label}: ctl mounted without a subPath")
+            need(g_mounts.get("/work", {}).get("readOnly") is True, f"{label}: /work writable in the grader")
+            need(g_mounts.get("/dev/shm", {}).get("name") != r_mounts.get("/dev/shm", {}).get("name"), f"{label}: grader and runner share /dev/shm")
+            need(g_mounts.get("/tmp", {}).get("name") != r_mounts.get("/tmp", {}).get("name"), f"{label}: grader and runner share /tmp")
+            shared = {m["name"] for m in g_mounts.values() if not m.get("readOnly")} & {m["name"] for m in r_mounts.values() if not m.get("readOnly")}
+            need(shared <= {"job"}, f"{label}: volumes writable from both containers: {shared}")
+            need("livenessProbe" in runner, f"{label}: runner has no liveness probe (restart channel)")
             need(spec.get("runtimeClassName") == "nvidia", f"{label}: runtimeClassName")
             need("secret" not in vols.values(), f"{label}: a Secret is mounted in a GPU pod")
             c = containers[0]

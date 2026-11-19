@@ -2,13 +2,20 @@
 # the trays for the whole run is these pods holding nvidia.com/gpu: 4 on each node. Created only after
 # the operator confirms tray availability.
 #
-# Privileges: non-root (uid 1000), read-only root filesystem, every capability dropped except IPC_LOCK
-# (CUDA pinned memory / NCCL). SYS_PTRACE is not needed: nsys and ncu trace the processes they launch
-# themselves. /dev/shm is a memory emptyDir (CUDA IPC, NCCL). IMEX channel 0 and NCCL MNNVL come from
-# the SGLang deployment on this cluster (DECISIONS section 3).
-# The converted weights are a host path mounted read-only at /weights; the records volume is absent. The
-# control volume is mounted twice: the request side read-only (candidate code in this pod cannot create
-# or alter jobs), the results side read-write (DECISIONS-LOG L13).
+# Trusted verdict channel (DECISIONS-LOG L19): each pod has two containers.
+#   grader  uid 2000: the evaluator (sandbox/lib/executor.py). Mounts the request spool read-only, the
+#           results spool read-write, /work read-only, the weights read-only. No candidate code ever runs here.
+#   runner  uid 1000: the candidate's processes (sandbox/lib/spawner.py). Mounts /work read-write, the
+#           weights read-only. No control or results mount at all: there is no path from this container to
+#           a request, a verdict or a record.
+# They share only the pod-local emptyDir /job (requests the runner can read, outputs it can write) and the
+# GPUs. Separate pid namespaces (no shareProcessNamespace), different uids, read-only root filesystems,
+# every capability dropped except IPC_LOCK (CUDA pinned memory / NCCL). The runner's liveness probe fails
+# when the grader writes /job/RESTART-RUNNER (leftover GPU processes), so kubelet restarts the container.
+# GPU visibility in the runner comes from NVIDIA_VISIBLE_DEVICES=all with the GPUs requested by the grader:
+# whether this cluster's device plugin honours that for an unprivileged container is a live test (TRUSTED-
+# VERDICT.md); the fallback is the request on the runner and the env on the grader.
+# The converted weights are a host path mounted read-only at /weights; the records volume is absent.
 apiVersion: v1
 kind: Service
 metadata: {name: goalbox-gpu, namespace: goalbox-k3}
@@ -31,9 +38,10 @@ spec:
   restartPolicy: Always
   serviceAccountName: goalbox-gpu
   automountServiceAccountToken: false
-  securityContext: {runAsNonRoot: true, runAsUser: 1000, runAsGroup: 1000, fsGroup: 1000, seccompProfile: {type: RuntimeDefault}}
+  enableServiceLinks: false
+  securityContext: {runAsNonRoot: true, fsGroup: 1000, seccompProfile: {type: RuntimeDefault}}
   containers:
-    - name: executor
+    - name: grader
       image: "${IMAGE}"
       imagePullPolicy: IfNotPresent
       command: [python3, /goalbox/sandbox/lib/executor.py]
@@ -41,33 +49,67 @@ spec:
         - {name: GOALBOX_NODE_NAME, value: goalbox-gpu-a}
         - {name: GOALBOX_CTL_REQ, value: /ctl-req}
         - {name: GOALBOX_CTL_RESULTS, value: /ctl-results}
+        - {name: GOALBOX_JOB_DIR, value: /job}
+        - {name: GOALBOX_GRADER_TMP, value: /tmp}
         - {name: GOALBOX_GPUS_HERE, value: "4"}
-        - {name: GOALBOX_EXECUTOR_KILL_ALL_UID, value: "1"}
+        - {name: GOALBOX_BENCH, value: /goalbox/bench}
         - {name: KIMI_K3_WEIGHTS, value: /weights}
         - {name: GOALBOX_WEIGHTS_MANIFEST, value: /weights/tp8/MANIFEST.json}
         - {name: PYTHONPATH, value: /goalbox/bench}
         - {name: NVIDIA_IMEX_CHANNELS, value: "0"}
         - {name: NCCL_MNNVL_ENABLE, value: "1"}
         - {name: NVIDIA_DRIVER_CAPABILITIES, value: compute,utility}
-        - {name: HOME, value: /home/agent}
-      securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL], add: [IPC_LOCK]}}
+        - {name: HOME, value: /tmp}
+      securityContext: {runAsUser: 2000, runAsGroup: 2000, allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL], add: [IPC_LOCK]}}
       resources:
         requests: {cpu: "16", memory: 256Gi, nvidia.com/gpu: 4}
         limits: {cpu: "64", memory: 512Gi, nvidia.com/gpu: 4}
       volumeMounts:
+        - {name: work, mountPath: /work, readOnly: true}
+        - {name: ctl, mountPath: /ctl-req, subPath: req, readOnly: true}      # requests: only the controller writes
+        - {name: ctl, mountPath: /ctl-results, subPath: results}               # results and verdicts: this container only
+        - {name: weights, mountPath: /weights, readOnly: true}
+        - {name: job, mountPath: /job}
+        - {name: grader-shm, mountPath: /dev/shm}
+        - {name: grader-tmp, mountPath: /tmp}
+    - name: runner
+      image: "${IMAGE}"
+      imagePullPolicy: IfNotPresent
+      command: [python3, /goalbox/sandbox/lib/spawner.py]
+      env:
+        - {name: GOALBOX_JOB_DIR, value: /job}
+        - {name: GOALBOX_SPAWNER_KILL_ALL_UID, value: "1"}
+        - {name: KIMI_K3_WEIGHTS, value: /weights}
+        - {name: PYTHONPATH, value: /goalbox/bench}
+        - {name: NVIDIA_VISIBLE_DEVICES, value: all}
+        - {name: NVIDIA_DRIVER_CAPABILITIES, value: compute,utility}
+        - {name: NVIDIA_IMEX_CHANNELS, value: "0"}
+        - {name: NCCL_MNNVL_ENABLE, value: "1"}
+        - {name: HOME, value: /home/agent}
+      securityContext: {runAsUser: 1000, runAsGroup: 1000, allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL], add: [IPC_LOCK]}}
+      livenessProbe:
+        exec: {command: [test, "!", -e, /job/RESTART-RUNNER]}
+        periodSeconds: 10
+        failureThreshold: 1
+      resources:
+        requests: {cpu: "16", memory: 256Gi}
+        limits: {cpu: "64", memory: 512Gi}
+      volumeMounts:
         - {name: work, mountPath: /work}
         - {name: work, mountPath: /home/agent, subPath: home}
-        - {name: ctl, mountPath: /ctl-req, subPath: req, readOnly: true}      # requests: only the controller writes
-        - {name: ctl, mountPath: /ctl-results, subPath: results}               # results: untrusted, reported to the agent
         - {name: weights, mountPath: /weights, readOnly: true}
-        - {name: dshm, mountPath: /dev/shm}
-        - {name: tmp, mountPath: /tmp}
+        - {name: job, mountPath: /job}
+        - {name: runner-shm, mountPath: /dev/shm}
+        - {name: runner-tmp, mountPath: /tmp}
   volumes:
     - {name: work, persistentVolumeClaim: {claimName: goalbox-work}}
     - {name: ctl, persistentVolumeClaim: {claimName: goalbox-ctl}}
     - {name: weights, hostPath: {path: "${WEIGHTS_DIR}", type: Directory}}
-    - {name: dshm, emptyDir: {medium: Memory, sizeLimit: 64Gi}}
-    - {name: tmp, emptyDir: {sizeLimit: 200Gi}}
+    - {name: job, emptyDir: {sizeLimit: 100Gi}}
+    - {name: grader-shm, emptyDir: {medium: Memory, sizeLimit: 32Gi}}
+    - {name: runner-shm, emptyDir: {medium: Memory, sizeLimit: 64Gi}}
+    - {name: grader-tmp, emptyDir: {sizeLimit: 100Gi}}
+    - {name: runner-tmp, emptyDir: {sizeLimit: 200Gi}}
   imagePullSecrets: [{name: vccr-creds}]
 ---
 apiVersion: v1
@@ -84,9 +126,10 @@ spec:
   restartPolicy: Always
   serviceAccountName: goalbox-gpu
   automountServiceAccountToken: false
-  securityContext: {runAsNonRoot: true, runAsUser: 1000, runAsGroup: 1000, fsGroup: 1000, seccompProfile: {type: RuntimeDefault}}
+  enableServiceLinks: false
+  securityContext: {runAsNonRoot: true, fsGroup: 1000, seccompProfile: {type: RuntimeDefault}}
   containers:
-    - name: executor
+    - name: grader
       image: "${IMAGE}"
       imagePullPolicy: IfNotPresent
       command: [python3, /goalbox/sandbox/lib/executor.py]
@@ -94,31 +137,65 @@ spec:
         - {name: GOALBOX_NODE_NAME, value: goalbox-gpu-b}
         - {name: GOALBOX_CTL_REQ, value: /ctl-req}
         - {name: GOALBOX_CTL_RESULTS, value: /ctl-results}
+        - {name: GOALBOX_JOB_DIR, value: /job}
+        - {name: GOALBOX_GRADER_TMP, value: /tmp}
         - {name: GOALBOX_GPUS_HERE, value: "4"}
-        - {name: GOALBOX_EXECUTOR_KILL_ALL_UID, value: "1"}
+        - {name: GOALBOX_BENCH, value: /goalbox/bench}
         - {name: KIMI_K3_WEIGHTS, value: /weights}
         - {name: GOALBOX_WEIGHTS_MANIFEST, value: /weights/tp8/MANIFEST.json}
         - {name: PYTHONPATH, value: /goalbox/bench}
         - {name: NVIDIA_IMEX_CHANNELS, value: "0"}
         - {name: NCCL_MNNVL_ENABLE, value: "1"}
         - {name: NVIDIA_DRIVER_CAPABILITIES, value: compute,utility}
-        - {name: HOME, value: /home/agent}
-      securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL], add: [IPC_LOCK]}}
+        - {name: HOME, value: /tmp}
+      securityContext: {runAsUser: 2000, runAsGroup: 2000, allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL], add: [IPC_LOCK]}}
       resources:
         requests: {cpu: "16", memory: 256Gi, nvidia.com/gpu: 4}
         limits: {cpu: "64", memory: 512Gi, nvidia.com/gpu: 4}
       volumeMounts:
+        - {name: work, mountPath: /work, readOnly: true}
+        - {name: ctl, mountPath: /ctl-req, subPath: req, readOnly: true}      # requests: only the controller writes
+        - {name: ctl, mountPath: /ctl-results, subPath: results}               # results and verdicts: this container only
+        - {name: weights, mountPath: /weights, readOnly: true}
+        - {name: job, mountPath: /job}
+        - {name: grader-shm, mountPath: /dev/shm}
+        - {name: grader-tmp, mountPath: /tmp}
+    - name: runner
+      image: "${IMAGE}"
+      imagePullPolicy: IfNotPresent
+      command: [python3, /goalbox/sandbox/lib/spawner.py]
+      env:
+        - {name: GOALBOX_JOB_DIR, value: /job}
+        - {name: GOALBOX_SPAWNER_KILL_ALL_UID, value: "1"}
+        - {name: KIMI_K3_WEIGHTS, value: /weights}
+        - {name: PYTHONPATH, value: /goalbox/bench}
+        - {name: NVIDIA_VISIBLE_DEVICES, value: all}
+        - {name: NVIDIA_DRIVER_CAPABILITIES, value: compute,utility}
+        - {name: NVIDIA_IMEX_CHANNELS, value: "0"}
+        - {name: NCCL_MNNVL_ENABLE, value: "1"}
+        - {name: HOME, value: /home/agent}
+      securityContext: {runAsUser: 1000, runAsGroup: 1000, allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL], add: [IPC_LOCK]}}
+      livenessProbe:
+        exec: {command: [test, "!", -e, /job/RESTART-RUNNER]}
+        periodSeconds: 10
+        failureThreshold: 1
+      resources:
+        requests: {cpu: "16", memory: 256Gi}
+        limits: {cpu: "64", memory: 512Gi}
+      volumeMounts:
         - {name: work, mountPath: /work}
         - {name: work, mountPath: /home/agent, subPath: home}
-        - {name: ctl, mountPath: /ctl-req, subPath: req, readOnly: true}      # requests: only the controller writes
-        - {name: ctl, mountPath: /ctl-results, subPath: results}               # results: untrusted, reported to the agent
         - {name: weights, mountPath: /weights, readOnly: true}
-        - {name: dshm, mountPath: /dev/shm}
-        - {name: tmp, mountPath: /tmp}
+        - {name: job, mountPath: /job}
+        - {name: runner-shm, mountPath: /dev/shm}
+        - {name: runner-tmp, mountPath: /tmp}
   volumes:
     - {name: work, persistentVolumeClaim: {claimName: goalbox-work}}
     - {name: ctl, persistentVolumeClaim: {claimName: goalbox-ctl}}
     - {name: weights, hostPath: {path: "${WEIGHTS_DIR}", type: Directory}}
-    - {name: dshm, emptyDir: {medium: Memory, sizeLimit: 64Gi}}
-    - {name: tmp, emptyDir: {sizeLimit: 200Gi}}
+    - {name: job, emptyDir: {sizeLimit: 100Gi}}
+    - {name: grader-shm, emptyDir: {medium: Memory, sizeLimit: 32Gi}}
+    - {name: runner-shm, emptyDir: {medium: Memory, sizeLimit: 64Gi}}
+    - {name: grader-tmp, emptyDir: {sizeLimit: 100Gi}}
+    - {name: runner-tmp, emptyDir: {sizeLimit: 200Gi}}
   imagePullSecrets: [{name: vccr-creds}]

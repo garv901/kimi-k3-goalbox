@@ -79,8 +79,10 @@ activations) when the result stays in the band.
 
 ## Tools
 
-- `./check_candidate --case ID` runs the trusted harness on a GPU through `gpu-run`
-  (the default case is `{dev}`, one GPU). Multi-GPU cases request all their GPUs.
+- `./check_candidate --case ID` asks the trusted grader to evaluate `/work/submission.py` on a GPU
+  (`gpu-run --grade`; the default case is `{dev}`). The GPU count, the harness options and the
+  evaluator run outside your reach; its verdict and output come back as the request's output. Any
+  other argument is ignored.
 - `./sol_info --case ID --json` prints the per-GPU HBM floor and its byte breakdown.
 - `./profile_candidate --case ID [ncu options]` captures one warm step with Nsight Compute
   (all ranks) into `reports/`.
@@ -135,7 +137,7 @@ def make_workspace(output: Path, *, bench: str = "/goalbox/bench") -> Path:
               "[ -n \"${GPUS[$CASE]:-}\" ] || { echo \"unknown case $CASE\"; exit 2; }\n")
     tools = {
         "check_candidate": common +
-        "[ -e /dev/nvidiactl ] || exec gpu-run -g \"${GPUS[$CASE]}\" -t \"${GPU_MINUTES:-30}\" -- ./check_candidate --case \"$CASE\" \"${ARGS[@]}\"\n"
+        "[ -e /dev/nvidiactl ] || exec gpu-run --grade \"$CASE\" -t \"${GPU_MINUTES:-30}\" --submission /work/submission.py\n"
         "run_id=$(date -u +%Y%m%dT%H%M%S)-$$\n"
         "exec python -m megabench evaluate --case \"$CASE\" --submission /work/submission.py "
         "--method local-check --session-id \"local-$run_id\" --device cuda:0 --trials 2 --warmup 2 --reps 10 "

@@ -20,6 +20,9 @@ spec:
       env:
         - {name: GOALBOX_GPU_MODE, value: k8s}
         - {name: GOALBOX_CTL, value: /ctl}
+        - {name: GOALBOX_BENCH, value: /goalbox/bench}
+        - {name: GOALBOX_GRADE_ARGS, value: "--trials 2 --warmup 2 --reps 10 --timeout 3600"}
+        - {name: GOALBOX_GRADE_DEVICE, value: cuda:0}
         - {name: GOALBOX_GPU_NODES, value: "goalbox-gpu-a,goalbox-gpu-b"}
         - {name: GOALBOX_RUN_HOURS, value: "48"}
         - {name: GOALBOX_MAX_MIN, value: "120"}

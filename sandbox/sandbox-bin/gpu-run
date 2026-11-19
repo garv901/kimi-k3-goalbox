@@ -6,6 +6,9 @@
 #       -t  time limit in minutes (default 20, max 120); keep it honest and short
 #       -g  GPUs (default 1; 1 to 4 run on one GB300 tray; 8 runs on two whole trays)
 #       -d  detach: print the request id and return at once
+#   gpu-run --grade CASE [-t MINUTES] [-d] [--submission PATH]
+#       ask the trusted grader to evaluate PATH (default ./submission.py) on CASE: GPU count,
+#       harness options and the evaluator run outside your reach; the verdict comes back with the output
 #   gpu-run --wait ID     wait for a detached request, then print its output
 #   gpu-run --status [ID] show the state of one request (default: the latest 10)
 #
@@ -28,7 +31,22 @@ wait_for() {
   [[ $code =~ ^[0-9]+$ ]] && exit "$code" || exit 1
 }
 
+GRADE="" SUBMISSION="$PWD/submission.py"
 case ${1:-} in
+  --grade)
+    GRADE=$2; shift 2
+    while [ $# -gt 0 ]; do
+      case $1 in -t) MIN=$2; shift 2 ;; -d) DETACH=1; shift ;; --submission) SUBMISSION=$(realpath -m "$2"); shift 2 ;;
+                 *) echo "gpu-run --grade: unexpected argument $1" >&2; exit 2 ;; esac
+    done
+    id=$(date +%Y%m%d-%H%M%S)-$$
+    printf '# grade request %s: %s\n' "$GRADE" "$SUBMISSION" > "$SP/req/$id.sh"
+    printf '{"kind": "grade", "case": "%s", "submission": "%s", "minutes": %d, "gpus": 0, "cwd": "%s"}\n' \
+      "$GRADE" "$SUBMISSION" "$MIN" "$PWD" > "$SP/req/.$id.tmp"
+    mv "$SP/req/.$id.tmp" "$SP/req/$id.json"
+    echo "[gpu-run $id] grade request queued ($GRADE, ${MIN} min)" >&2
+    [ $DETACH = 1 ] && { echo "$id"; exit 0; }
+    wait_for "$id" ;;
   --wait) wait_for "$2" ;;
   --status)
     if [ -n "${2:-}" ]; then cat "$SP/status/$2"; else

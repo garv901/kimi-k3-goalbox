@@ -179,3 +179,16 @@ instead of a pod deadline, explicit proxy allowlist, CiliumNetworkPolicy for the
 overlay and validation script. Two test-fixture mistakes (ledger test timing, verifier reading the stream
 from the old location) and two Docker-test mistakes (executor run from a shell wrapper instead of as pid 1,
 temp files left owned by the container user) were fixed on the way.
+
+## 18. Trusted verdict channel (2026-11-19)
+
+The safety review's blocker B-C1-1 (candidate-writable verdicts) led to a two-container GPU pod. The key
+analysis was that a different directory or container is not enough with one uid: /proc magic links reach
+another mount namespace, so the design rests on different uids plus separate pid namespaces plus mounts the
+runner never has. Torch's tensor reductions do not cross uids (shared-memory ref-counter files), so the
+transport uses raw CUDA IPC handles rebuilt through `__cuda_array_interface__`; CPU tests exercise the
+channel with by-value tensors. Debugging found: an iteration bug in the spawner, spawn directories that
+the other uid could not write, the system Python instead of the image venv, a leftover-GPU check that saw
+other users' processes on the shared host (now a before/after diff), and a killer control that was too
+effective on a shared host. The container's pid 1 being signal-immune from inside turned a planned
+recovery test into a documented property.

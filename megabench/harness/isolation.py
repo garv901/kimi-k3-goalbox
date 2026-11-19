@@ -18,7 +18,15 @@ The parent also wraps every timed repetition in an NVTX range `megabench:rank<R>
 that an Nsight Systems trace of the process tree (nsys_audit.py) can count the kernels of
 exactly that repetition (D-L5).
 
-Protocol over a multiprocessing Pipe (child side in `_child_main`):
+Two transports carry the same protocol. *Local*: a multiprocessing Pipe to a child this process spawned
+(tests, single-container runs; tensors through torch's reductions). *Remote* (GOALBOX_SPAWN_DIR set, the
+GPU pod): the parent writes a spawn request into a directory of the pod-local `/job` emptyDir and the
+untrusted spawner in the runner container (different uid, mount and pid namespace) starts
+`python -m megabench.harness.isolation --remote <dir>`; the two talk over FIFOs with tensors encoded by
+transport.py (raw CUDA IPC). The parent never learns a pid: liveness is EOF on the channel, a kill is a
+`KILL` file the spawner acts on, and a child that never connects is a Timeout in `build`. DECISIONS-LOG L19.
+
+Protocol over the channel (child side in `_child_main`):
   parent -> child  ("build",)                      child -> ("ready", events) | ("error", text, tb)
   parent -> child  ("run", inputs)                 child -> ("started",) then ("done", outputs) | ("error", text, tb)
   parent -> child  ("profile", inputs)             child -> ("done", outputs, advisory_counts) | ("error", ...)
@@ -55,10 +63,17 @@ def _import_submission(path: str):
     return build
 
 
-def _child_main(conn, submission: str, contract: dict, device: str, group: dict | None, stderr_path: str) -> None:
+def _child_main(conn, submission: str, contract: dict, device: str, group: dict | None, stderr_path: str,
+                remote: bool = False) -> None:
     """Candidate process entry point. Everything after `build` runs the candidate's code."""
     import torch
 
+    if remote:
+        from . import transport
+        keep = transport.KeepAlive()
+        raw_send, raw_recv = conn.send, conn.recv
+        conn.send = lambda msg: raw_send(transport.encode(msg, keep))        # type: ignore[assignment]
+        conn.recv = lambda: transport.decode(raw_recv())                     # type: ignore[assignment]
     sys.stderr = open(stderr_path, "a", buffering=1)
     sys.stdout = sys.stderr
     os.environ.setdefault("MEGABENCH_CANDIDATE_PROCESS", "1")
@@ -159,15 +174,21 @@ class CandidateProcess:
         self.device = torch.device(device)
         self.cuda = self.device.type == "cuda"
         self.stderr_path = Path(stderr_path)
-        self.stderr_path.parent.mkdir(parents=True, exist_ok=True)
-        self.stderr_path.touch()
-        ctx = mp.get_context("spawn")
-        self.conn, child_conn = ctx.Pipe()
-        self.process = ctx.Process(target=_child_main, name="megabench-candidate",
-                                   args=(child_conn, str(submission), contract, device, group, str(self.stderr_path)),
-                                   daemon=False)
-        self.process.start()
-        child_conn.close()
+        self.spawn_dir: Path | None = None
+        self.process = None
+        self.remote = bool(os.environ.get("GOALBOX_SPAWN_DIR"))
+        if self.remote:
+            self._start_remote(submission, contract, device, group, build_timeout_s)
+        else:
+            self.stderr_path.parent.mkdir(parents=True, exist_ok=True)
+            self.stderr_path.touch()
+            ctx = mp.get_context("spawn")
+            self.conn, child_conn = ctx.Pipe()
+            self.process = ctx.Process(target=_child_main, name="megabench-candidate",
+                                       args=(child_conn, str(submission), contract, device, group, str(self.stderr_path)),
+                                       daemon=False)
+            self.process.start()
+            child_conn.close()
         self.last_outputs: dict | None = None
         self.events = None
         self.build_ms = None
@@ -181,17 +202,57 @@ class CandidateProcess:
         if self.cuda and reply[1] is not None:
             self.events = tuple(torch.cuda.Event.from_ipc_handle(self.device, handle) for handle in reply[1])
 
+    def _start_remote(self, submission, contract, device, group, build_timeout_s) -> None:
+        """Remote transport: write the spawn request where the runner container's spawner reads it, then
+        wait for the candidate process to connect. The stderr file is written by the candidate (untrusted
+        content, kept as evidence) inside the spawn directory."""
+        import json
+
+        from . import transport
+        from .status import Infrastructure
+
+        self.spawn_dir = transport.make_spawn_dir(Path(os.environ["GOALBOX_SPAWN_DIR"]))
+        self.stderr_path = self.spawn_dir / "stderr"
+        request = {"submission": str(submission), "contract": contract, "device": device, "group": group,
+                   "stderr": str(self.stderr_path), "cwd": str(Path(submission).parent),
+                   "env": {k: v for k, v in os.environ.items()
+                           if k in ("CUDA_VISIBLE_DEVICES", "PYTHONPATH", "KIMI_K3_WEIGHTS", "NCCL_DEBUG", "NCCL_SOCKET_IFNAME",
+                                    "NVIDIA_IMEX_CHANNELS", "NCCL_MNNVL_ENABLE", "GOALBOX_JOB_ID", "MASTER_ADDR", "MASTER_PORT")}}
+        tmp = self.spawn_dir / ".cmd.tmp"
+        tmp.write_text(json.dumps(request))
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, self.spawn_dir / "cmd.json")
+        try:
+            self.conn = transport.connect_parent(self.spawn_dir, build_timeout_s)
+        except TimeoutError as exc:
+            spawned = (self.spawn_dir / "pid").exists()
+            if not spawned:
+                raise Infrastructure(f"the runner did not start a candidate process: {exc}", phase="build") from exc
+            raise Timeout(f"candidate process connected nothing within {build_timeout_s:.0f} s", phase="build") from exc
+        except transport.TransportError as exc:
+            raise CandidateError(f"candidate process failed to start: {exc}", phase="build") from exc
+        self._keep = transport.KeepAlive()
+        raw_send, raw_recv = self.conn.send, self.conn.recv
+        self._mappings: dict = {}
+        self.conn.send = lambda msg: raw_send(transport.encode(msg, self._keep))       # type: ignore[assignment]
+        self.conn.recv = lambda: transport.decode(raw_recv(), self._mappings)          # type: ignore[assignment]
+
+    def _alive(self) -> bool:
+        return self.process.is_alive() if self.process is not None else True   # remote: liveness is channel EOF
+
+    def _exitcode(self):
+        return self.process.exitcode if self.process is not None else "unknown (remote)"
+
     def _recv(self, timeout_s: float, *, phase: str):
         if not self.conn.poll(timeout_s):
-            if not self.process.is_alive():
-                raise CandidateError(f"candidate process exited with code {self.process.exitcode} during {phase}",
-                                     phase=phase)
+            if not self._alive():
+                raise CandidateError(f"candidate process exited with code {self._exitcode()} during {phase}", phase=phase)
             self.kill()
             raise Timeout(f"candidate exceeded {timeout_s:.0f} s in {phase}", phase=phase)
         try:
             return self.conn.recv()
         except EOFError:
-            raise CandidateError(f"candidate process died during {phase} (exit code {self.process.exitcode})", phase=phase)
+            raise CandidateError(f"candidate process died during {phase} (exit code {self._exitcode()})", phase=phase)
 
     def stderr_tail(self, limit: int = 4000) -> str:
         try:
@@ -263,19 +324,51 @@ class CandidateProcess:
         return reply[1], reply[2]
 
     def kill(self) -> None:
-        if self.process.is_alive():
-            self.process.kill()
-            self.process.join(10)
+        if self.process is not None:
+            if self.process.is_alive():
+                self.process.kill()
+                self.process.join(10)
+        elif self.spawn_dir is not None:
+            try:
+                (self.spawn_dir / "KILL").write_text(str(time.time()))     # the spawner kills the process group
+            except OSError:
+                pass
 
     def close(self) -> None:
         try:
-            if self.process.is_alive():
+            if self._alive():
                 self.conn.send(("stop",))
-                self.process.join(30)
-        except (OSError, ValueError):
+                if self.process is not None:
+                    self.process.join(30)
+        except (OSError, ValueError, BrokenPipeError):
             pass
         self.kill()
         try:
             self.conn.close()
         except OSError:
             pass
+
+
+def _remote_main(spawn_dir: str) -> int:
+    """Entry point in the runner container: `python -m megabench.harness.isolation --remote DIR`."""
+    import json
+
+    from . import transport
+
+    d = Path(spawn_dir)
+    request = json.loads((d / "cmd.json").read_text())
+    try:
+        conn = transport.connect_child(d)
+    except OSError as exc:
+        (d / "FAILED").write_text(f"connect: {exc}")
+        return 1
+    _child_main(conn, request["submission"], request["contract"], request["device"], request["group"], request["stderr"],
+                remote=True)
+    conn.close()
+    return 0
+
+
+if __name__ == "__main__":
+    if len(sys.argv) == 3 and sys.argv[1] == "--remote":
+        raise SystemExit(_remote_main(sys.argv[2]))
+    raise SystemExit("usage: python -m megabench.harness.isolation --remote SPAWN_DIR")

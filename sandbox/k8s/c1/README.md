@@ -30,7 +30,7 @@ privileged settings, hostPath, host namespaces, Secret data and cluster-scoped R
 | 3 permitted and forbidden destinations from a sandbox pod | `net-agentlike.txt`, `net-unlabeled.txt` |
 | 4 proxy restricts destinations and protocols; no unrestricted tunnel | `net-agentlike.txt` proxy cases, `proxy-net.log.txt`; also `local/proxy_test.sh` on Docker |
 | 5 records PVC cannot be mounted by agent-controlled workloads | `rbac-matrix.txt` (agent SA: no create pods), `pvc-mount-as-agent.txt` (Forbidden) |
-| 6 candidate code cannot modify control state, grading, protected artifacts, records | `local/mount_test.sh` (Docker, same mount layout as the GPU pod), `check_manifests.json` |
+| 6 candidate code cannot modify control state, grading, protected artifacts, records | `local/verdict_test.sh` (Docker, grader + runner containers, hostile and killer controls), `local/mount_test.sh` (single-container layout, superseded), `check_manifests.json`, `sandbox/k8s/TRUSTED-VERDICT.md` |
 | 7 cleanup kills only the job's session | `test_sandbox.SpoolProtocolTests` (unrelated same-uid bystander survives), `local/cleanup_uid_test.sh` (uid-wide sweep inside a private pid namespace) |
 | 8 admission behaviour | `events-after-apply.txt`, `admission-privileged.txt`, `admission-hostpath.txt` |
 | 9 budget timer and interruptions | `test_sandbox.BudgetLedgerTests`, `sandbox/lib/budget.py`, `controller.sh` |

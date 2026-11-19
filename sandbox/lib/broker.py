@@ -17,8 +17,12 @@ The sandboxed agent cannot reach Slurm. `gpu-run` inside the sandbox drops a req
 sbatch job that runs the command in the same sandbox view, in `gpu` mode: no network,
 only the job's GPUs. One job per run at a time; others wait in the spool.
 
-Request:  req/<id>.json  {"minutes": int, "gpus": int, "cwd": "/work/..."}
-          req/<id>.sh    the command (runs inside the sandbox; never parsed by the host)
+Request:  req/<id>.json  {"minutes": int, "gpus": int, "cwd": "/work/..."}            (kind "exec", default)
+                         {"kind": "grade", "case": ID, "submission": "/work/...", "minutes": int}
+          req/<id>.sh    the command (exec; runs in the runner container; never parsed by the host)
+Grade requests (DECISIONS-LOG L19): the broker fixes the GPU count from the case, the harness options
+(GOALBOX_GRADE_ARGS) and the device; the agent chooses only the case and the submission path under /work.
+In k8s mode the trusted grader evaluates it; its done record carries "trusted": true and a verdict file.
 Status:   status/<id>    last line is the current state; "done <exit> <slurm state>" at the end
 Output:   out/<id>.log
 """
@@ -36,6 +40,10 @@ MODE = os.environ.get("GOALBOX_GPU_MODE", "slurm" if shutil.which("sbatch") else
 CTL = Path(os.environ.get("GOALBOX_CTL", "/ctl"))
 GPU_NODES = [n for n in os.environ.get("GOALBOX_GPU_NODES", "").split(",") if n]
 MASTER_PORT = int(os.environ.get("GOALBOX_MASTER_PORT", "29500"))
+GRADE_ARGS = os.environ.get("GOALBOX_GRADE_ARGS", "--trials 2 --warmup 2 --reps 10 --timeout 3600").split()
+GRADE_DEVICE = os.environ.get("GOALBOX_GRADE_DEVICE", "cuda:0")
+WORK_ROOT = os.environ.get("GOALBOX_WORK_ROOT", "/work")
+DISPATCHED = {}  # rid -> dispatch time (a done record older than its request is refused)
 K8S = {}  # rid -> list of nodes the job was dispatched to
 LOCAL_GPUS = [g for g in os.environ.get("GOALBOX_LOCAL_GPUS", "").split(",") if g]
 LOCAL = {}  # rid -> (Popen, deadline)
@@ -68,21 +76,44 @@ def job_state(jobid):
     return "active", "UNKNOWN"
 
 
+def case_gpus(case_id):
+    """GPU count of a graded case from the benchmark's own case table (never from the agent)."""
+    sys.path.insert(0, os.environ.get("GOALBOX_BENCH", str(GB.parent)))
+    from megabench.cases import select_cases
+    return int(select_cases("all", [case_id])[0].gpus)
+
+
 def submit(rid):
+    grade = None
     try:
         req = json.loads((SPOOL / "req" / f"{rid}.json").read_text())
-        minutes, gpus, cwd = int(req["minutes"]), int(req["gpus"]), str(req["cwd"])
+        kind = req.get("kind", "exec")
+        assert kind in ("exec", "grade"), "kind must be exec or grade"
+        minutes, cwd = int(req["minutes"]), str(req["cwd"])
         assert 1 <= minutes <= MAX_MIN, f"minutes must be 1..{MAX_MIN}"
-        assert 1 <= gpus <= MAX_GPUS, f"gpus must be 1..{MAX_GPUS}"
         assert re.fullmatch(r"/(work|home/agent|tmp)(/[A-Za-z0-9_.+-]+)*/?", cwd), "cwd must be under /work, /home/agent or /tmp"
-        assert (SPOOL / "req" / f"{rid}.sh").is_file(), "missing command file"
+        if kind == "grade":
+            case = str(req["case"])
+            assert re.fullmatch(r"[A-Za-z0-9._-]{1,80}", case), "bad case id"
+            submission = str(req["submission"])
+            assert re.fullmatch(re.escape(WORK_ROOT) + r"(/[A-Za-z0-9_.+-]+)+", submission), f"submission must be a file under {WORK_ROOT}"
+            gpus = case_gpus(case)
+            grade = {"kind": "grade", "case": case, "submission": submission, "harness_args": GRADE_ARGS, "device": GRADE_DEVICE}
+        else:
+            gpus = int(req["gpus"])
+            assert 1 <= gpus <= MAX_GPUS, f"gpus must be 1..{MAX_GPUS}"
+            assert (SPOOL / "req" / f"{rid}.sh").is_file(), "missing command file"
     except Exception as e:
         status(rid, f"rejected: {e}"); status(rid, "done 2 REJECTED"); log(f"{rid} rejected: {e}")
         return None
+    if MODE == "k8s":
+        return submit_k8s(rid, minutes, gpus, cwd, grade)
+    if grade:   # local and slurm modes have no separate grader: run the evaluator as the job's command
+        (SPOOL / "req" / f"{rid}.sh").write_text(
+            f"exec python -m megabench evaluate --case {grade['case']} --submission {grade['submission']} --method goalbox-grade "
+            f"--session-id {rid} --device {grade['device']} {' '.join(grade['harness_args'])} --output /tmp/grade-{rid}.jsonl\n")
     if MODE == "local":
         return submit_local(rid, minutes, gpus, cwd)
-    if MODE == "k8s":
-        return submit_k8s(rid, minutes, gpus, cwd)
     script = JOBS / f"{rid}.sbatch"
     script.write_text(
         "#!/bin/bash\n"
@@ -119,7 +150,7 @@ def submit_local(rid, minutes, gpus, cwd):
     return f"local:{rid}"
 
 
-def submit_k8s(rid, minutes, gpus, cwd):
+def submit_k8s(rid, minutes, gpus, cwd, grade=None):
     per_node = 4
     if gpus > per_node and gpus != 2 * per_node:
         status(rid, f"rejected: {gpus} GPUs: use 1..{per_node} (one tray) or {2*per_node} (two trays)")
@@ -127,44 +158,68 @@ def submit_k8s(rid, minutes, gpus, cwd):
     nodes = GPU_NODES[:1] if gpus <= per_node else GPU_NODES[:2]
     if len(nodes) < (1 if gpus <= per_node else 2):
         status(rid, "rejected: not enough GPU workers configured"); status(rid, "done 2 REJECTED"); return None
-    script = (SPOOL / "req" / f"{rid}.sh").read_bytes()
+    script = (SPOOL / "req" / f"{rid}.sh").read_bytes() if grade is None else None
     for index, node in enumerate(nodes):
         spool = CTL / "req" / "gpu" / node
         (spool / "req").mkdir(parents=True, exist_ok=True)
-        for d in ("status", "out", "done"):
+        for d in ("status", "out", "done", "verdict", "candidate"):
             (CTL / "results" / "gpu" / node / d).mkdir(parents=True, exist_ok=True)
         topology = ({"GOALBOX_NNODES": 2, "GOALBOX_NODE_RANK": index, "GOALBOX_MASTER_ADDR": nodes[0],
                      "GOALBOX_MASTER_PORT": MASTER_PORT} if len(nodes) == 2 else {})
-        (spool / "req" / f"{rid}.sh").write_bytes(script)
+        if script is not None:
+            (spool / "req" / f"{rid}.sh").write_bytes(script)
+        request = {"kind": "exec", "minutes": minutes, "gpus": min(gpus, per_node), "cwd": cwd, "topology": topology}
+        if grade:
+            request |= grade
         tmp = spool / "req" / f".{rid}.tmp"
-        tmp.write_text(json.dumps({"minutes": minutes, "gpus": min(gpus, per_node), "cwd": cwd, "topology": topology}))
+        tmp.write_text(json.dumps(request))
         os.replace(tmp, spool / "req" / f"{rid}.json")
     K8S[rid] = nodes
+    DISPATCHED[rid] = time.time()
     status(rid, f"dispatched to {', '.join(nodes)} ({gpus} GPU, {minutes} min)")
     log(f"{rid} -> k8s {nodes} ({gpus} GPU, {minutes} min, cwd {cwd})")
     return f"k8s:{rid}"
 
 
 def k8s_state(rid):
+    """The grader's done records decide the state. Grade jobs: trusted verdict (the evaluator ran in the
+    grader container). Exec jobs: the exit code is candidate-reported and labelled so. A done record older
+    than the dispatch, or malformed, is an infrastructure-class failure, never a pass."""
     nodes = K8S[rid]
     done = [CTL / "results" / "gpu" / n / "done" / f"{rid}.json" for n in nodes]
     if not all(p.exists() for p in done):
         running = [n for n, p in zip(nodes, done) if not p.exists()]
         return "active", "RUNNING on " + " ".join(running)
-    try:
-        records = [json.loads(p.read_text()) for p in done]
-        codes = [int(r["exit"]) for r in records]
-    except (ValueError, KeyError, TypeError) as e:   # results are untrusted content
-        log(f"{rid} malformed done record: {e}")
-        records = [{"exit": 3, "state": "MALFORMED_RESULT"} for _ in nodes]
-        codes = [3 for _ in nodes]
+    records = []
+    for p in done:
+        try:
+            r = json.loads(p.read_text())
+            codes_ok = isinstance(r.get("exit"), int) and isinstance(r.get("state"), str)
+            assert codes_ok and float(r.get("finished_utc", 0)) >= DISPATCHED.get(rid, 0) - 5, "stale or malformed done record"
+        except (ValueError, KeyError, TypeError, AssertionError) as e:
+            log(f"{rid} refused done record {p}: {e}")
+            r = {"exit": 8, "state": "MALFORMED_RESULT", "kind": "exec", "trusted": False}
+        records.append(r)
+    trusted = all(r.get("trusted") is True for r in records)
     with (SPOOL / "out" / f"{rid}.log").open("w") as out:
         for node, record in zip(nodes, records):
-            out.write(f"===== {node} (exit {record.get('exit')} {str(record.get('state'))[:40]})\n")
+            tag = "trusted grader verdict" if record.get("trusted") else "candidate-reported exit"
+            out.write(f"===== {node} (exit {record.get('exit')} {str(record.get('state'))[:40]}; {tag})\n")
             src = CTL / "results" / "gpu" / node / "out" / f"{rid}.log"
             out.write(src.read_text(errors="replace") if src.exists() else "(no output)\n")
-    code = max(codes)
-    return "done", f"{code} {'COMPLETED' if code == 0 else '+'.join(sorted({str(r.get('state'))[:40] for r in records}))}"
+            verdict = CTL / "results" / "gpu" / node / "verdict" / f"{rid}.json"
+            if record.get("trusted") and verdict.exists():
+                try:
+                    v = json.loads(verdict.read_text())
+                    rec = v.get("record") or {}
+                    out.write(f"----- verdict: {v.get('state')} {('- ' + str(rec.get('reason'))) if rec.get('reason') else ''}"
+                              f" (graded snapshot sha256 {str(v.get('graded_snapshot', {}).get('sha256', '?'))[:16]})\n")
+                except (OSError, ValueError):
+                    out.write("----- verdict file unreadable\n")
+    code = max(int(r["exit"]) for r in records)
+    states = sorted({str(r.get("state"))[:40] for r in records})
+    label = "COMPLETED" if code == 0 and not trusted else "+".join(states)
+    return "done", f"{code} {label}" + ("" if trusted else " (candidate-reported)")
 
 
 def local_state(rid):

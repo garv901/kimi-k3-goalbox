@@ -137,3 +137,22 @@ Conditional GO for C1 received after commit 361a053 was accepted. Done locally (
   probes, cleanup regression, rendered manifests with sha256, read-only can-i recon).
 - Blocked on the operator: creating the namespace and running `c1-validate.sh` need an identity that can create
   resources; the build agent's credential cannot (L18) and the Rancher identity is reserved for the operator.
+
+## 2026-11-19 (evening): trusted verdict channel (blocker B-C1-1), CPU-validated
+
+- GPU worker pods now have a `grader` container (uid 2000, evaluator, results spool) and a `runner`
+  container (uid 1000, candidate processes, no control/results/records mounts); shared only a pod-local
+  emptyDir and the GPUs; separate pid namespaces. Harness candidate processes are spawned remotely over
+  FIFOs with raw CUDA IPC (`megabench/harness/transport.py`, `isolation.py` remote mode); protocol,
+  hashes, timing, deadlines, launch budget and tolerances unchanged (DECISIONS-LOG L19).
+- Grade requests (`gpu-run --grade`) replace the pass-through of harness arguments; the broker fixes the
+  GPU count, options and device (L20). The grader snapshots the graded sources (sha256 in the verdict).
+- Regressions: `GradeProtocolTests` (hostile and killer controls, rejected options/paths, runner-down
+  recovery), `TransportTests`, updated `SpoolProtocolTests`; Docker two-container model
+  `sandbox/k8s/c1/local/verdict_test.sh`: 23 hostile attempts denied, verdicts from the grader only, pid-1
+  spawner signal-immune, paused runner → INFRA_RUNNER_DOWN + restart request → recovery. 34 CPU tests OK.
+- Evidence `reports/gb300/verdict-channel-20261119/`; design and remaining live tests
+  `sandbox/k8s/TRUSTED-VERDICT.md`; operator checklist `reports/gb300/C1-OPERATOR-CHECKLIST.md`.
+- Mishap: a first version of the killer control candidate killed every process of my uid on the shared
+  rack 3 host (my own ssh session included; no other users affected). The control now goes uid-wide only
+  inside a private pid namespace whose pid 1 is the spawner.
