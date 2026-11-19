@@ -55,7 +55,11 @@ class Runner:
     def setup(self):
         if os.path.exists(self.run_dir):
             sys.exit(f'{self.run_dir} exists; pick a new run id')
-        isolation.setup_node()
+        lock = isolation.setup_node()
+        self.run['device_lockdown'] = {'locked': len(lock['devices_locked']), 'unlockable': lock['devices_unlockable']}
+        if lock['devices_unlockable']:
+            self.run['abort_flags'].append('GPU device nodes not lockable (read-only): lease bypass by the run user is '
+                                           'detectable (bypass_pids), not prevented')
         uid, gid = isolation.create_user(self.run_id, self.run_dir)
         self.uid = uid
         os.makedirs(f'{self.run_dir}/logs', exist_ok=True); os.chmod(f'{self.run_dir}/logs', 0o700)

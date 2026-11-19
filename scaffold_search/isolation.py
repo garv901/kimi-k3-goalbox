@@ -16,6 +16,10 @@ What it does
   root-only. /tmp 1733 (others cannot list). The benchmark is read from the read-only snapshot
   /srv/ss/trusted/vibe-megakernel (root-owned, a-w). GPU device nodes root:ss-gpu 0660: run users
   reach the GPUs only through gpu_lease, which adds ss-gpu to the spawned command's groups.
+  Where the device nodes cannot be changed (docker `--gpus` bind-mounts the host's 0666 nodes
+  read-only; seen on rack 10 GB300 trays), setup_node warns and reports them as unlockable; run_arm
+  records this in run.json ('device_lockdown') and the lease is then only enforced for cooperative
+  users (telemetry.bypass_pids detects direct GPU use).
 - Network: the node has no CAP_NET_ADMIN (no iptables), so the web block is (1) Claude Code's
   --disallowedTools WebFetch,WebSearch, (2) HTTPS_PROXY/HTTP_PROXY pointing at a local CONNECT
   proxy that allows only Anthropic/Claude hosts and logs every denied host with the client uid,
@@ -90,10 +94,20 @@ def setup_node(lock_devices=True):
     os.chmod('/tmp', 0o1733)
     hide_shared_tmp()
     install_claude()
+    locked, unlockable = [], []
     if lock_devices:
         for dev in gpu_devices():
-            os.chown(dev, 0, gid); os.chmod(dev, 0o660)
+            try:
+                os.chown(dev, 0, gid); os.chmod(dev, 0o660)
+                locked.append(dev)
+            except OSError as e:   # e.g. docker --gpus: read-only bind mounts of the host's 0666 nodes
+                unlockable.append(f'{dev}: {e.strerror}')
+    if unlockable:
+        print(f'WARNING: GPU device nodes could not be locked to root:{GPU_GROUP} ({len(unlockable)}): '
+              f'{unlockable[0]} ...; run users can reach the GPUs without a lease (telemetry bypass_pids '
+              f'detects this, nothing prevents it). See docs: credential/device isolation on rack 10.', file=sys.stderr)
     sync_creds()
+    return {'devices_locked': locked, 'devices_unlockable': unlockable}
 
 
 def hide_shared_tmp():
@@ -386,7 +400,8 @@ def proxy(port=PROXY_PORT):
 def main():
     a = sys.argv[1:]
     if a[0] == 'setup-node':
-        setup_node(lock_devices='--no-devices' not in a); print('node set up')
+        r = setup_node(lock_devices='--no-devices' not in a)
+        print('node set up; GPU device nodes locked:', len(r['devices_locked']), 'unlockable:', len(r['devices_unlockable']))
     elif a[0] == 'create-user':
         print(create_user(a[1], a[2]))
     elif a[0] == 'delete-user':
