@@ -1,0 +1,49 @@
+# Checkpoint conversion on one tray (run once per tray with TRAY and the matching job name; DECISIONS
+# section 7). Output on the tray's local RAID at ${CACHE_DIR} (hostPath, DirectoryOrCreate). The
+# directory is root-owned when first created, so an init container running as root with exactly the
+# capabilities that `chown` and `chmod` need (CHOWN, FOWNER, DAC_OVERRIDE) hands it to uid 1000 and
+# exits; the converter itself runs as uid 1000 with every capability dropped. The HF source is a
+# read-only hostPath. No GPU, no network. Memory: see tools/conversion_sizing.py (about 2x the largest
+# layer per worker; the limit below is for 4 workers).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: goalbox-convert-${TRAY_SHORT}
+  namespace: goalbox-k3
+  labels: {app.kubernetes.io/component: conversion}
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 604800
+  template:
+    metadata: {labels: {app.kubernetes.io/component: conversion}}
+    spec:
+      nodeName: "${TRAY}"
+      restartPolicy: Never
+      serviceAccountName: goalbox-gpu
+      automountServiceAccountToken: false
+      securityContext: {seccompProfile: {type: RuntimeDefault}}
+      initContainers:
+        - name: own-cache-dir
+          image: "${IMAGE}"
+          imagePullPolicy: IfNotPresent
+          command: [sh, -c, "chown 1000:1000 /cache && chmod 0755 /cache && ls -ld /cache"]
+          securityContext: {runAsUser: 0, runAsNonRoot: false, allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL], add: [CHOWN, FOWNER, DAC_OVERRIDE]}}
+          resources: {requests: {cpu: 100m, memory: 64Mi}, limits: {cpu: 500m, memory: 256Mi}}
+          volumeMounts: [{name: cache, mountPath: /cache}]
+      containers:
+        - name: convert
+          image: "${IMAGE}"
+          imagePullPolicy: IfNotPresent
+          command: [bash, -c, "set -e; cd /goalbox/bench && CUDA_VISIBLE_DEVICES= /opt/goalbox/venv/bin/python -s -m megabench.tasks.kimi_checkpoint --src /hf --out /cache/weights --tp 8 --workers ${WORKERS} && /opt/goalbox/venv/bin/python -s /goalbox/bench/planning/bringup/conversion_manifest.py --hf /hf --out /cache/weights --tp 8 --layers 93 --repo /goalbox/bench > /cache/weights/tp8/MANIFEST.json && /opt/goalbox/venv/bin/python -s /goalbox/bench/planning/bringup/verify_conversion.py --hf /hf --out /cache/weights --tp 8 --layers 93 | tee /cache/weights/tp8/VERIFY.txt"]
+          env: [{name: PYTHONPATH, value: /goalbox/bench}, {name: OMP_NUM_THREADS, value: "8"}]
+          securityContext: {runAsUser: 1000, runAsGroup: 1000, runAsNonRoot: true, allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          resources: {requests: {cpu: "16", memory: 320Gi}, limits: {cpu: "48", memory: 600Gi}}
+          volumeMounts:
+            - {name: cache, mountPath: /cache}
+            - {name: hf, mountPath: /hf, readOnly: true}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - {name: cache, hostPath: {path: "${CACHE_DIR}", type: DirectoryOrCreate}}
+        - {name: hf, hostPath: {path: "${HF_DIR}", type: Directory}}
+        - {name: tmp, emptyDir: {sizeLimit: 20Gi}}
+      imagePullSecrets: [{name: vccr-creds}]

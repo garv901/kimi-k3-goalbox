@@ -1,0 +1,44 @@
+# ServiceAccounts and the one Role. No ClusterRole, no ClusterRoleBinding.
+# - goalbox-controller: the only account with API rights: read pods and stream pod logs in this namespace
+#   (the agent container's stdout is the stream-json trajectory; the controller copies it to records).
+# - goalbox-agent, goalbox-gpu, goalbox-proxy: no API token is mounted (automountServiceAccountToken: false)
+#   and no Role is bound, so a process in those pods has no Kubernetes identity at all.
+# The shared `dc` ServiceAccount (inference-wideep/wideep-session) has no binding here; the check in
+# check_manifests.py refuses any binding to a subject outside this namespace.
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: goalbox-controller, namespace: goalbox-k3}
+automountServiceAccountToken: true
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: goalbox-agent, namespace: goalbox-k3}
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: goalbox-gpu, namespace: goalbox-k3}
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: goalbox-proxy, namespace: goalbox-k3}
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: {name: goalbox-controller, namespace: goalbox-k3}
+rules:
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [get, list, watch]
+  - apiGroups: [""]
+    resources: [pods/log]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: {name: goalbox-controller, namespace: goalbox-k3}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: goalbox-controller}
+subjects:
+  - {kind: ServiceAccount, name: goalbox-controller, namespace: goalbox-k3}

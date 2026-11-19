@@ -1,0 +1,10 @@
+nvcc (CUDA 13.4, rack 3) compile check of sandbox/agent-tools/megatimer.cuh, 2026-11-19
+
+  nvcc -gencode arch=compute_103a,code=sm_103a -DMEGATIMER -o k_dev k.cu      -> dev build ok
+  cuobjdump -symbols k_dev | grep -c megatimer_records                        -> 1
+  nvcc -gencode arch=compute_103a,code=sm_103a -o k_graded k.cu               -> graded build ok
+  cuobjdump -symbols k_graded | grep -c megatimer_records                     -> 0
+
+k.cu: one kernel calling MEGATIMER_MARK(1) from thread 0, host calls megatimer_reset()/megatimer_dump().
+The evaluator's static scan (megabench/harness/scan.py, rule timer_macro) rejects a submission whose
+build flags contain -DMEGATIMER or whose artifacts contain the megatimer_records symbol.

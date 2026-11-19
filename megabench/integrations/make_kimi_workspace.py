@@ -38,9 +38,19 @@ every per-rank weight tensor. `make_state()` lists the per-sequence state.
 
 `submission.py` exports `build(case: dict) -> run`. `run(inputs: dict) -> dict` gets this
 rank's tensors and returns this rank's outputs: {outputs}.
-`case['execution']` (multi-GPU cases) gives rank, world_size, tp_rank, device, and the live
-torch.distributed `tp_group`. Do all communication inside the one launch per rank. Use the
-same `build` for every case: read the geometry from `case['params']`.
+`case['execution']` (multi-GPU cases) gives rank, world_size, tp_rank, device, node_rank,
+local_rank, and the live torch.distributed `tp_group`. Do all communication inside the one
+launch per rank. Use the same `build` for every case: read the geometry from `case['params']`.
+Your `run` is called in its own process per rank (the grader's process only times and checks),
+so keep every CUDA resource you need inside `build`'s closure.
+
+TP8 cases run on two trays: ranks 0-3 on tray A, 4-7 on tray B, one NVLink domain (IMEX), so
+NCCL and CUDA peer access work across the trays. The GPUs are B300 (sm_103a): compile SASS with
+`-gencode arch=compute_103a,code=sm_103a` (PTX-only JIT fails on this driver).
+
+The MLA latent and rope caches are `float8_e4m3fn` with one FP32 scale per layer
+(`l<L>_kv_scale`): dequantize on read, quantize your cache writes with the same scale. The KDA
+state is FP32.
 
 ## Correctness: the oracle band
 
@@ -57,8 +67,9 @@ activations) when the result stays in the band.
 
 ## Rules
 
-- At most one GPU kernel launch per rank for the whole step (the launch audit counts
-  NCCL kernels too).
+- At most one GPU kernel launch per rank for the whole step. The grader counts device kernels
+  (NCCL kernels too) in an Nsight Systems trace of every timed repetition; copies and memsets
+  are reported but not counted; a CUDA graph launch or a device-side launch fails.
 - Compute from the runtime inputs on every call. Weights (synthetic cases), tokens,
   reset flags and states change between trials. Do not mutate inputs, cache answers,
   call the oracle, replay a multi-kernel CUDA graph, or move model work to the CPU.
@@ -73,8 +84,18 @@ activations) when the result stays in the band.
 - `./sol_info --case ID --json` prints the per-GPU HBM floor and its byte breakdown.
 - `./profile_candidate --case ID [ncu options]` captures one warm step with Nsight Compute
   (all ranks) into `reports/`.
+- `./nsys_candidate --case ID` traces the grader running your candidate with Nsight Systems
+  and prints the launch audit the grader uses, per rank and repetition, plus the GPU span.
+- `megatimer.cuh` (in `tools/`): `MEGATIMER_MARK(phase)` records `%globaltimer` and `clock64`
+  inside your kernel when compiled with `-DMEGATIMER`; `./phase_timeline timeline.bin` prints the
+  per-phase, per-block timeline. The graded build must not define `MEGATIMER` (the scan rejects it).
 - `BASELINES.json` has the measured latency of the best known implementation
   (vLLM with the Kimi K3 latency-specialized decode path) for each graded case.
+- Before running, the grader scans your sources and binaries: imports of the oracle, tensors
+  loaded from files, CUDA graphs, device-side launches, reads outside `/work`, `/home/agent`,
+  `/tmp` and `/weights`, and the timer macro all fail the evaluation with status `scan_failed`.
+- If `/work/STOP-REQUESTED` appears, the run budget ends in 30 minutes: stop experiments, commit
+  within 15 minutes and finish `PROGRESS.md`.
 """
 
 
@@ -126,10 +147,18 @@ def make_workspace(output: Path, *, bench: str = "/goalbox/bench") -> Path:
         "exec ncu --profile-from-start off --target-processes all -o \"reports/profile-$CASE-$run_id\" \"${ARGS[@]}\" "
         "python -m megabench.integrations.ncu_profile_case --case \"$CASE\" --submission /work/submission.py\n",
         "sol_info": common + "exec python -m megabench sol --case \"$CASE\" \"${ARGS[@]}\"\n",
+        "nsys_candidate": "#!/bin/bash\nexec /goalbox/sandbox/agent-tools/nsys_candidate \"$@\"\n",
+        "phase_timeline": "#!/bin/bash\nexec /goalbox/sandbox/agent-tools/phase_timeline \"$@\"\n",
     }
     for name, text in tools.items():
         (project/name).write_text(text)
         (project/name).chmod(0o755)
+    (project/"tools").mkdir(exist_ok=True)
+    header = Path(__file__).resolve().parents[2]/"sandbox"/"agent-tools"/"megatimer.cuh"
+    for candidate in (header, Path("/goalbox/sandbox/agent-tools/megatimer.cuh")):
+        if candidate.exists():
+            (project/"tools"/"megatimer.cuh").write_text(candidate.read_text())
+            break
     subprocess.run(["git", "init", "-q", "-b", "main"], cwd=project, check=True)
     subprocess.run(["git", "add", "-A"], cwd=project, check=True)
     subprocess.run(["git", "-c", "user.name=goalbox", "-c", "user.email=goalbox@invalid", "commit", "-q",

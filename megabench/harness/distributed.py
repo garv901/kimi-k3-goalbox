@@ -1,10 +1,25 @@
-"""Evaluate a submission in one process per GPU with per-rank auditing."""
+"""Evaluate a submission with one evaluator process per local GPU and the candidate in its own
+process per rank (D-I2). Every case goes through this path, including TP1 (world size 1).
+
+Per rank: init the evaluator process group -> start the candidate process (build) -> trials
+(fresh inputs, keyed snapshot, oracle, candidate run, immutability, structural checks,
+agreement, band grading) -> timing (warmup, timed reps under NVTX ranges, immutability,
+grading of the last timed outputs) -> reference timing (synthetic cases) -> advisory
+in-process profile of the candidate -> immutability -> record. Each phase is guarded (D-S2):
+a rank that fails reports its typed failure at the next agreement point, so no rank is left
+alone in a collective. Statuses per rank and for the group follow status.py (D-S1).
+
+Two trays (DECISIONS section 2): launch.py reads GOALBOX_NNODES / GOALBOX_NODE_RANK /
+GOALBOX_MASTER_ADDR / GOALBOX_MASTER_PORT; this module spawns only the local ranks and
+gathers every rank's record on global rank 0 at the end.
+"""
 
 from __future__ import annotations
 
 import json
+import os
+import platform
 import secrets
-import statistics
 import tempfile
 import time
 import traceback
@@ -18,16 +33,27 @@ import torch.multiprocessing as mp
 from ..cases import Case
 from ..tasks.parallel import initialize
 from ..workloads import make_inputs, reference
-from .benchmark import _audit_launches, _measure
-from .correctness import check_unchanged, compare, snapshot
+from .benchmark import _measure, classify_events, measure_candidate
+from .correctness import changed_inputs, compare, new_key, snapshot, structural_check
+from .deadlines import Deadlines, for_case
+from .isolation import CandidateProcess
+from .launch import Topology, topology_from_env
+from .status import EvaluationFailure, Incorrect, InputMutation, classify, merge_group
 
 
-def agree(local_error: str | None) -> None:
-    """Report rank-local errors before advancing to another collective stage."""
-    errors = [None] * dist.get_world_size()
-    dist.all_gather_object(errors, local_error)
-    if any(errors):
-        raise AssertionError("; ".join(f"rank {rank}: {error}" for rank, error in enumerate(errors) if error))
+class GroupAbort(Exception):
+    def __init__(self, failures: list[dict]):
+        super().__init__(f"{len(failures)} rank(s) failed")
+        self.failures = failures
+
+
+def agree(local_failure: dict | None) -> None:
+    """Exchange typed failures. Raises GroupAbort on every rank if any rank failed (D-S2)."""
+    gathered: list = [None] * dist.get_world_size()
+    dist.all_gather_object(gathered, local_failure)
+    failures = [f for f in gathered if f]
+    if failures:
+        raise GroupAbort(failures)
 
 
 def shared_seed() -> int:
@@ -36,148 +62,250 @@ def shared_seed() -> int:
     return values[0]
 
 
-def fresh_inputs(case: Case, seed: int, device: str) -> dict:
-    values, local_error = None, None
-    try:
-        values = make_inputs(case, seed, device)
-    except Exception as exc:
-        local_error = f"input generation failed: {type(exc).__name__}: {exc}"
-    agree(local_error)
-    return values
+class Phase:
+    """Run one guarded step; return (value, failure_record_or_None) and time it."""
 
+    def __init__(self, rank: int, record: dict):
+        self.rank, self.record = rank, record
 
-def _rank_worker(rank: int, contract: dict, submission: str, device_kind: str,
-                 first_device: int, trials: int, warmup: int, reps: int,
-                 rendezvous: str, output_dir: str) -> None:
-    from .runner import _load_submission
-
-    case = Case(**contract)
-    device = f"cuda:{first_device + rank}" if device_kind == "cuda" else "cpu"
-    if device_kind == "cuda":
-        torch.cuda.set_device(first_device + rank)
-    result = {"rank": rank, "device": device}
-    initialized = False
-    try:
-        dist.init_process_group("nccl" if device_kind == "cuda" else "gloo",
-                                init_method=rendezvous, world_size=case.gpus, rank=rank,
-                                timeout=timedelta(minutes=10),
-                                device_id=torch.device(device) if device_kind == 'cuda' else None)
-        initialized = True
-        ctx = initialize(case)
-        execution = {"rank": rank, "world_size": case.gpus, "tp_rank": ctx.tp_rank,
-                     "ep_rank": ctx.ep_rank, "backend": dist.get_backend(), "device": device,
-                     "tp_group": ctx.tp_group, "ep_group": ctx.ep_group}
-        local_error, candidate = None, None
+    def __call__(self, name: str, fn, *args, **kwargs):
         start = time.perf_counter()
         try:
-            candidate = _load_submission(Path(submission), case, execution=execution)
-        except Exception as exc:
-            local_error = f"build failed: {type(exc).__name__}: {exc}"
-        agree(local_error)
-        result["build_ms"] = (time.perf_counter() - start) * 1000
+            value = fn(*args, **kwargs)
+        except GroupAbort:
+            raise
+        except BaseException as exc:  # noqa: BLE001 - typed below
+            failure = classify(exc, phase=name, rank=self.rank)
+            entry = failure.record() | {"traceback": traceback.format_exc(limit=8)}
+            self.record.setdefault("phases", {})[name] = {"ms": (time.perf_counter() - start) * 1000, "ok": False}
+            return None, entry
+        self.record.setdefault("phases", {})[name] = {"ms": (time.perf_counter() - start) * 1000, "ok": True}
+        return value, None
+
+
+def _immutability(inputs: dict, originals: dict, key: int, when: str) -> None:
+    changed = changed_inputs(inputs, originals, key)
+    if changed:
+        raise InputMutation(f"candidate mutated input(s) {', '.join(changed[:8])} ({len(changed)} total) {when}",
+                            phase="immutability")
+
+
+def _grade(case: Case, inputs: dict, expected: dict, actual: dict, device: str) -> dict:
+    try:
+        return compare(case, inputs, expected, actual, device, serial=case.gpus == 1)
+    except AssertionError as exc:
+        raise Incorrect(str(exc), phase="grade") from exc
+
+
+def _rank_worker(local_rank: int, contract: dict, submission: str, device_kind: str, first_device: int,
+                 trials: int, warmup: int, reps: int, topo_dict: dict, output_dir: str, deadlines_dict: dict,
+                 options: dict) -> None:
+    case = Case(**contract)
+    topo = Topology(**topo_dict)
+    deadlines = Deadlines(**deadlines_dict)
+    rank = topo.global_rank(local_rank)
+    device = f"cuda:{first_device + local_rank}" if device_kind == "cuda" else "cpu"
+    if device_kind == "cuda":
+        torch.cuda.set_device(first_device + local_rank)
+    result = {"rank": rank, "local_rank": local_rank, "node_rank": topo.node_rank, "device": device,
+              "host": platform.node(), "status": "pass", "phases": {}}
+    phase = Phase(rank, result)
+    candidate = None
+    initialized = False
+    own_failure: dict | None = None
+    try:
+        dist.init_process_group("nccl" if device_kind == "cuda" else "gloo", init_method=topo.rendezvous(output_dir, offset=0),
+                                world_size=case.gpus, rank=rank, timeout=timedelta(seconds=deadlines.collective_s),
+                                device_id=torch.device(device) if device_kind == "cuda" else None)
+        initialized = True
+        ctx = initialize(case)
+        key = new_key()
+        execution = None
+        group = None
+        if case.gpus > 1:
+            execution = {"rank": rank, "world_size": case.gpus, "tp_rank": ctx.tp_rank, "ep_rank": ctx.ep_rank,
+                         "backend": dist.get_backend(), "device": device, "node_rank": topo.node_rank,
+                         "local_rank": local_rank, "nnodes": topo.nnodes}
+            group = {"backend": dist.get_backend(), "init_method": topo.rendezvous(output_dir, offset=1),
+                     "world_size": case.gpus, "rank": rank, "timeout_s": deadlines.collective_s}
+        contract_for_candidate = dict(contract)
+        if execution is not None:
+            contract_for_candidate["execution"] = execution
+        stderr_path = Path(output_dir) / f"candidate-rank{rank}.stderr"
+
+        def start_candidate():
+            return CandidateProcess(Path(submission), contract_for_candidate, device, group=group,
+                                    stderr_path=stderr_path, build_timeout_s=deadlines.build_s)
+
+        candidate, own_failure = phase("build", start_candidate)
+        agree(own_failure)
+        result["build_ms"] = candidate.build_ms
         result["correctness"] = {"status": "pass", "trials": []}
         with torch.inference_mode():
             for trial in range(trials):
                 seed = shared_seed()
-                inputs = fresh_inputs(case, seed, device)
-                originals = snapshot(inputs)
-                expected = reference(case, inputs)
-                local_error, details = None, None
-                try:
-                    first_start = time.perf_counter() if trial == 0 else None
-                    actual = candidate(inputs)
-                    if device_kind == "cuda":
-                        torch.cuda.synchronize(device)
+                inputs, own_failure = phase("inputs", make_inputs, case, seed, device)
+                agree(own_failure)
+                originals, own_failure = phase("snapshot", snapshot, inputs, key)
+                agree(own_failure)
+                expected, own_failure = phase("reference", reference, case, inputs)
+                agree(own_failure)
+                first_start = time.perf_counter() if trial == 0 else None
+                run, own_failure = phase("candidate", candidate.run, inputs, deadlines.trial_s)
+                if own_failure is None:
+                    actual, _timing = run
                     if first_start is not None:
-                        result["first_call_ms_including_jit"] = (time.perf_counter()-first_start)*1000
-                    check_unchanged(inputs, originals)
-                except Exception as exc:
-                    local_error = f"trial {trial}: {type(exc).__name__}: {exc}"
-                agree(local_error)
-                try:
-                    # Every rank must enter the grading collectives, so grade after agreement.
-                    details = compare(case, inputs, expected, actual, device)
-                except Exception as exc:
-                    local_error = f"trial {trial}: {type(exc).__name__}: {exc}"
-                agree(local_error)
+                        result["first_call_ms_including_jit"] = (time.perf_counter() - first_start) * 1000
+                    _, own_failure = phase("immutability", _immutability, inputs, originals, key, f"in trial {trial}")
+                if own_failure is None:
+                    _, own_failure = phase("structure", structural_check, case, expected, actual, device)
+                agree(own_failure)
+                details, own_failure = phase("grade", _grade, case, inputs, expected, actual, device)
+                agree(own_failure)
                 result["correctness"]["trials"].append({"seed": seed, "outputs": details})
                 del inputs, originals, expected, actual
-            perf_inputs = fresh_inputs(case, shared_seed(), device)
+            # Timing on a fresh seed; the last timed outputs are graded (poisoned buffers would fail).
+            seed = shared_seed()
+            perf_inputs, own_failure = phase("inputs", make_inputs, case, seed, device)
+            agree(own_failure)
+            originals, own_failure = phase("snapshot", snapshot, perf_inputs, key)
+            agree(own_failure)
+            expected, own_failure = phase("reference", reference, case, perf_inputs)
+            agree(own_failure)
             dist.barrier()
-            result["candidate_timing"] = _measure(candidate, perf_inputs, device, warmup, reps)
+            timed, own_failure = phase("timing", measure_candidate, candidate, perf_inputs, warmup, reps,
+                                       rep_timeout_s=deadlines.rep_s, nvtx_prefix=f"megabench:rank{rank}")
+            if own_failure is None:
+                result["candidate_timing"], last_outputs = timed
+                _, own_failure = phase("immutability", _immutability, perf_inputs, originals, key, "during timing")
+            if own_failure is None:
+                _, own_failure = phase("structure", structural_check, case, expected, last_outputs, device)
+            agree(own_failure)
+            details, own_failure = phase("grade_after_timing", _grade, case, perf_inputs, expected, last_outputs, device)
+            agree(own_failure)
+            result["timed_outputs_grade"] = details
             dist.barrier()
-            # The eager oracle is slow (host-driven routing); a few repetitions are enough.
-            result["reference_timing"] = _measure(lambda values: reference(case, values), perf_inputs, device,
-                                                  min(warmup, 1), min(reps, 3))
+            reference_reps = options.get("reference_reps", 0)
+            if reference_reps:
+                timing, own_failure = phase("reference_timing", _measure, lambda values: reference(case, values),
+                                            perf_inputs, device, min(warmup, 1), reference_reps)
+                if own_failure is None:
+                    result["reference_timing"] = timing
+                agree(own_failure)
             dist.barrier()
-            result["launch_audit"] = _audit_launches(candidate, perf_inputs, device, case.max_gpu_launches)
+            audit, own_failure = phase("audit", candidate.profile, perf_inputs, deadlines.audit_s)
+            if own_failure is None:
+                outputs, counts = audit
+                result["launch_audit_advisory"] = counts | {"note": "in-process count from the candidate process; "
+                                                                    "the audit of record is the nsys trace (nsys_audit.py)"}
+                _, own_failure = phase("immutability", _immutability, perf_inputs, originals, key, "during the audit")
+            agree(own_failure)
+            del perf_inputs, originals, expected
         if device_kind == "cuda":
             result["hardware"] = {"gpu_name": torch.cuda.get_device_name(device),
-                                  "peak_allocated_bytes": torch.cuda.max_memory_allocated(device)}
-        result["status"] = "pass"
-    except Exception as exc:
-        result.update(status="incorrect" if isinstance(exc, AssertionError) else "error",
-                      reason=f"{type(exc).__name__}: {exc}", traceback=traceback.format_exc(limit=12))
+                                  "evaluator_max_memory_allocated_bytes": torch.cuda.max_memory_allocated(device),
+                                  "evaluator_max_memory_reserved_bytes": torch.cuda.max_memory_reserved(device)}
+    except GroupAbort as abort:
+        result["status"] = own_failure["status"] if own_failure else "aborted_by_group"
+        if own_failure:
+            result["failure"] = own_failure
+        result["group_failures"] = abort.failures
+    except EvaluationFailure as failure:
+        result["status"] = failure.status
+        result["failure"] = failure.record() | {"traceback": traceback.format_exc(limit=8)}
+    except Exception as exc:  # noqa: BLE001 - last resort, typed as infrastructure/evaluator by classify
+        failure = classify(exc, phase="setup", rank=rank)
+        result["status"] = failure.status
+        result["failure"] = failure.record() | {"traceback": traceback.format_exc(limit=8)}
     finally:
+        if candidate is not None:
+            result["candidate_stderr_tail"] = candidate.stderr_tail()
+            candidate.close()
+        result["deadlines_s"] = deadlines.to_dict()
         with (Path(output_dir) / f"rank-{rank}.json").open("x") as file:
             json.dump(result, file)
         if initialized:
+            try:
+                gathered: list = [None] * case.gpus
+                dist.all_gather_object(gathered, result)
+                if rank == 0:
+                    (Path(output_dir) / "all-ranks.json").write_text(json.dumps(gathered))
+            except Exception as exc:  # noqa: BLE001 - a broken group only loses the remote records
+                (Path(output_dir) / f"gather-failed-rank{rank}.txt").write_text(f"{type(exc).__name__}: {exc}")
             dist.destroy_process_group()
 
 
 def worst_rank_timing(ranks: list[dict], key: str) -> dict:
     """Use the slowest rank on each repetition, including its device completion."""
+    import statistics
+
     result = {}
+    present = [rank for rank in ranks if key in rank]
     for prefix in ("host", "cuda_event"):
-        series = [rank[key][prefix + "_ms"] for rank in ranks]
+        series = [rank[key][prefix + "_ms"] for rank in present]
+        if not series or any(len(s) != len(series[0]) for s in series) or not series[0]:
+            result[prefix + "_ms"], result[prefix + "_p50_ms"], result[prefix + "_p95_ms"] = [], None, None
+            continue
         values = [max(row) for row in zip(*series, strict=True)]
         ordered = sorted(values)
+        at = (len(values) - 1) * 0.95
+        lo = int(at)
         result[prefix + "_ms"] = values
-        result[prefix + "_p50_ms"] = statistics.median(values) if values else None
-        if values:
-            at = (len(values) - 1) * 0.95
-            lo = int(at)
-            result[prefix + "_p95_ms"] = ordered[lo] + (ordered[min(lo + 1, len(values) - 1)] - ordered[lo]) * (at - lo)
-        else:
-            result[prefix + "_p95_ms"] = None
+        result[prefix + "_p50_ms"] = statistics.median(values)
+        result[prefix + "_p95_ms"] = ordered[lo] + (ordered[min(lo + 1, len(values) - 1)] - ordered[lo]) * (at - lo)
     return result
 
 
-def evaluate_distributed(case: Case, submission: Path, *, device: str,
-                         trials: int, warmup: int, reps: int) -> dict:
+def evaluate_distributed(case: Case, submission: Path, *, device: str, trials: int, warmup: int, reps: int,
+                         reference_reps: int | None = None) -> dict:
     selected = torch.device(device)
     first_device = selected.index or 0
-    if selected.type == "cuda" and torch.cuda.device_count() < first_device + case.gpus:
-        return {"status": "unavailable", "reason": f"requires {case.gpus} visible GPUs starting at {device}"}
+    topo = topology_from_env(case.gpus)
+    if selected.type == "cuda" and torch.cuda.device_count() < first_device + topo.local_world:
+        return {"status": "unavailable", "reason": f"requires {topo.local_world} visible GPUs starting at {device}"}
+    deadlines = for_case(case, multi_node=topo.multi_node)
+    if reference_reps is None:
+        reference_reps = 0 if case.params.get("checkpoint") else 3
+    options = {"reference_reps": reference_reps}
     with tempfile.TemporaryDirectory(prefix="megabench-ranks-") as directory:
-        rendezvous = Path(directory) / "rendezvous"
-        mp.spawn(_rank_worker, nprocs=case.gpus, join=True, args=(case.to_dict(), str(submission),
-                 selected.type, first_device, trials, warmup, reps, rendezvous.as_uri(), directory))
-        ranks = [json.loads((Path(directory) / f"rank-{rank}.json").read_text()) for rank in range(case.gpus)]
-    failures = [rank for rank in ranks if rank["status"] != "pass"]
-    if failures:
-        return {"status": "incorrect" if any(rank["status"] == "incorrect" for rank in failures) else "error",
-                "reason": failures[0]["reason"], "ranks": ranks}
-    audits = [rank["launch_audit"] for rank in ranks]
-    within_budget = all(audit["status"] == "within_budget" for audit in audits)
-    failed_budget = any(audit["status"] == "launch_budget_failed" for audit in audits)
-    status = ("correctness_only" if selected.type == "cpu" else "ok_provisional" if within_budget else
-              "non_megakernel" if failed_budget else "authenticity_unverified")
-    result = {"status": status, "ranks": ranks, "build_ms": max(rank["build_ms"] for rank in ranks),
-              "correctness": {"status": "pass", "per_rank": [rank["correctness"] for rank in ranks]},
-              "first_call_ms_including_jit": max(rank["first_call_ms_including_jit"] for rank in ranks),
-              "candidate_timing": worst_rank_timing(ranks, "candidate_timing"),
-              "reference_timing": worst_rank_timing(ranks, "reference_timing"),
-              "launch_audit": {"status": "within_budget" if within_budget else
-                               "launch_budget_failed" if failed_budget else "unverified",
-                               "max_gpu_launches_per_rank": case.max_gpu_launches,
-                               "per_rank": audits, "review_required": True},
-              "topology": {"world_size": case.gpus, "tp": case.tp, "ep": case.ep,
-                           "rank_mapping": "rank = ep_rank * tp + tp_rank"},
-              "graph_baseline_unavailable": "The distributed eager reference uses host-driven routing and process-group collectives."}
-    result["speedup_vs_eager_host"] = result["reference_timing"]["host_p50_ms"] / result["candidate_timing"]["host_p50_ms"]
-    if selected.type == "cuda":
-        ratio = result["reference_timing"]["cuda_event_p50_ms"] / result["candidate_timing"]["cuda_event_p50_ms"]
-        result["speedup_vs_eager_cuda_event"] = ratio
-        result["speedup_vs_best_baseline_cuda_event"] = ratio
+        mp.spawn(_rank_worker, nprocs=topo.local_world, join=True,
+                 args=(case.to_dict(), str(submission), selected.type, first_device, trials, warmup, reps,
+                       topo.to_dict(), directory, deadlines.to_dict(), options))
+        local = [json.loads((Path(directory) / f"rank-{topo.global_rank(r)}.json").read_text()) for r in topo.local_ranks]
+        gathered_path = Path(directory) / "all-ranks.json"
+        gathered = json.loads(gathered_path.read_text()) if gathered_path.exists() else None
+        stderr_files = {f"rank{topo.global_rank(r)}": (Path(directory) / f"candidate-rank{topo.global_rank(r)}.stderr")
+                        for r in topo.local_ranks}
+        stderr_tails = {k: v.read_bytes()[-4000:].decode("utf-8", errors="replace") for k, v in stderr_files.items() if v.exists()}
+    topo_record = topo.describe()
+    if topo.multi_node and topo.node_rank != 0:
+        return {"status": "node_done", "topology": topo_record, "local_ranks": local,
+                "note": "records of this tray were gathered on global rank 0; this node writes no grade"}
+    ranks = gathered if gathered and len(gathered) == case.gpus and all(gathered) else None
+    if ranks is None:
+        ranks = sorted(local, key=lambda r: r["rank"])
+        missing = sorted(set(range(case.gpus)) - {r["rank"] for r in ranks})
+        for rank in missing:
+            ranks.append({"rank": rank, "status": "infrastructure",
+                          "failure": {"status": "infrastructure", "message": "no record from this rank (process or gather failed)"}})
+        ranks.sort(key=lambda r: r["rank"])
+    group = merge_group(ranks)
+    result = {"ranks": ranks, "topology": topo_record, "deadlines_s": deadlines.to_dict(),
+              "candidate_stderr_tail": stderr_tails}
+    if group["status"] != "pass":
+        return result | {"status": group["status"], "reason": group.get("message", ""), "group_failure": group}
+    result |= {"status": "correctness_only" if selected.type == "cpu" else "ok_provisional",
+               "build_ms": max(r["build_ms"] for r in ranks),
+               "correctness": {"status": "pass", "per_rank": [r["correctness"] for r in ranks]},
+               "first_call_ms_including_jit": max(r.get("first_call_ms_including_jit", 0) for r in ranks),
+               "candidate_timing": worst_rank_timing(ranks, "candidate_timing"),
+               "launch_audit_advisory": {"per_rank": [r.get("launch_audit_advisory") for r in ranks],
+                                         "note": "advisory in-process counts; the audit of record is the nsys trace"}}
+    if any("reference_timing" in r for r in ranks):
+        result["reference_timing"] = worst_rank_timing(ranks, "reference_timing")
+        if result["reference_timing"]["host_p50_ms"] and result["candidate_timing"]["host_p50_ms"]:
+            result["speedup_vs_eager_host"] = result["reference_timing"]["host_p50_ms"] / result["candidate_timing"]["host_p50_ms"]
+        if selected.type == "cuda" and result["reference_timing"]["cuda_event_p50_ms"]:
+            result["speedup_vs_eager_cuda_event"] = (result["reference_timing"]["cuda_event_p50_ms"] /
+                                                     result["candidate_timing"]["cuda_event_p50_ms"])
     return result

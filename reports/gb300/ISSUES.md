@@ -82,3 +82,15 @@ Routes are checked for cross-rank identity with an all-reduced checksum before t
 ## 17. The device checksum for inputs above 64 MB is linear and not adversarial (Step 8 robustness summary, shown on the CPU)
 
 `snapshot()` (`megabench/harness/correctness.py`) keeps, for every contiguous tensor above 64 MB, two exact int64 sums of its int32 words: the plain sum and the sum weighted by `(i mod 65521) + 1` within each 2^26-word chunk. Both are linear in the words, so any mutation whose word deltas sum to zero and whose weighted deltas sum to zero is invisible; the simplest is `+d` at word `i` and `-d` at word `i + 65521` in the same chunk. `negative-controls/checksum_collision_check.py` (CPU, `CUDA_VISIBLE_DEVICES=""`, the evaluator's own `snapshot()`/`check_unchanged()`, evidence `negative-controls/checksum-collision-20261112T202413Z/`): on a 128 MB BF16 tensor a single-word change is detected, three such pairs (deltas 1, 12345 and -3, one of them turning a value of 0.78 into 8e28) leave both sums byte-identical and pass `check_unchanged()`, and the same pair on a 64 MB tensor, which takes the exact host-copy path, is detected. Consequences: the immutability check is a guard against accidental in-place mutation (Steps 6, 7 and 8 show single-element and random corruption detected on both paths), not against a candidate that deliberately edits a large input, which on the real TP8 cases means every weight shard (171 GiB per rank above the limit, item 10). A keyed or non-linear hash (for example a per-run random weight vector, or a cryptographic hash of the words computed on the device) would close this at a similar cost; the 64 MB host-copy path is already exact.
+
+## 2026-11-19: status after the hardened evaluator (branch `gb300-tp8-e2e-decisions`)
+
+Addressed in code, verified on the CPU (`reports/gb300/cpu-hardening-20261119/`), to be confirmed on GPUs in
+validation step 2: items 1 and 2 (NCCL double count, memcpy counted: the audit of record is now the nsys trace
+with device kernels counted and copies reported, `nsys_audit.py`), 3 (no graph baseline: removed from the
+record; a graph launch by the candidate fails), 4 (`max_memory_reserved` recorded per rank), 5 (candidate stderr
+preserved per rank), 6 (provenance kept on failure), 7 (grader message in its own field), 8 and 12 (typed
+statuses per rank and group, `status.py`), 14 (geometry failures are `evaluator_error`, not `incorrect`), 15
+and 16 (structural checks before any collective, rank-attributed), 17 (keyed hash replaces the linear
+checksums; the 65521-word pair is detected). Items 9 to 11 and 13 are documentation or already-recorded
+observations and stay as they are.

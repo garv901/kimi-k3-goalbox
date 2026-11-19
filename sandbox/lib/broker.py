@@ -4,6 +4,11 @@
 GOALBOX_GPU_MODE=slurm (default when sbatch exists): each request becomes an sbatch job.
 GOALBOX_GPU_MODE=local: the broker runs each request itself on this machine's GPUs
 (GOALBOX_LOCAL_GPUS, default all), one request at a time, killed at its time limit.
+GOALBOX_GPU_MODE=k8s (controller pod, DECISIONS-LOG L2): the broker copies each request into the
+controller-owned spool GOALBOX_CTL/gpu/<node>/req for the executor (executor.py) in the GPU worker
+pods named in GOALBOX_GPU_NODES (comma list, 4 GPUs each). 1..4 GPUs run on the first worker; 8 GPUs
+run on both with GOALBOX_NNODES=2, node ranks 0/1 and the first worker as rendezvous master
+(GOALBOX_MASTER_PORT, default 29500). The two outputs are concatenated into one log.
 
 The sandboxed agent cannot reach Slurm. `gpu-run` inside the sandbox drops a request in
 /home/agent/.gpu/req/ (= RUN_DIR/home/.gpu/req). The broker turns each request into an
@@ -26,6 +31,10 @@ import shlex, shutil, signal
 PARTITION = os.environ.get("GOALBOX_PARTITION") or None  # None: the cluster's default partition
 MAX_MIN, MAX_GPUS = int(os.environ.get("GOALBOX_MAX_MIN", 120)), int(os.environ.get("GOALBOX_MAX_GPUS", 8))
 MODE = os.environ.get("GOALBOX_GPU_MODE", "slurm" if shutil.which("sbatch") else "local")
+CTL = Path(os.environ.get("GOALBOX_CTL", "/ctl"))
+GPU_NODES = [n for n in os.environ.get("GOALBOX_GPU_NODES", "").split(",") if n]
+MASTER_PORT = int(os.environ.get("GOALBOX_MASTER_PORT", "29500"))
+K8S = {}  # rid -> list of nodes the job was dispatched to
 LOCAL_GPUS = [g for g in os.environ.get("GOALBOX_LOCAL_GPUS", "").split(",") if g]
 LOCAL = {}  # rid -> (Popen, deadline)
 JOBS = RUN / "gpu"
@@ -70,6 +79,8 @@ def submit(rid):
         return None
     if MODE == "local":
         return submit_local(rid, minutes, gpus, cwd)
+    if MODE == "k8s":
+        return submit_k8s(rid, minutes, gpus, cwd)
     script = JOBS / f"{rid}.sbatch"
     script.write_text(
         "#!/bin/bash\n"
@@ -106,6 +117,47 @@ def submit_local(rid, minutes, gpus, cwd):
     return f"local:{rid}"
 
 
+def submit_k8s(rid, minutes, gpus, cwd):
+    per_node = 4
+    if gpus > per_node and gpus != 2 * per_node:
+        status(rid, f"rejected: {gpus} GPUs: use 1..{per_node} (one tray) or {2*per_node} (two trays)")
+        status(rid, "done 2 REJECTED"); return None
+    nodes = GPU_NODES[:1] if gpus <= per_node else GPU_NODES[:2]
+    if len(nodes) < (1 if gpus <= per_node else 2):
+        status(rid, "rejected: not enough GPU workers configured"); status(rid, "done 2 REJECTED"); return None
+    script = (SPOOL / "req" / f"{rid}.sh").read_bytes()
+    for index, node in enumerate(nodes):
+        spool = CTL / "gpu" / node
+        for d in ("req", "status", "out", "done"):
+            (spool / d).mkdir(parents=True, exist_ok=True)
+        topology = ({"GOALBOX_NNODES": 2, "GOALBOX_NODE_RANK": index, "GOALBOX_MASTER_ADDR": nodes[0],
+                     "GOALBOX_MASTER_PORT": MASTER_PORT} if len(nodes) == 2 else {})
+        (spool / "req" / f"{rid}.sh").write_bytes(script)
+        tmp = spool / "req" / f".{rid}.tmp"
+        tmp.write_text(json.dumps({"minutes": minutes, "gpus": min(gpus, per_node), "cwd": cwd, "topology": topology}))
+        os.replace(tmp, spool / "req" / f"{rid}.json")
+    K8S[rid] = nodes
+    status(rid, f"dispatched to {', '.join(nodes)} ({gpus} GPU, {minutes} min)")
+    log(f"{rid} -> k8s {nodes} ({gpus} GPU, {minutes} min, cwd {cwd})")
+    return f"k8s:{rid}"
+
+
+def k8s_state(rid):
+    nodes = K8S[rid]
+    done = [CTL / "gpu" / n / "done" / f"{rid}.json" for n in nodes]
+    if not all(p.exists() for p in done):
+        running = [n for n, p in zip(nodes, done) if not p.exists()]
+        return "active", "RUNNING on " + " ".join(running)
+    records = [json.loads(p.read_text()) for p in done]
+    with (SPOOL / "out" / f"{rid}.log").open("w") as out:
+        for node, record in zip(nodes, records):
+            out.write(f"===== {node} (exit {record['exit']} {record['state']})\n")
+            src = CTL / "gpu" / node / "out" / f"{rid}.log"
+            out.write(src.read_text(errors="replace") if src.exists() else "(no output)\n")
+    code = max(r["exit"] for r in records)
+    return "done", f"{code} {'COMPLETED' if code == 0 else '+'.join(sorted({r['state'] for r in records}))}"
+
+
 def local_state(rid):
     proc, deadline = LOCAL[rid]
     code = proc.poll()
@@ -117,13 +169,15 @@ def local_state(rid):
 
 
 def main():
-    log(f"broker start mode={MODE} partition={PARTITION or 'default'} max_min={MAX_MIN} max_gpus={MAX_GPUS}")
+    log(f"broker start mode={MODE} partition={PARTITION or 'default'} max_min={MAX_MIN} max_gpus={MAX_GPUS}"
+        + (f" nodes={GPU_NODES}" if MODE == "k8s" else ""))
     active = None  # (rid, jobid, last)
     seen = {p.name for p in (SPOOL / "status").iterdir()}
     while True:
         if active:
             rid, jobid, last = active
-            kind, info = local_state(rid) if jobid.startswith("local:") else job_state(jobid)
+            kind, info = (local_state(rid) if jobid.startswith("local:") else
+                          k8s_state(rid) if jobid.startswith("k8s:") else job_state(jobid))
             if kind == "done":
                 status(rid, f"done {info}"); log(f"{rid} job {jobid} done {info}"); active = None
             elif info != last:
@@ -142,4 +196,5 @@ def main():
         time.sleep(3)
 
 
-main()
+if __name__ == "__main__":
+    main()

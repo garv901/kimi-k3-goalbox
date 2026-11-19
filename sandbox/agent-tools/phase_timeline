@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Print the per-phase timeline from a megatimer dump (megatimer.cuh, development build only).
+
+    phase_timeline timeline.bin [--names 0=embed,1=attn,...]
+
+For each phase: first and last mark (ns from the earliest mark), number of blocks that marked it,
+and the gap to the next phase's first mark. Also the span between consecutive phases per block
+(median, p95) so an imbalance across blocks is visible.
+"""
+import argparse
+import statistics
+import struct
+import sys
+from collections import defaultdict
+
+RECORD = struct.Struct("<IIQQ")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dump")
+    parser.add_argument("--names", default="")
+    args = parser.parse_args()
+    names = dict(pair.split("=", 1) for pair in args.names.split(",") if pair)
+    data = open(args.dump, "rb").read()
+    (count,) = struct.unpack_from("<I", data, 0)
+    records = [RECORD.unpack_from(data, 4 + i * RECORD.size) for i in range(min(count, (len(data) - 4) // RECORD.size))]
+    if not records:
+        print("no records"); return 1
+    t0 = min(r[2] for r in records)
+    by_phase = defaultdict(list)
+    for phase, block, gt, _ in records:
+        by_phase[phase].append((gt - t0, block))
+    print(f"{'phase':>6} {'name':<16} {'first_us':>10} {'last_us':>10} {'blocks':>7} {'spread_us':>10}")
+    for phase in sorted(by_phase):
+        marks = by_phase[phase]
+        first, last = min(m[0] for m in marks), max(m[0] for m in marks)
+        print(f"{phase:>6} {names.get(str(phase), ''):<16} {first / 1e3:>10.1f} {last / 1e3:>10.1f} {len({m[1] for m in marks}):>7} {(last - first) / 1e3:>10.1f}")
+    per_block = defaultdict(dict)
+    for phase, block, gt, _ in records:
+        per_block[block][phase] = min(per_block[block].get(phase, gt), gt)
+    phases = sorted(by_phase)
+    for a, b in zip(phases, phases[1:]):
+        spans = [(blk[b] - blk[a]) / 1e3 for blk in per_block.values() if a in blk and b in blk]
+        if spans:
+            spans.sort()
+            print(f"phase {a}->{b}: per-block span median {statistics.median(spans):.1f} us, p95 {spans[int(0.95 * (len(spans) - 1))]:.1f} us, n={len(spans)}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

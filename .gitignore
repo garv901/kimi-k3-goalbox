@@ -7,3 +7,4 @@ baseline/BASELINES.json
 baseline/results/
 *.ncu-rep
 *.log
+sandbox/k8s/rendered/

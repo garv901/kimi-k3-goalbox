@@ -1,0 +1,7 @@
+built_utc: 2026-11-19T07:30:25Z
+tag: goalbox-k3:dev
+image_id: sha256:817c1bdd265457c9a910e65ff99b66931bbe62d29f303b1c3c2994487505c10a
+size_bytes: 9476210027
+labels: {"maintainer":"NVIDIA CORPORATION <cudatools@nvidia.com>","org.goalbox.claude-code":"2.1.322","org.goalbox.torch":"2.14.1","org.opencontainers.image.version":"24.04"}
+base: nvidia/cuda:13.4.1-devel-ubuntu24.04
+repo_digests: ["goalbox-k3@sha256:817c1bdd265457c9a910e65ff99b66931bbe62d29f303b1c3c2994487505c10a"]   # local daemon value; the registry digest is known only after a push

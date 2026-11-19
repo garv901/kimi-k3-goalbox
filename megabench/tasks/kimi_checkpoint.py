@@ -205,6 +205,10 @@ def load_weights(case, root: str, rank: int, device: str) -> dict[str, torch.Ten
                 values[f'l{layer}_{key}'] = tensor
     values |= {key: torch.stack(items) for key, items in stacked.items()}
     expected = weight_shapes(case)
+    # The Kimi K3 checkpoint ships no kv-cache scales: vLLM's per-tensor fp8 cache scale is then 1.0.
+    for key in expected:
+        if key.endswith('kv_scale') and key not in values:
+            values[key] = torch.ones(1, dtype=torch.float32, device=str(device))
     if set(values) != set(expected):
         raise ValueError(f'converted weights do not match the fixture: missing {sorted(set(expected)-set(values))[:5]}, '
                          f'extra {sorted(set(values)-set(expected))[:5]}')

@@ -17,7 +17,7 @@ from .cases import Case
 
 DEFAULT_HBM_BANDWIDTH_TB_S = 8.0   # B300 HBM3e peak per GPU (DGX B300: 64 TB/s over 8 GPUs)
 DEFAULT_HBM_BANDWIDTH_SOURCE = "https://www.nvidia.com/en-us/data-center/dgx-b300/"
-BF16, FP32, INT64 = 2, 4, 8
+BF16, FP32, INT64, FP8 = 2, 4, 8, 1
 
 
 def _mxfp4_bytes(rows: int, cols: int) -> int:
@@ -58,11 +58,11 @@ def estimate_case(case: Case, bandwidth_tb_s: float = DEFAULT_HBM_BANDWIDTH_TB_S
     add("norms_and_residual_mixers", p["layers"]*6*h*BF16, "layer norms and attention-residual vectors")
     add("lm_head", p["vocab"]//tp*h*BF16, "vocabulary shard of the LM head")
     add("embedding_rows", B*h*BF16, "token embedding rows")
-    add("mla_cache_reads", (B-resets)*len(mla)*ctx*(kr+rd)*BF16,
-        "old latent+rope cache, replicated on every rank (a context split across ranks can lower this)")
+    add("mla_cache_reads", (B-resets)*len(mla)*ctx*(kr+rd)*FP8,
+        "old latent+rope FP8 (e4m3) cache, replicated on every rank (a context split across ranks can lower this)")
     add("kda_state", len(kda)*B*(2*H//tp*d*d*FP32+2*3*qdim//tp*p["conv_kernel"]*BF16),
         "FP32 recurrent state and BF16 conv state, read and written")
-    add("outputs", B*(p["vocab"]//tp*FP32+INT64*(2+p["layers"]*k)+len(mla)*(kr+rd)*BF16), "logits shard, tokens, routes, cache writes")
+    add("outputs", B*(p["vocab"]//tp*FP32+INT64*(2+p["layers"]*k)+len(mla)*(kr+rd)*FP8), "logits shard, tokens, routes, FP8 cache writes")
     total = sum(c["bytes"] for c in comps)
     floor_ms = total/(bandwidth_tb_s*1e12)*1e3
     result.update(minimum_bytes=total, minimum_gb=total/1e9, hbm_floor_ms=floor_ms, components=comps,

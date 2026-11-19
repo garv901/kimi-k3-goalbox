@@ -1,0 +1,72 @@
+# Network policy: default deny both directions for every pod, then the minimum per role.
+# Enforced by Cilium on this cluster. One layer of the sandbox, not the whole boundary (the pods also
+# run as non-root with read-only root filesystems, all capabilities dropped, and no API token).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: default-deny, namespace: goalbox-k3}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+# Agent pod: egress only to the proxy pod on 3128 and to cluster DNS. No ingress.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: agent, namespace: goalbox-k3}
+spec:
+  podSelector: {matchLabels: {app.kubernetes.io/component: agent}}
+  policyTypes: [Ingress, Egress]
+  egress:
+    - to: [{podSelector: {matchLabels: {app.kubernetes.io/component: proxy}}}]
+      ports: [{protocol: TCP, port: 3128}]
+    - to: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}, podSelector: {matchLabels: {k8s-app: kube-dns}}}]
+      ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]
+---
+# Proxy pod: ingress from the agent only; egress to public IPv4 on 443 (the allowlist is applied in
+# netproxy.py) and to cluster DNS. Private ranges are excluded so the proxy can never be used to reach
+# the trays, the API server or other namespaces.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: proxy, namespace: goalbox-k3}
+spec:
+  podSelector: {matchLabels: {app.kubernetes.io/component: proxy}}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from: [{podSelector: {matchLabels: {app.kubernetes.io/component: agent}}}]
+      ports: [{protocol: TCP, port: 3128}]
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10, 169.254.0.0/16, 127.0.0.0/8]
+      ports: [{protocol: TCP, port: 443}]
+    - to: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}, podSelector: {matchLabels: {k8s-app: kube-dns}}}]
+      ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]
+---
+# GPU workers: talk only to each other (NCCL bootstrap and the torch.distributed rendezvous use
+# arbitrary ports) and to cluster DNS for each other's names. No external network (DECISIONS section 3).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: gpu-workers, namespace: goalbox-k3}
+spec:
+  podSelector: {matchLabels: {app.kubernetes.io/component: gpu-worker}}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from: [{podSelector: {matchLabels: {app.kubernetes.io/component: gpu-worker}}}]
+  egress:
+    - to: [{podSelector: {matchLabels: {app.kubernetes.io/component: gpu-worker}}}]
+    - to: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}, podSelector: {matchLabels: {k8s-app: kube-dns}}}]
+      ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]
+---
+# Controller: egress to the API server (to stream the agent's stdout) and DNS. The API server CIDR is
+# rendered from the environment (render.sh), not committed.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: controller, namespace: goalbox-k3}
+spec:
+  podSelector: {matchLabels: {app.kubernetes.io/component: controller}}
+  policyTypes: [Ingress, Egress]
+  egress:
+    - to: [{ipBlock: {cidr: "${API_SERVER_CIDR}"}}]
+      ports: [{protocol: TCP, port: 6443}, {protocol: TCP, port: 443}]
+    - to: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}, podSelector: {matchLabels: {k8s-app: kube-dns}}}]
+      ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]

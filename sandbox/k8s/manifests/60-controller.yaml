@@ -1,0 +1,41 @@
+# Controller pod: owns the GPU broker (k8s mode), streams the agent container's stdout (the
+# stream-json trajectory, D-T1) into the records volume with `kubectl logs -f`, and enforces the 48 h
+# budget (sandbox/k8s/controller.sh). It is the only pod with an API identity (Role: pods get/list/watch,
+# pods/log get). The agent never reaches /ctl or /records.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: goalbox-controller
+  namespace: goalbox-k3
+  labels: {app.kubernetes.io/component: controller}
+spec:
+  restartPolicy: Always
+  serviceAccountName: goalbox-controller
+  securityContext: {runAsNonRoot: true, runAsUser: 2000, runAsGroup: 2000, fsGroup: 2000, seccompProfile: {type: RuntimeDefault}}
+  containers:
+    - name: controller
+      image: "${IMAGE}"
+      imagePullPolicy: IfNotPresent
+      command: [bash, /goalbox/sandbox/k8s/controller.sh]
+      env:
+        - {name: GOALBOX_GPU_MODE, value: k8s}
+        - {name: GOALBOX_CTL, value: /ctl}
+        - {name: GOALBOX_GPU_NODES, value: "goalbox-gpu-a,goalbox-gpu-b"}
+        - {name: GOALBOX_RUN_HOURS, value: "48"}
+        - {name: GOALBOX_MAX_MIN, value: "120"}
+        - {name: GOALBOX_MAX_GPUS, value: "8"}
+        - {name: HOME, value: /tmp}
+      securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+      resources: {requests: {cpu: "1", memory: 2Gi}, limits: {cpu: "4", memory: 8Gi}}
+      volumeMounts:
+        - {name: work, mountPath: /work}
+        - {name: work, mountPath: /run-home, subPath: home}
+        - {name: ctl, mountPath: /ctl}
+        - {name: records, mountPath: /records}
+        - {name: tmp, mountPath: /tmp}
+  volumes:
+    - {name: work, persistentVolumeClaim: {claimName: goalbox-work}}
+    - {name: ctl, persistentVolumeClaim: {claimName: goalbox-ctl}}
+    - {name: records, persistentVolumeClaim: {claimName: goalbox-records}}
+    - {name: tmp, emptyDir: {sizeLimit: 10Gi}}
+  imagePullSecrets: [{name: vccr-creds}]

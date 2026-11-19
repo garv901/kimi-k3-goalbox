@@ -1,0 +1,10 @@
+# Dedicated namespace for the Kimi K3 goalbox run (DECISIONS-LOG L1). Created with the operator's
+# Rancher identity. Nothing here binds the shared inference-wideep ServiceAccount.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: goalbox-k3
+  labels:
+    app.kubernetes.io/part-of: goalbox-k3
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: restricted

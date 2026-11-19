@@ -6,7 +6,6 @@ import argparse
 import hashlib
 import importlib.util
 import json
-import math
 import os
 import platform
 import secrets
@@ -25,8 +24,10 @@ from ..cases import Case, select_cases
 from ..sol import (DEFAULT_HBM_BANDWIDTH_SOURCE,
                    DEFAULT_HBM_BANDWIDTH_TB_S, estimate_case)
 from ..workloads import make_inputs, reference
-from .benchmark import _audit_launches, _measure
-from .correctness import check_trials
+from .benchmark import _audit_launches, _measure  # noqa: F401 - re-exported for tooling
+from .correctness import check_trials  # noqa: F401 - re-exported for tooling
+from .scan import scan_submission
+from .status import EXIT_CODES, STATUSES
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -39,6 +40,8 @@ CONTRACT_FILES = (
     "megabench/tasks/quantization.py", "megabench/tasks/distributed.py",
     "megabench/tasks/parallel.py", "megabench/tasks/kimi.py",
     "megabench/tasks/kimi_checkpoint.py",
+    "megabench/harness/status.py", "megabench/harness/isolation.py", "megabench/harness/launch.py",
+    "megabench/harness/deadlines.py", "megabench/harness/scan.py", "megabench/harness/nsys_audit.py",
 )
 
 
@@ -69,116 +72,66 @@ def _load_submission(path: Path, case: Case, *, execution: dict | None = None) -
     return runner
 
 
-def evaluate_case(case: Case, submission: Path, *, device: str,
-                  trials: int, warmup: int, reps: int,
-                  graph_baseline: bool = True) -> dict:
+def provenance(case: Case, submission: Path, *, device: str) -> dict:
+    """Fields every record keeps, pass or fail (ISSUES item 11)."""
     import torch
 
-    record = {"case": case.to_dict(), "submission": str(submission),
-              "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-              "hardware": {"hostname": platform.node(), "torch": torch.__version__,
-                           "cuda": torch.version.cuda, "device": device,
-                           "cuda_visible_devices": os.getenv("CUDA_VISIBLE_DEVICES")}}
     source = submission.read_bytes()
-    record["submission_sha256"] = hashlib.sha256(source).hexdigest()
-    source_text = source.decode("utf-8", errors="replace")
-    record["source_hints_advisory"] = {
-        "mentions_cuda_graph": "CUDAGraph" in source_text or "cuda_graph" in source_text,
-        "mentions_torch_compile": "torch.compile" in source_text,
-        "mentions_oracle_module": any(
-            name in source_text for name in
-            ("megabench.workloads", "megabench.tasks.workloads",
-             "megabench.tasks.dense", "megabench.tasks.moe",
-             "megabench.tasks.gemma", "megabench.tasks.eagle3",
-             "megabench.tasks.gptoss", "megabench.tasks.hybrid",
-             "megabench.tasks.vision", "megabench.tasks.speculative",
-             "megabench.tasks.distributed", "megabench.tasks.frontier",
-             "megabench.tasks.kimi",
-             "megabench.tasks.references")),
-    }
+    return {"case": case.to_dict(), "submission": str(submission),
+            "submission_sha256": hashlib.sha256(source).hexdigest(),
+            "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+            "hardware": {"hostname": platform.node(), "torch": torch.__version__, "cuda": torch.version.cuda,
+                         "device": device, "cuda_visible_devices": os.getenv("CUDA_VISIBLE_DEVICES")}}
+
+
+def evaluate_case(case: Case, submission: Path, *, device: str, trials: int, warmup: int, reps: int,
+                  graph_baseline: bool = True, scan: bool = True, reference_reps: int | None = None) -> dict:
+    """Evaluate one case. Every case runs through the per-rank path with the candidate in its own
+    process (D-I2); TP1 is a world of one. `graph_baseline` is accepted for compatibility and ignored
+    (the oracle cannot be graph-captured; ISSUES item 3)."""
+    import torch
+
+    record = provenance(case, submission, device=device)
     if not case.ready:
         return record | {"status": "not_implemented", "reason": case.note}
+    if scan:
+        record["scan"] = scan_submission(submission)
+        if record["scan"]["status"] != "pass":
+            rules = ", ".join(record["scan"]["rules_hit"])
+            return record | {"status": "scan_failed", "reason": f"automated source/artifact scan: {rules}"}
     if torch.device(device).type == "cuda":
         if not torch.cuda.is_available():
             return record | {"status": "unavailable", "reason": "CUDA not visible"}
         props = torch.cuda.get_device_properties(device)
-        record["hardware"].update(gpu_name=props.name,
-                                  gpu_memory_bytes=props.total_memory)
-    if case.gpus != 1:
-        from .distributed import evaluate_distributed
-        return record | evaluate_distributed(case, submission, device=device, trials=trials,
-                                             warmup=warmup, reps=reps)
-
-    build_start = time.perf_counter()
-    candidate = _load_submission(submission, case)
-    record["build_ms"] = (time.perf_counter() - build_start) * 1000
-    with torch.inference_mode():
-        record["correctness"], first_call_ms = check_trials(
-            case, candidate, device, trials)
-        if first_call_ms is not None:
-            record["first_call_ms_including_jit"] = first_call_ms
-
-        perf_inputs = make_inputs(case, secrets.randbits(32), device)
-        if case.family in ("spec_target_step", "spec_full_iteration"):
-            perf_output = reference(case, perf_inputs)
-            record["spec_accounting"] = {
-                "proposed_draft_tokens": case.params["draft_depth"],
-                "accepted_draft_tokens": int(perf_output["accepted_count"].item()),
-                "committed_tokens": int(perf_output["committed_count"].item()),
-            }
-            del perf_output
-        record["candidate_timing"] = _measure(candidate, perf_inputs, device,
-                                              warmup, reps)
-        record["reference_timing"] = _measure(
-            lambda values: reference(case, values), perf_inputs, device,
-            warmup, reps)
-        if graph_baseline and torch.device(device).type == "cuda":
-            try:
-                graph = torch.cuda.CUDAGraph()
-                with torch.cuda.graph(graph):
-                    captured_output = reference(case, perf_inputs)
-                record["graph_baseline_timing"] = _measure(
-                    lambda _: graph.replay(), perf_inputs, device, warmup, reps)
-                # Keep captured tensors alive until replay timing is complete.
-                del captured_output
-            except Exception as exc:
-                record["graph_baseline_unavailable"] = (
-                    f"{type(exc).__name__}: {exc}")
-        record["launch_audit"] = _audit_launches(candidate, perf_inputs, device,
-                                                 case.max_gpu_launches)
-        cand = record["candidate_timing"]["host_p50_ms"]
-        base = record["reference_timing"]["host_p50_ms"]
-        record["speedup_vs_eager_host"] = base / cand
-        if torch.device(device).type == "cuda":
-            cand_event = record["candidate_timing"]["cuda_event_p50_ms"]
-            base_event = record["reference_timing"]["cuda_event_p50_ms"]
-            record["speedup_vs_eager_cuda_event"] = base_event / cand_event
-            best = base_event
-            if "graph_baseline_timing" in record:
-                graph_event = record["graph_baseline_timing"]["cuda_event_p50_ms"]
-                record["speedup_vs_graph_cuda_event"] = graph_event / cand_event
-                best = min(best, graph_event)
-            record["speedup_vs_best_baseline_cuda_event"] = best / cand_event
-    audit = record["launch_audit"]["status"]
-    record["status"] = ("correctness_only" if torch.device(device).type == "cpu" else
-                        "ok_provisional" if audit == "within_budget" else
-                        "non_megakernel" if audit == "launch_budget_failed" else
-                        "authenticity_unverified")
+        record["hardware"].update(gpu_name=props.name, gpu_memory_bytes=props.total_memory)
+    from .distributed import evaluate_distributed
+    result = evaluate_distributed(case, submission, device=device, trials=trials, warmup=warmup, reps=reps,
+                                  reference_reps=reference_reps)
+    record |= result
+    record.setdefault("launch_audit", {"status": "see nsys_audit", "max_gpu_launches_per_rank": case.max_gpu_launches,
+                                       "note": "the graded audit is the nsys trace of the timed repetitions "
+                                               "(megabench.harness.nsys_audit); in-process counts are advisory"})
     return record
 
 
 def _worker(args: argparse.Namespace) -> int:
     case = select_cases("all", [args.case])[0]
+    submission = Path(args.submission).resolve()
     try:
-        result = evaluate_case(case, Path(args.submission).resolve(),
-                               device=args.device, trials=args.trials,
-                               warmup=args.warmup, reps=args.reps,
-                               graph_baseline=args.graph_baseline)
+        result = evaluate_case(case, submission, device=args.device, trials=args.trials,
+                               warmup=args.warmup, reps=args.reps, scan=not args.no_scan,
+                               reference_reps=args.reference_reps)
     except Exception as exc:
-        result = {"case": case.to_dict(), "submission": args.submission,
-                  "status": "incorrect" if isinstance(exc, AssertionError) else "error",
-                  "reason": f"{type(exc).__name__}: {exc}",
-                  "traceback": traceback.format_exc(limit=12)}
+        from .status import classify
+        failure = classify(exc, phase="setup")
+        try:
+            result = provenance(case, submission, device=args.device)
+        except Exception:  # noqa: BLE001
+            result = {"case": case.to_dict(), "submission": str(submission)}
+        result |= {"status": failure.status, "reason": failure.message, "failure": failure.record(),
+                   "traceback": traceback.format_exc(limit=12)}
+    if result.get("status") not in STATUSES and result.get("status") not in ("node_done",):
+        result["status_note"] = f"non-standard status {result.get('status')!r}"
     with Path(args.result).open("x", encoding="utf-8") as file:
         json.dump(result, file)
     return 0
@@ -218,8 +171,10 @@ def _docker_worker_command(args: argparse.Namespace, case: Case,
                 "--device", args.device, "--trials", str(args.trials),
                 "--warmup", str(args.warmup), "--reps", str(args.reps),
                 "--result", f"/results/{result_path.name}"])
-    if not args.graph_baseline:
-        cmd.append("--no-graph-baseline")
+    if args.no_scan:
+        cmd.append("--no-scan")
+    if args.reference_reps is not None:
+        cmd.extend(["--reference-reps", str(args.reference_reps)])
     return cmd, name, run_id
 
 
@@ -271,8 +226,10 @@ def _run_one(args: argparse.Namespace, case: Case, tempdir: Path) -> dict:
                "--submission", str(Path(args.submission).resolve()), "--device", args.device,
                "--trials", str(args.trials), "--warmup", str(args.warmup),
                "--reps", str(args.reps), "--result", str(result_path)]
-        if not args.graph_baseline:
-            cmd.append("--no-graph-baseline")
+        if args.no_scan:
+            cmd.append("--no-scan")
+        if args.reference_reps is not None:
+            cmd.extend(["--reference-reps", str(args.reference_reps)])
     try:
         proc = (subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=args.timeout)
                 if container else _run_local_worker(cmd, args.timeout))
@@ -281,8 +238,8 @@ def _run_one(args: argparse.Namespace, case: Case, tempdir: Path) -> dict:
             if proc.returncode:
                 result["worker_exit_code"] = proc.returncode
         else:
-            result = {"case": case.to_dict(), "status": "worker_failed",
-                      "reason": f"worker exited {proc.returncode}",
+            result = {"case": case.to_dict(), "status": "evaluator_error",
+                      "reason": f"worker exited {proc.returncode} without a record",
                       "stderr_tail": proc.stderr[-4000:]}
         result["submission"] = submission
         if container:
@@ -300,7 +257,7 @@ def _run_one(args: argparse.Namespace, case: Case, tempdir: Path) -> dict:
         return result
     except OSError as exc:
         return {"case": case.to_dict(), "submission": submission,
-                "status": "worker_failed",
+                "status": "infrastructure",
                 "reason": f"could not start worker: {type(exc).__name__}: {exc}"}
 
 
@@ -349,13 +306,12 @@ def aggregate_sessions(paths: list[Path], suite: str, method: str) -> dict:
         results[case_id] = row
     missing = sorted(expected.keys() - results.keys())
     passed = [row for row in results.values() if row["status"] == "ok_provisional"]
-    score = (math.exp(sum(math.log(row["speedup_vs_best_baseline_cuda_event"])
-                          for row in passed) / len(passed))
-             if not missing and len(passed) == len(expected) else None)
+    latencies = {case_id: row.get("candidate_timing", {}).get("cuda_event_p50_ms") for case_id, row in results.items()}
     return {"suite": suite, "method": method,
             "contract_sha256": contract_sha256, "cases": results,
             "missing_cases": missing, "passed": len(passed),
-            "total": len(expected), "provisional_geomean_speedup": score}
+            "total": len(expected), "all_passed": not missing and len(passed) == len(expected),
+            "cuda_event_p50_ms": latencies}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -389,8 +345,11 @@ def main(argv: list[str] | None = None) -> int:
     evaluation.add_argument("--timeout", type=int, default=180)
     evaluation.add_argument("--docker-image", help="run each case in this existing local image")
     evaluation.add_argument("--docker-gpus", help="Docker GPU selection, e.g. device=6")
-    evaluation.add_argument("--no-graph-baseline", dest="graph_baseline",
-                            action="store_false")
+    evaluation.add_argument("--no-graph-baseline", dest="graph_baseline", action="store_false",
+                            help="accepted for compatibility; no graph baseline exists for these cases")
+    evaluation.add_argument("--no-scan", action="store_true", help="skip the automated source/artifact scan (controls only)")
+    evaluation.add_argument("--reference-reps", type=int, default=None,
+                            help="timed repetitions of the eager oracle (default: 3 synthetic, 0 real weights)")
     evaluation.add_argument("--output")
     aggregate = sub.add_parser("aggregate", help="combine independent case sessions")
     aggregate.add_argument("--suite", choices=("core", "p0", "p1", "p2", "p3"),
@@ -406,8 +365,9 @@ def main(argv: list[str] | None = None) -> int:
     worker.add_argument("--warmup", type=int, required=True)
     worker.add_argument("--reps", type=int, required=True)
     worker.add_argument("--result", required=True)
-    worker.add_argument("--no-graph-baseline", dest="graph_baseline",
-                        action="store_false")
+    worker.add_argument("--no-graph-baseline", dest="graph_baseline", action="store_false")
+    worker.add_argument("--no-scan", action="store_true")
+    worker.add_argument("--reference-reps", type=int, default=None)
     args = parser.parse_args(argv)
     if args.command == "_worker":
         return _worker(args)
@@ -486,7 +446,7 @@ def main(argv: list[str] | None = None) -> int:
             with destination.open("x", encoding="utf-8") as output:
                 json.dump(summary, output, indent=2)
         print(json.dumps(summary))
-        return 0 if summary["provisional_geomean_speedup"] is not None else 1
+        return 0 if summary["all_passed"] else 1
     if min(args.trials, args.reps, args.timeout) < 1 or args.warmup < 0:
         parser.error("trials, reps, timeout must be positive; warmup >= 0")
     if args.docker_gpus and not args.docker_image:
@@ -515,14 +475,10 @@ def main(argv: list[str] | None = None) -> int:
             results.append(result)
             output.write(json.dumps(result) + "\n")
             output.flush()
-            print(f"{case.id}: {result['status']}" +
-                  (f" ({result['speedup_vs_best_baseline_cuda_event']:.2f}x "
-                   "GPU-event vs best available baseline)"
-                   if "speedup_vs_best_baseline_cuda_event" in result else ""))
-    complete = [item for item in results if item["status"] == "ok_provisional"]
-    score = (math.exp(sum(math.log(item["speedup_vs_best_baseline_cuda_event"])
-                          for item in complete) / len(complete))
-             if complete else None)
-    print(json.dumps({"results": str(path), "provisional_geomean_speedup": score,
-                      "passed": len(complete), "total": 1}))
-    return 0 if complete else 1
+            timing = result.get("candidate_timing", {}).get("cuda_event_p50_ms")
+        print(f"{case.id}: {result['status']}" + (f" ({timing:.3f} ms CUDA-event p50, slowest rank)" if timing else "") +
+              (f" - {result['reason']}" if result.get("reason") else ""))
+    status = results[0]["status"]
+    print(json.dumps({"results": str(path), "status": status, "exit_code": EXIT_CODES.get(status, 1),
+                      "passed": int(status in ("ok_provisional", "correctness_only")), "total": 1}))
+    return EXIT_CODES.get(status, 1)

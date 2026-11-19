@@ -72,7 +72,9 @@ class KimiReferenceTests(unittest.TestCase):
         actual = kimi.reference(case, values, serial=True)
         self.assertTrue(all(torch.equal(value, before[name]) for name, value in values.items()))
         self.assertEqual(actual['cache_length'].tolist(), [1, case.params['context']+1])
-        changed = {name: (value+10 if name.endswith(('_cache', '_state')) else value) for name, value in values.items()}
+        def shift(value):   # fp8 caches have no arithmetic on the CPU: perturb through float
+            return (value.float()+10).to(value.dtype) if value.dtype == kimi.CACHE_DTYPE else value+10
+        changed = {name: (shift(value) if name.endswith(('_cache', '_state')) else value) for name, value in values.items()}
         other = kimi.reference(case, changed, serial=True)
         self.assertTrue(torch.equal(actual['logits'][0], other['logits'][0]))
         self.assertFalse(torch.equal(actual['logits'][1], other['logits'][1]))

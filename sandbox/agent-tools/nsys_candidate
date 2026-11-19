@@ -1,0 +1,27 @@
+#!/bin/bash
+# Nsight Systems trace of the evaluator running your candidate on one case, then the launch audit
+# the grader uses (every timed repetition, per rank; D-L4/D-L5). Runs on GPUs through gpu-run when
+# called from the agent sandbox; inside a GPU job it runs directly.
+#
+#   nsys_candidate --case ID [--reps N] [--trials N]
+#
+# Output in ./reports/nsys/<case>-<time>/: trace.nsys-rep, trace.sqlite, audit.json, evaluation.json.
+# Multi-rank cases are traced as one application: nsys follows the evaluator's child processes
+# (the per-rank evaluators and the candidate processes), so one report has every rank.
+set -euo pipefail
+CASE= REPS=5 TRIALS=1 ARGS=()
+while [ $# -gt 0 ]; do case $1 in --case) CASE=$2; shift 2 ;; --reps) REPS=$2; shift 2 ;; --trials) TRIALS=$2; shift 2 ;; *) ARGS+=("$1"); shift ;; esac; done
+[ -n "$CASE" ] || { sed -n '2,12p' "$0"; exit 2; }
+GPUS=$(python -m megabench list --json 2>/dev/null | python -c "import json,sys; print({c['id']: c['gpus'] for c in json.load(sys.stdin)}['$CASE'])")
+if [ ! -e /dev/nvidiactl ]; then
+  exec gpu-run -g "$GPUS" -t "${GPU_MINUTES:-40}" -- "$0" --case "$CASE" --reps "$REPS" --trials "$TRIALS" "${ARGS[@]}"
+fi
+OUT=reports/nsys/$CASE-$(date -u +%Y%m%dT%H%M%SZ); mkdir -p "$OUT"
+nsys profile --trace=cuda,nvtx --cuda-graph-trace=node --sample=none --cpuctxsw=none \
+  --force-overwrite=true -o "$OUT/trace" \
+  python -m megabench evaluate --case "$CASE" --submission ./submission.py --trials "$TRIALS" --reps "$REPS" \
+  --output "$OUT/evaluation.json" "${ARGS[@]}" || echo "evaluation exit $? (see $OUT/evaluation.json)"
+nsys export --type sqlite --force-overwrite true -o "$OUT/trace.sqlite" "$OUT/trace.nsys-rep"
+MAP=$(python -c "print(','.join(f'{r}:{r % 4}' for r in range($GPUS)))")
+python -m megabench.harness.nsys_audit "$OUT/trace.sqlite" --budget 1 --device-of-rank "$MAP" | tee "$OUT/audit.json"
+echo "trace and audit in $OUT"

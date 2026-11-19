@@ -14,6 +14,13 @@ Weights come from one of two sources (case.params['checkpoint'] set or not):
 The per-sequence state (tokens, reset flags, MLA latent caches, KDA conv and
 recurrent states) is always fresh random data for each seed.
 
+MLA cache precision (DECISIONS section 13): the latent cache and the rope cache are
+float8_e4m3fn with one per-layer FP32 scale `l<L>_kv_scale` (per-tensor, 1.0 for the real
+checkpoint, which ships no kv scales), the same format vLLM's Kimi K3 MLA layer uses for its
+`fp8` KV cache ([kv_c_normed | k_pe] in one e4m3 buffer, one `_k_scale`). Reads dequantize to
+the activation dtype; the new token's cache write (`kv_write`, `pe_write`) is quantized with the
+same scale. The FP32 reference returns the unquantized writes. The KDA state stays FP32.
+
 reference(..., fp32=False) is the BF16 serving oracle. reference(..., fp32=True)
 runs the same math with FP32 activations and FP32-decoded weights. compare()
 grades a candidate with the oracle band: its distance to the FP32 reference
@@ -39,6 +46,17 @@ BAND = 2.0            # candidate error may be at most BAND x the BF16 oracle er
 FLOOR = 2e-3          # absolute allowance on relative L2, for outputs where the oracle error is ~0
 ROUTE_FLOOR = 1e-3   # router-score units: extra near-tie room for a chosen expert below the k-th best
 WEIGHTS_ENV = 'KIMI_K3_WEIGHTS'
+CACHE_DTYPE = torch.float8_e4m3fn   # MLA latent and rope cache storage (vLLM `fp8` KV cache)
+FP8_MAX = 448.0
+
+
+def quantize_cache(value: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
+    """BF16/FP32 -> e4m3 with one per-tensor scale (saturating, as vLLM's fp8 cache insert)."""
+    return (value.float()/scale.float()).clamp(-FP8_MAX, FP8_MAX).to(CACHE_DTYPE)
+
+
+def dequantize_cache(value: torch.Tensor, scale: torch.Tensor, dtype: torch.dtype) -> torch.Tensor:
+    return (value.float()*scale.float()).to(dtype)
 
 
 def full_layer(case: Case, layer: int) -> bool:
@@ -94,7 +112,8 @@ def weight_shapes(case: Case) -> dict[str, tuple[tuple[int, ...], torch.dtype, i
             out |= {x+'qa': ((qr, h), bf, h, False), x+'qb': ((heads//tp*(nr+rd), qr), bf, qr, True),
                     x+'ka': ((kr+rd, h), bf, h, False), x+'kb': ((heads//tp*(nr+vd), kr), bf, kr, True),
                     x+'o': ((h, heads//tp*vd), bf, heads*vd, True), x+'output_gate': ((heads//tp*vd, h), bf, h, True),
-                    x+'qn': ((qr,), bf, 0, False), x+'kn': ((kr,), bf, 0, False)}
+                    x+'qn': ((qr,), bf, 0, False), x+'kn': ((kr,), bf, 0, False),
+                    x+'kv_scale': ((1,), f32, 0, False)}
         else:
             for name in ('q', 'k', 'v', 'output_gate'):
                 out[x+name] = ((qdim//tp, h), bf, h, True)
@@ -131,6 +150,8 @@ def synthetic_weights(case: Case, seed: int, device: str, rank: int) -> dict[str
             continue
         if name.endswith('_blocks'):
             values[name], values[name[:-7]+'_scales'] = _mxfp4(seed, stream, shape[:-2]+(shape[-2]*32,), fan_in, device)
+        elif name.endswith('kv_scale'):
+            values[name] = torch.ones(shape, dtype=dtype, device=device)   # per-tensor fp8 cache scale
         elif name.endswith('A_log'):
             values[name] = _randn(seed, stream, shape, 0.5, device, dtype)
         elif name.endswith('dt_bias'):
@@ -174,8 +195,9 @@ def make_state(case: Case, seed: int, device: str, rank: int) -> dict[str, torch
     for layer in range(p['layers']):
         x = f'l{layer}_'
         if full_layer(case, layer):
-            values[x+'kv_cache'] = _randn(seed, x+'kv_cache', (B, p['context'], p['kv_lora_rank']), 1.0, device)
-            values[x+'pe_cache'] = _randn(seed, x+'pe_cache', (B, p['context'], p['qk_rope_dim']), 1.0, device)
+            one = torch.ones(1, device=device)
+            values[x+'kv_cache'] = quantize_cache(_randn(seed, x+'kv_cache', (B, p['context'], p['kv_lora_rank']), 1.0, device), one)
+            values[x+'pe_cache'] = quantize_cache(_randn(seed, x+'pe_cache', (B, p['context'], p['qk_rope_dim']), 1.0, device), one)
         else:
             values[x+'conv_state'] = _randn(seed, f'{x}conv_state@{rank}', (B, 3, qdim, p['conv_kernel']), 1.0, device)
             values[x+'recurrent_state'] = _randn(seed, f'{x}recurrent@{rank}', (B, heads, d, d), 0.05, device, torch.float32)
@@ -266,16 +288,17 @@ def reference(case: Case, values, *, serial=None, fp32=False, routes=None):
             raw = project(x+'ka', normalized)
             latent = rms(raw[:, :kr], values[x+'kn'], eps=1e-6)
             pe = raw[:, kr:]
-            latent_writes.append(latent)
-            pe_writes.append(pe)
+            scale = values[x+'kv_scale']
+            latent_writes.append(latent if fp32 else quantize_cache(latent, scale))
+            pe_writes.append(pe if fp32 else quantize_cache(pe, scale))
             weight = cast(values[x+'kb']).view(heads, nr+vd, kr)
             absorbed = torch.einsum('bhd,hdc->bhc', query[..., :nr], weight[:, :nr])
             outputs = []
             for b in range(B):
                 all_latent, all_pe = latent[b:b+1], pe[b:b+1]
                 if keep[b]:
-                    all_latent = torch.cat((cast(values[x+'kv_cache'][b]), all_latent))
-                    all_pe = torch.cat((cast(values[x+'pe_cache'][b]), all_pe))
+                    all_latent = torch.cat((dequantize_cache(values[x+'kv_cache'][b], scale, act), all_latent))
+                    all_pe = torch.cat((dequantize_cache(values[x+'pe_cache'][b], scale, act), all_pe))
                 scores = (absorbed[b].float()@all_latent.float().T+query[b, :, nr:].float()@all_pe.float().T)/(nr+rd)**0.5
                 outputs.append(cast(scores.softmax(-1))@all_latent)
             output = torch.einsum('bhc,hdc->bhd', torch.stack(outputs), weight[:, nr:]).flatten(1)

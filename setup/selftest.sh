@@ -6,8 +6,22 @@
 set -euo pipefail
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 PY=$REPO/.venv/bin/python
-echo "== unit tests"
-(cd "$REPO" && PYTHONPATH=$REPO "$PY" -s -m unittest megabench.tests.test_kimi)
+echo "== unit tests (oracle, hardened evaluator, sandbox pieces; CPU)"
+(cd "$REPO" && PYTHONPATH=$REPO CUDA_VISIBLE_DEVICES= "$PY" -s -m unittest megabench.tests.test_kimi megabench.tests.test_harness megabench.tests.test_sandbox)
+echo "== manifest static checks"
+(cd "$REPO" && "$PY" -s sandbox/k8s/check_manifests.py >/dev/null && echo "ok: manifests")
+if [ "${GOALBOX_SELFTEST_K8S:-0}" = 1 ]; then
+  # Inside the agent pod (run as the agent): the boundaries the manifests promise.
+  echo "== agent pod boundaries"
+  (exec 3<>/dev/tcp/1.1.1.1/443) 2>/dev/null && echo "FAIL: direct network reachable" || echo "ok: direct network unreachable"
+  curl -s -o /dev/null -w '%{http_code}\n' -x http://goalbox-proxy:3128 https://api.anthropic.com/ | grep -q '^[2345]' && echo "ok: proxy reaches api.anthropic.com" || echo "FAIL: proxy path"
+  curl -s -o /dev/null -w '%{http_code}\n' -x http://goalbox-proxy:3128 https://github.com/ | grep -q '^403' && echo "ok: github denied" || echo "FAIL: github not denied"
+  [ -r /var/run/secrets/kubernetes.io/serviceaccount/token ] && echo "FAIL: API token mounted" || echo "ok: no API token"
+  for d in /records /ctl /weights; do [ -e $d ] && echo "FAIL: $d visible" || echo "ok: $d absent"; done
+  touch /goalbox/bench/x 2>/dev/null && echo "FAIL: bench writable" || echo "ok: bench read-only"
+  [ -e /dev/nvidiactl ] && echo "FAIL: GPU device in agent pod" || echo "ok: no GPU device"
+  exit 0
+fi
 T=$(mktemp -d); mkdir -p "$T"/{work,home,tmp,sock}
 trap 'rm -rf "$T"' EXIT
 echo "== agent sandbox: no direct network, no host files, benchmark read-only"

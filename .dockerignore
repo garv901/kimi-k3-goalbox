@@ -1,0 +1,8 @@
+.git
+.venv*
+runs
+weights
+reports
+baseline/results
+**/__pycache__
+sandbox/k8s/rendered

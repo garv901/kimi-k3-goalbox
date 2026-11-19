@@ -106,6 +106,15 @@ async def handle(cr, cw):
 
 
 async def main():
+    # Kubernetes mode: `netproxy.py RUN_DIR --tcp PORT` listens on all interfaces of the proxy pod; the
+    # NetworkPolicy is what limits who can connect (the agent pod only).
+    if "--tcp" in sys.argv:
+        port = int(sys.argv[sys.argv.index("--tcp") + 1])
+        server = await asyncio.start_server(handle, host="0.0.0.0", port=port)
+        log("start", f"tcp :{port} allow={sorted(ALLOW_CONNECT)}+{ALLOW_PATTERNS} blocked={len(BLOCKED)} patterns")
+        async with server:
+            await server.serve_forever()
+        return
     sock = RUN / "sock/net.sock"
     sock.unlink(missing_ok=True)
     server = await asyncio.start_unix_server(handle, path=str(sock))

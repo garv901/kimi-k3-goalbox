@@ -1,0 +1,18 @@
+{
+ "tp": 8,
+ "layers": 93,
+ "workers": 4,
+ "output_bytes_total": 1640452651648,
+ "output_bytes_per_rank": 205056581456,
+ "global_tensors_bytes_per_rank": 595245056,
+ "biggest_layer_bytes_all_ranks": 17812169088,
+ "biggest_layer_bytes_per_rank": 2226521136,
+ "peak_disk_bytes": 1711701328000,
+ "peak_host_rss_bytes_per_worker_estimate": 38845563648,
+ "peak_host_rss_bytes_total_estimate": 155382254592,
+ "layer_bytes_per_rank_histogram": [
+  294246960,
+  2198485508,
+  2226521136
+ ]
+}
