@@ -129,7 +129,7 @@ mismatch.
 | overlays/A2 (tree) | f4366b5a119e3e62120fcc7d14b52fd208d798e26bc4dc44ece6ac9bf5c5b2fd |
 | overlays/A3 (tree) | 8f9d929153cdaf177bbdc147fe3feffafad03e60ae584c6ce5a671e26cfc49fb |
 | scaffold_search/harness_files (tree) | 2f18b46dddf41e7c7d34419ad7837e041b100e5ed3ca87ae1088ddc0dd33ce59 |
-| scaffold_search/rescore.py | 781ca4930acd572276bf9a1cb6dd038d08fcb6d10b5ca37e69f7c8a1f5ae9c05 |
+| scaffold_search/rescore.py | 54000a67ab0b54b4945ff92b715a5416e4e7cb5d1a84eb208fbfbf08a33a9d6e |
 | scaffold_search/gpu_lease.py | 7db8ac6991522135892fc2342f093cd69ccc193e48e7f65f3a9bd45a25e81804 |
 | Claude Code / model | 2.1.326 / claude-opus-5-5 |
 

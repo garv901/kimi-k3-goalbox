@@ -216,7 +216,14 @@ def rescore_run(run_dir, reps=3, final=True, push=True, max_candidates=3):
     ranked = sorted((s for s in snaps if s.get('p50_ms')), key=lambda s: s['p50_ms'])
     tried, chosen = [], None
     for s in ranked[:max_candidates]:
-        res, recs = check_n(run_id, run_dir, f'snap{s["n"]:03d}', extract(f'{run_dir}/snapshots/{s["tar"]}'), reps)
+        try:
+            res, recs = check_n(run_id, run_dir, f'snap{s["n"]:03d}', extract(f'{run_dir}/snapshots/{s["tar"]}'), reps)
+        except (tarfile.TarError, EOFError) as e:   # unreadable tarball: not scorable, try the next snapshot
+            tried.append({'snapshot': s['tar'], 'agent_p50_ms': s['p50_ms'], 'sha256': s.get('sha256'),
+                          'error': f'snapshot tarball unreadable: {e!r}', 'L_ms': None,
+                          'review_reports': {'ok': False, 'issues': ['tarball unreadable']},
+                          'review_sources': {'ok': False, 'disqualifying': []}, 'runs': [], 'rescore_p50s': []})
+            continue
         rv = review.review_reports(recs)
         src = review.review_sources(res['ws'])
         entry = {'snapshot': s['tar'], 'agent_p50_ms': s['p50_ms'], 'sha256': s['sha256'], 'rescore_p50s': res['p50s'],

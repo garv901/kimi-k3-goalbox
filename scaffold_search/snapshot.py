@@ -114,7 +114,9 @@ def process(run_dir, final=False):
             if info.get(k) and os.path.exists(info[k]):
                 shutil.copy2(info[k], f'{snap}/reports/{cid}-{os.path.basename(info[k])}')
         shutil.copy2(base + '.log', f'{snap}/reports/{cid}.log') if os.path.exists(base + '.log') else None
-        passing = rec.get('rc') == 0 and info['status'] == 'ok_provisional' and os.path.exists(base + '.tgz')
+        # a pass needs the evaluator's report file (status read from it), not just a log line saying so
+        passing = (rec.get('rc') == 0 and info['status'] == 'ok_provisional' and bool(info.get('report'))
+                   and os.path.exists(info['report']) and os.path.exists(base + '.tgz'))
         if passing:
             n = len(open(f'{snap}/index.jsonl').readlines()) if os.path.exists(f'{snap}/index.jsonl') else 0
             dst = f'{snap}/{n:03d}-{cid}.tgz'
