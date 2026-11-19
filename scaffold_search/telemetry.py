@@ -2,7 +2,8 @@
 
 - `GpuSampler(run_dir, uid)`: 1 Hz nvidia-smi sampler -> logs/gpu_samples.jsonl: per GPU util/mem
   and the uids owning its compute processes; flags processes of the run uid without a lease
-  (no SS_LEASE_ID in their environment) as `bypass`.
+  (no SS_LEASE_ID in their environment) as `bypass`. run_arm reads `sampler.last_bypass` every
+  tick and contains: `kill_tree(descendants(bypass))`, the run is marked failed (containment).
 - `summarize(run_dir, run_id)` -> logs/telemetry.json: GPU-busy fraction, lease slice of
   /srv/ss/lease.jsonl (waits/holds), transcript stats from logs/agent*.jsonl (+ .times line
   timestamps written by run_arm): turns, tool counts incl. Skill/Task, tokens, cost, rate-limit
@@ -32,6 +33,13 @@ def proc_uid(pid):
         return None
 
 
+def cmdline(pid):
+    try:
+        return open(f'/proc/{pid}/cmdline', 'rb').read().replace(b'\0', b' ').decode('utf-8', 'replace').strip()[:200]
+    except OSError:
+        return None
+
+
 def has_lease_env(pid):
     try:
         return b'SS_LEASE_ID=' in open(f'/proc/{pid}/environ', 'rb').read()
@@ -39,12 +47,64 @@ def has_lease_env(pid):
         return None
 
 
+def descendants(pids):
+    """pids plus every live descendant (parent chain from /proc/*/stat), deepest first."""
+    kids = collections.defaultdict(list)
+    for d in os.listdir('/proc'):
+        if not d.isdigit():
+            continue
+        try:
+            stat = open(f'/proc/{d}/stat').read()
+            ppid = int(stat[stat.rindex(')') + 2:].split()[1])
+        except (OSError, ValueError, IndexError):
+            continue
+        kids[ppid].append(int(d))
+    out, seen = [], set()
+    def walk(p):
+        if p in seen:
+            return
+        seen.add(p)
+        for k in kids.get(p, []):
+            walk(k)
+        out.append(p)
+    for p in pids:
+        walk(p)
+    return out
+
+
+def kill_tree(pids, sig=9):
+    """SIGKILL (default) the processes and all their descendants; returns (killed, still_alive)."""
+    import signal
+    tree = descendants(pids)
+    killed = []
+    for p in tree:
+        try:
+            os.kill(p, sig); killed.append(p)
+        except ProcessLookupError:
+            pass
+        except PermissionError:
+            pass
+    time.sleep(0.5)
+    alive = [p for p in tree if os.path.exists(f'/proc/{p}') and 'Z' not in _state(p)]
+    return killed, alive
+
+
+def _state(pid):
+    try:
+        stat = open(f'/proc/{pid}/stat').read()
+        return stat[stat.rindex(')') + 2:].split()[0]
+    except (OSError, ValueError):
+        return ''
+
+
 class GpuSampler(threading.Thread):
+    """Also keeps the newest `bypass` list in self.last_bypass for run_arm's containment check."""
     def __init__(self, run_dir, uid, interval=1.0):
         super().__init__(daemon=True)
         self.path = f'{run_dir}/logs/gpu_samples.jsonl'
         self.uid, self.interval = uid, interval
         self.stop_ev = threading.Event()
+        self.last_bypass = []
 
     def sample(self):
         gpus = []
@@ -68,6 +128,7 @@ class GpuSampler(threading.Thread):
                 mine.append(gi)
                 if has_lease_env(pid) is False:
                     bypass.append(pid)
+        self.last_bypass = bypass
         return {'t': round(time.time(), 2), 'gpus': gpus, 'mine': sorted(set(x for x in mine if x is not None)),
                 'bypass': bypass}
 

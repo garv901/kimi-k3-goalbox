@@ -7,7 +7,8 @@ Steps: node lockdown (idempotent) -> run user -> workspace (arm + seed + overlay
 calibration check (1x, before the clock starts) -> `claude -p "<goal prompt>"` as the run user
 (stream-json transcript to logs/agent.jsonl, line timestamps to logs/agent.times) -> monitor
 (pending checks -> snapshots + run-branch push; credential sync every minute; periodic push every
-10 min; 1 Hz GPU sampler) -> at T-15 min (T-max(2, budget/4) for budgets < 60) SIGINT, then
+10 min; 1 Hz GPU sampler; containment: a compute process of the run user without a lease is
+SIGKILLed with all its descendants and the run is marked failed, see Runner.contain) -> at T-15 min (T-max(2, budget/4) for budgets < 60) SIGINT, then
 `claude -p --resume <session> "<summary message>"` for at most 10 min -> kill the process group and
 every process of the run user, `gpu_lease kill-run`, check no GPU process of the uid remains ->
 final snapshot processing, telemetry, push -> rescore.py (result.json, results branch).
@@ -27,9 +28,15 @@ def utc(t=None):
     return time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(t if t is not None else time.time()))
 
 
+class Contained(Exception):
+    """raised from tick() once unauthorized GPU use was contained: the agent phase ends as a failed run"""
+
+
 class Runner:
     def __init__(self, a):
         self.a = a
+        self.contained = set()
+        self.sampler = None
         arm_path = a.arm if a.arm.endswith('.toml') else f'{REPO}/arms/{a.arm}.toml'
         self.arm = workspace.load_arm(arm_path)
         self.arm_sha = hashlib.sha256(open(arm_path, 'rb').read()).hexdigest()
@@ -113,7 +120,30 @@ class Runner:
             pass
         return None
 
+    def contain(self, bypass):
+        """Unauthorized GPU use by the run user (compute process without SS_LEASE_ID): SIGKILL the
+        processes and all their descendants, record it, and mark the run failed. Idempotent per pid."""
+        new_pids = [p for p in bypass if p not in self.contained]
+        if not new_pids:
+            return False
+        self.contained.update(new_pids)
+        tree = telemetry.descendants(new_pids)
+        cmdlines = {str(p): telemetry.cmdline(p) for p in tree}   # before the kill: /proc/<pid>/cmdline empties
+        killed, alive = telemetry.kill_tree(new_pids)
+        ev = {'t': utc(), 'bypass_pids': new_pids, 'tree': tree, 'killed': killed, 'still_alive': alive,
+              'cmdlines': cmdlines}
+        self.run.setdefault('containment', []).append(ev)
+        if not self.run.get('failed'):
+            self.run['failed'] = 'unauthorized GPU use: compute process of the run user outside a lease'
+            self.run['abort_flags'].append(f'containment: GPU bypass pids {new_pids} killed with descendants {tree}')
+        self.save()
+        self.log(f'CONTAINMENT bypass pids {new_pids} tree {tree} killed {killed} alive {alive}')
+        return True
+
     def tick(self, now, state):
+        if getattr(self, 'sampler', None) is not None and self.sampler.last_bypass:
+            if self.contain(list(self.sampler.last_bypass)):
+                raise Contained()
         new = snapshot.process(self.run_dir)
         if new:
             for s in new:
@@ -169,6 +199,7 @@ class Runner:
                              open(f'{REPO}/prompts/goal_improve.md', 'rb').read()).hexdigest()})
         self.save()
         sampler = telemetry.GpuSampler(self.run_dir, self.uid); sampler.start()
+        self.sampler = sampler
         if self.a.fake_agent:
             fa = f'{self.run_dir}/fake_agent.sh'
             open(fa, 'w').write(open(FAKE_AGENT).read()); os.chmod(fa, 0o755)
@@ -176,7 +207,21 @@ class Runner:
         argv = ['/bin/bash', self.fake, 'work'] if self.a.fake_agent else self.claude_argv(prompt)
         self.log(f'agent start; prompt deadline {deadline}; argv {argv[:2]}...')
         p, th = self.spawn(argv, 'agent')
-        rc = self.wait_proc(p, t_int, state)
+        try:
+            rc = self.wait_proc(p, t_int, state)
+        except Contained:
+            self.log('run failed (containment): killing the agent, no summary resume')
+            self.run['agent_exit'] = 'killed: containment'
+            self.stop_group(p, signal.SIGKILL, grace=5)
+            th.join(timeout=10)
+            self.run['agent_end_utc'] = utc()
+            self.save()
+            self.teardown(p)
+            sampler.stop(); sampler.join(timeout=5)
+            self.run['t_end'] = time.time(); self.run['end_utc'] = utc()
+            snapshot.process(self.run_dir, final=True)
+            self.save()
+            return
         if rc is None:
             self.log('T-lead reached: SIGINT to the agent')
             self.run['agent_exit'] = 'interrupted'
@@ -199,7 +244,12 @@ class Runner:
             rp = None
             self.run['abort_flags'].append('no session id: summary resume skipped')
         if rp is not None:
-            rrc = self.wait_proc(rp, r_until, state)
+            try:
+                rrc = self.wait_proc(rp, r_until, state)
+            except Contained:
+                self.run['agent_exit'] = str(self.run.get('agent_exit')) + ' / summary killed: containment'
+                self.stop_group(rp, signal.SIGKILL, grace=5)
+                rrc = rp.returncode
             if rrc is None:
                 self.run['abort_flags'].append('summary resume timed out')
                 self.stop_group(rp, signal.SIGINT, grace=20)

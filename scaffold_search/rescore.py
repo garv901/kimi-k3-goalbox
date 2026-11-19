@@ -262,11 +262,15 @@ def rescore_run(run_dir, reps=3, final=True, push=True, max_candidates=3):
             first_imp = round((te - t0) / 60, 2); break
     tr = tel['transcript']
     cost = tr.get('cost_usd') or 0
+    failed = run.get('failed')   # set by run_arm containment: the run is not scored (counts as a failed run)
+    if failed:
+        L, source = None, 'failed: ' + failed
     score = B3_MS / L if L else None
     result = {
         'schema': 'scaffold-search/result/v1',
         'run_id': run_id, 'arm': info['arm'], 'task': info['task'], 'case': info['case'],
         'budget_minutes': budget, 'fake_agent': run.get('fake_agent', False),
+        'failed': failed, 'containment': run.get('containment'),
         'pins': {k: run.get(k) for k in ('claude_version', 'model', 'harness_commit', 'harness_dirty', 'trusted_commit',
                                          'trusted_patches', 'seed_sha256',
                                          'prompt_sha256', 'arm_sha256')},
