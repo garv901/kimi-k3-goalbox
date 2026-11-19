@@ -4,15 +4,17 @@
 #
 #   1. PROTOCOL manifest (scripts/verify_protocol.py)                                    CPU, seconds
 #   2. CPU unit tests: tests/test_scaffold_search.py + tests/test_package.py           CPU, seconds
+#   2b-2d. negative controls (harness scoring path; trusted evaluator on CPU with 4 gloo
+#      ranks, one corrupted rank each) and the overlay tools on CPU                   CPU, ~15 min
 #   3. gpu_lease policy tests (private daemon, mostly `sleep`; 2 tests touch a GPU)   root, ~5 min
 #      (whole-node class = 4 GPUs: GPU_LEASE_NGPU defaults to 4)
 #   4. isolation tests as a run user (needs ss-lease + ss-proxy; --claude adds 2 tiny
 #      `claude -p` calls as the run user, ~$0.05)                                     root, ~2 min
 #   5. arm workspaces S/A1/A2/A3 build without conflicts; overlay tools start          root, ~2 min
 #   6. fake-agent smoke: run_arm --arm A0S --fake-agent --budget-minutes 10 (submits the seed;
-#      calibration + 10 min + rescore 3x + final check); the TP4 seed latency is not calibrated yet:
-#      the smoke prints it (score = 28.95 / L with the TP8 normalizer, see rescore.py) full node, ~35 min
-# --cpu-only: stages 1-2 (any machine with python3.12 + pytest). --no-smoke: skip stage 6.
+#      calibration + 10 min + rescore 3x + final check); expected seed L ~28.0 ms (Gate E),
+#      score 28.95 / L ~ 1.03                                                         full node, ~45 min
+# --cpu-only: stages 1-2d (any machine with python3.12 + pytest + torch). --no-smoke: skip stage 6.
 set -euo pipefail
 H=$(cd "$(dirname "$0")/.." && pwd)
 PY=${PY:-/usr/bin/python3.12}; [ -x "$PY" ] || PY=$(command -v python3.12 || command -v python3)
@@ -29,6 +31,18 @@ else "$PY" scripts/verify_protocol.py; fi
 
 stage "2. CPU unit tests"
 "$PY" -m pytest -q -p no:cacheprovider scaffold_search/tests/test_scaffold_search.py scaffold_search/tests/test_package.py
+
+stage "2b. negative controls of the harness scoring path (CPU, canned data)"
+"$PY" -m pytest -q -p no:cacheprovider scaffold_search/tests/test_negative_controls.py
+
+stage "2c. overlay tools A1/A2/A3 on CPU (rank handling, profiler commands, self-tests)"
+"$PY" -m pytest -q -p no:cacheprovider scaffold_search/tests/test_overlay_tools_cpu.py
+
+stage "2d. trusted evaluator negative controls (CPU, gloo, 4 ranks, dev-size TP4 case; ~10-20 min)"
+TR=${MEGABENCH_ROOT:-/srv/ss/trusted/vibe-megakernel}
+if [ -d "$TR/megabench" ]; then
+  MEGABENCH_ROOT="$TR" "$PY" -m pytest -q -p no:cacheprovider scaffold_search/tests/test_evaluator_negative.py
+else echo "skipped: no trusted tree at $TR (set MEGABENCH_ROOT)"; fi
 [ $CPU_ONLY = 1 ] && { echo; echo "CPU-only selftest OK"; exit 0; }
 
 [ "$(id -u)" = 0 ] || { echo "stages 3-6 need root on the node" >&2; exit 1; }
