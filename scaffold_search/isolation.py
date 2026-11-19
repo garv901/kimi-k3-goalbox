@@ -36,11 +36,13 @@ TRUSTED = f'{SS}/trusted/vibe-megakernel'
 CREDS_DIR = f'{SS}/creds'
 SHARED_CREDS = f'{CREDS_DIR}/.credentials.json'
 ROOT_CREDS = '/root/.claude/.credentials.json'
-# Optional (not used in our runs, which used root's OAuth login above): KEY=VALUE lines with
-# CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`) or ANTHROPIC_API_KEY, root-only 0600.
-# When present, these variables are added to every run user's environment (agent_env).
+# Optional: KEY=VALUE lines with CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`) or ANTHROPIC_API_KEY,
+# root-only 0600. When present, these variables are added to every run user's environment (agent_env).
+# ANTHROPIC_BASE_URL points Claude Code at a credential relay (docs/credential-relay.md): the real key
+# stays on the relay host, ANTHROPIC_API_KEY is then a per-run relay token. The relay host is added to
+# the proxy allowlist; NODE_EXTRA_CA_CERTS lets Claude Code trust the relay's private CA.
 CLAUDE_ENV_FILE = f'{CREDS_DIR}/claude.env'
-CLAUDE_ENV_KEYS = ('CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY')
+CLAUDE_ENV_KEYS = ('CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY', 'ANTHROPIC_BASE_URL', 'NODE_EXTRA_CA_CERTS')
 PROXY_PORT = 3128
 PROXY_LOG = f'{SS}/proxy.jsonl'
 ALLOW = ('anthropic.com', 'claude.ai', 'claude.com')
@@ -213,8 +215,12 @@ def minimal_claude_json(ws):
                                 'hasSeenAutoDefaultNotice', 'hasResetAutoModeOptInForDefaultOffer')
             if k in src}
     keep.update({'numStartups': 1, 'autoUpdates': False, 'installMethod': src.get('installMethod', 'native'),
+                 'hasCompletedOnboarding': True,
                  'projects': {ws: {'hasTrustDialogAccepted': True, 'allowedTools': [],
                                    'hasCompletedProjectOnboarding': True}}})
+    key = claude_env().get('ANTHROPIC_API_KEY')
+    if key:   # pre-approve the env key (relay token) so claude -p does not stop at the "use this API key?" prompt
+        keep['customApiKeyResponses'] = {'approved': [key[-20:]], 'rejected': []}
     return keep
 
 
@@ -228,7 +234,8 @@ SETTINGS = {
 }
 
 
-def create_user(run_id, run_dir):
+def create_user(run_id, run_dir, require_creds=True):
+    """require_creds=False: a fake-agent run (nothing in it talks to Anthropic) needs no credential at all."""
     name = user_name(run_id)
     agid = ensure_group(AGENT_GROUP)
     home = f'{run_dir}/home'
@@ -247,7 +254,7 @@ def create_user(run_id, run_dir):
     if os.path.exists(ROOT_CREDS):
         shutil.copyfile(ROOT_CREDS, f'{home}/.claude/.credentials.json')
         os.chmod(f'{home}/.claude/.credentials.json', 0o600)
-    elif not claude_env():
+    elif require_creds and not claude_env():
         raise SystemExit(f'no Claude credentials: log in as root ({ROOT_CREDS}) or write {CLAUDE_ENV_FILE}')
     sh('chown', '-hR', f'{uid}:{agid}', home)
     os.chmod(home, 0o700)
@@ -327,9 +334,21 @@ def _peer_uid(port):
     return None
 
 
-def _allowed(host):
+def relay_endpoint():
+    """(host, port) of ANTHROPIC_BASE_URL in claude.env, or None."""
+    url = claude_env().get('ANTHROPIC_BASE_URL')
+    if not url:
+        return None
+    from urllib.parse import urlsplit
+    u = urlsplit(url)
+    return (u.hostname or '').lower(), u.port or (443 if u.scheme == 'https' else 80)
+
+
+def _allowed(host, port=443):
     host = host.lower().rstrip('.')
-    return any(host == a or host.endswith('.' + a) for a in ALLOW)
+    if any(host == a or host.endswith('.' + a) for a in ALLOW):
+        return port in (443, 80)
+    return (host, port) == relay_endpoint()
 
 
 def _pipe(a, b):
@@ -364,7 +383,7 @@ def _proxy_conn(c, addr, logf, lock):
         else:  # plain http: absolute URI
             from urllib.parse import urlsplit
             u = urlsplit(target); host, port = u.hostname or '', u.port or 80
-        ok = _allowed(host) and port in (443, 80)
+        ok = _allowed(host, port)
         with lock:
             if not ok or os.environ.get('SS_PROXY_LOG_ALL'):
                 logf.write(json.dumps({'t': round(time.time(), 3), 'uid': _peer_uid(addr[1]), 'host': host,
@@ -391,7 +410,7 @@ def proxy(port=PROXY_PORT):
     s = socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(('127.0.0.1', port)); s.listen(512)
     logf = open(PROXY_LOG, 'a'); lock = threading.Lock()
-    print(f'allowlist proxy on 127.0.0.1:{port}, allow {ALLOW}, log {PROXY_LOG}', flush=True)
+    print(f'allowlist proxy on 127.0.0.1:{port}, allow {ALLOW} relay {relay_endpoint()}, log {PROXY_LOG}', flush=True)
     while True:
         c, addr = s.accept()
         threading.Thread(target=_proxy_conn, args=(c, addr, logf, lock), daemon=True).start()

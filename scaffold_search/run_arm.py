@@ -60,7 +60,7 @@ class Runner:
         if lock['devices_unlockable']:
             self.run['abort_flags'].append('GPU device nodes not lockable (read-only): lease bypass by the run user is '
                                            'detectable (bypass_pids), not prevented')
-        uid, gid = isolation.create_user(self.run_id, self.run_dir)
+        uid, gid = isolation.create_user(self.run_id, self.run_dir, require_creds=not self.a.fake_agent)
         self.uid = uid
         os.makedirs(f'{self.run_dir}/logs', exist_ok=True); os.chmod(f'{self.run_dir}/logs', 0o700)
         self.logf = open(f'{self.run_dir}/logs/run_arm.log', 'a')
@@ -118,7 +118,7 @@ class Runner:
         if new:
             for s in new:
                 self.log(f'snapshot {s["tar"]} status {s["status"]} p50 {s["p50_ms"]}')
-        if now - state['creds'] >= 60:
+        if now - state['creds'] >= 60 and not self.a.fake_agent:
             state['creds'] = now
             try:
                 isolation.sync_creds()
