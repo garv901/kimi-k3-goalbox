@@ -69,7 +69,7 @@ test_rbac() {
 
 test_network() {
   echo "== in-pod network tests (tests 3, 4)"
-  local node_ip; node_ip=$($KUBECTL get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' 2>/dev/null || echo 10.13.84.1)
+  local node_ip; node_ip=$($KUBECTL get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' 2>/dev/null || true)
   k -n $NS exec c1-agentlike -- env C1_NODE_IP="$node_ip" python3 /c1/c1_net_tests.py --role agent --json | tee "$EVIDENCE/net-agentlike.txt" || true
   k -n $NS exec c1-unlabeled -- env C1_NODE_IP="$node_ip" python3 /c1/c1_net_tests.py --role unlabeled --json | tee "$EVIDENCE/net-unlabeled.txt" || true
   echo "== proxy log (allow/deny decisions)"
