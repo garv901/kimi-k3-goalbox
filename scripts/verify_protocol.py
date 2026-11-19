@@ -7,7 +7,8 @@ Recomputes, with the method used for the PROTOCOL.md manifest:
   - file hashes: arms/*.toml, prompts/goal_improve.md, scaffold_search/gpu_lease.py,
     scaffold_search/rescore.py (scoring constants), scaffold_search/patches/gpu_noise_multirank.patch
   - tree hashes: overlays/{S,A1,A2,A3}, scaffold_search/harness_files
-    (sha256 over `relpath \\0 sha256(file) \\n`, walking directories in sorted os.walk order)
+    (sha256 over `relpath \\0 sha256(file) \\n`, walking directories in sorted os.walk order,
+    __pycache__/*.pyc ignored)
   - seed: sha256 of seeds/dsv41_b8_tp4_nopf/MANIFEST.sha256 (= SEED_SHA256), and, if src/ is unpacked,
     every file of src/ against the manifest
   - with --trusted: the trusted tree's .ss_commit and .ss_patches
@@ -26,8 +27,10 @@ def fh(p):
 def th(d):
     h = hashlib.sha256()
     for r, ds, fs in sorted(os.walk(d)):
-        ds.sort()
+        ds[:] = sorted(x for x in ds if x != '__pycache__')   # stray bytecode caches are not part of the tree
         for f in sorted(fs):
+            if f.endswith('.pyc'):
+                continue
             p = os.path.join(r, f)
             h.update(os.path.relpath(p, d).encode() + b'\0' + fh(p).encode() + b'\n')
     return h.hexdigest()

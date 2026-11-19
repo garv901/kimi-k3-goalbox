@@ -184,7 +184,7 @@ def build(run_id, arm, run_dir, uid=None, gid=None):
                 owner[rel] = ov
         if conflicts:
             raise SystemExit(f'overlay {ov} would overwrite: {conflicts}')
-        shutil.copytree(src, ws, dirs_exist_ok=True, symlinks=True)
+        shutil.copytree(src, ws, dirs_exist_ok=True, symlinks=True, ignore=shutil.ignore_patterns('__pycache__'))
     info_overlays = owner
     # initial commit as the starting point of the agent's git history
     g = ['git', '-c', 'safe.directory=*', '-C', ws]

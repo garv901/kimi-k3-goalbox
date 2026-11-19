@@ -9,6 +9,10 @@ from pathlib import Path
 
 import pytest
 
+# the overlay trees are sha256-manifested: importing their modules must not leave __pycache__ behind
+sys.dont_write_bytecode = True
+os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+
 ROOT = Path(__file__).resolve().parents[2]
 OV = ROOT / 'overlays'
 PY = sys.executable

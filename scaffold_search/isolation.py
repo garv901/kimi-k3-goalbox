@@ -74,8 +74,9 @@ def setup_node(lock_devices=True):
     os.chmod('/root', 0o700)
     for d in ('build', 'logs', 'scratch', 'harness', 'results', 'runs', 'trusted', 'bin', 'lease'):
         os.makedirs(f'{SS}/{d}', exist_ok=True)
-    for d in ('build', 'logs', 'scratch', 'harness', 'results'):
-        os.chmod(f'{SS}/{d}', 0o700)
+    for d in ('build', 'logs', 'scratch', 'harness', 'results', 'creds', 'schedules'):
+        if os.path.isdir(f'{SS}/{d}'):
+            os.chmod(f'{SS}/{d}', 0o700)
     os.chmod(SS, 0o755)
     os.chmod(f'{SS}/runs', 0o711)
     for d in ('trusted', 'bin', 'lease'):

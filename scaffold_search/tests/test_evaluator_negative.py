@@ -5,7 +5,7 @@ DSv4.1 DSpark case at TP4 (4 processes, gloo) exactly as on the GPUs minus the l
 timing: fresh inputs per trial, reference + fp32 oracle, `regrade`, per-rank gate, `agree()` across
 ranks, input-mutation check. A wrapper submission around the trusted reference is correct; the
 mutations below corrupt ONE rank (or one output) and must each turn the status into `incorrect`
-(or `error` for a build failure) with the offending rank named in the reason.
+with the offending rank named in the reason (a one-rank build failure too: agree() raises).
 
 Needs the trusted benchmark importable (PYTHONPATH=/srv/ss/trusted/vibe-megakernel or
 MEGABENCH_ROOT) and torch; skipped otherwise. ~1-3 min per control on a few CPU cores.
@@ -60,8 +60,10 @@ CONTROLS = {
     'rank0_missing_output': ('', 'if rank == 0: del out["committed_tokens"]', 'incorrect', ('rank 0',)),
     'rank2_mutates_input': ('', 'if rank == 2:\n            t = next(v for v in inputs.values() if isinstance(v, torch.Tensor) and not v.is_floating_point()); t.add_(1)',
                             'incorrect', ('rank 2', 'mutated input')),
+    # a build failure on one rank is reported through agree() (AssertionError), so the evaluator
+    # classifies it as `incorrect` with the rank and 'build failed' in the reason
     'rank2_build_fails': ('if rank == 2: raise RuntimeError("deliberate build failure")', '',
-                          'error', ('rank 2', 'build failed')),
+                          'incorrect', ('rank 2', 'build failed')),
     'all_ranks_wrong': ('', 'out["logits"] = out["logits"] * 0', 'incorrect', ('rank 0',)),
 }
 
