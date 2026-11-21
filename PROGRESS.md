@@ -179,3 +179,11 @@ Conditional GO for C1 received after commit 361a053 was accepted. Done locally (
   verdicts carry `launch_audit.status`; broker marks passing grades as TRANSPORT PASS. 37 CPU tests OK.
 - C2 plan: TRANSPORT PASS vs FULL C2 PASS, step 8 detailed with four success criteria. L24 recorded.
 - C1b: waiting for the operator's evidence; script and manifests unchanged since the review.
+
+## 2026-11-21 (later): profiling feasibility under the B-C2-1 HOLD
+
+- `sandbox/k8s/PROFILING-FEASIBILITY.md`: enforcement vs detection, event taxonomy, mechanisms M1 to M8,
+  separation of ownership (E3b/E3c/E4 negative; no_new_privs disables file capabilities), untraced-process
+  detection, decision matrix, option C impact on the programming model and TP8, GPU experiments G1 to G5.
+- Found the profiler's `--cuda-trace-scope=system-wide` (same uid, target environment variable required).
+- Corrected the audit docstring's claim that CUPTI records events outside the candidate's control. L25.

@@ -1,0 +1,32 @@
+	--cuda-trace-scope=<scope>
+---
+	--cuda-trace-scope=<scope>
+
+	   Possible values are 'process-tree' or 'system-wide'.
+	   Select 'process-tree' to trace CUDA activities for the target 
+	   process and its child processes.
+	   Select 'system-wide' to trace CUDA activities from eligible processes 
+	   across the system that are launched after collection starts.
+	   System-wide CUDA trace requirements:
+	   - Processes running as a different user are not traced.
+	   - POSIX root Nsys sessions trace CUDA processes running as root without 
+	     additional setup.
+	   - POSIX non-root Nsys sessions trace same-user CUDA processes only when 
+	     CUDA_INJECTION_SHM_ALLOWED=TRUE is set in the target process environment 
+	     before launch.
+	   - Windows elevated Nsys sessions trace same-user CUDA processes without 
+	     additional setup.
+	   - Windows non-elevated Nsys sessions trace non-elevated same-user CUDA 
+	     processes only when CUDA_INJECTION_SHM_ALLOWED=TRUE is set in the 
+	     target process environment before launch.
+	   Default is 'process-tree'.
+
+=== E4 rerun for evidence
+Generated:
+	/report/e4.nsys-rep
+export=0
+=== E4: collector container + runner container, same uid, separate pid namespaces, shared /tmp
+  target record: 7 (pid in the runner namespace)
+  marks from the runner-container target in the collector report: []
+  PROCESSES: [(29, 'bash'), (20, 'nsys'), (1, 'nsys'), (28, 'nsys-launcher'), (30, 'nsys-tee')]
+  diag: ['Common injection library initialized successfully.', 'OS runtime libraries injection initialized successfully.', 'Not all NVTX events might have been collected.', 'No NVTX events collected. Does the process use NVTX?']

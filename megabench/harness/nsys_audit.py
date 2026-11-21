@@ -4,8 +4,11 @@ The evaluator wraps every timed repetition of rank R in the NVTX range `megabenc
 (isolation.py, benchmark.py). When the whole evaluation runs under
 `nsys profile --trace=cuda,nvtx --cuda-graph-trace=node`, the exported SQLite file has those
 ranges (NVTX_EVENTS, from the evaluator process) and every device event of the candidate
-process (CUPTI_ACTIVITY_KIND_KERNEL, _MEMCPY, _MEMSET, _RUNTIME). CUPTI records them in the
-driver, outside the candidate process's control, so this is the audit of record (D-L4, D-L5).
+process (CUPTI_ACTIVITY_KIND_KERNEL, _MEMCPY, _MEMSET, _RUNTIME). CUPTI runs inside the traced
+process: its activity buffers live in the candidate's address space, so the trace is detective
+evidence, trustworthy against mistakes and ordinary multi-launch submissions, not against a
+candidate that attacks its own CUDA driver instance (sandbox/k8s/PROFILING-FEASIBILITY.md).
+The audit applies the fail-closed rules of L22/L24: incomplete or missing evidence is never a pass.
 
 For each rank and repetition this module counts, on the rank's device and inside the range:
   device kernels (compute and NCCL device kernels; D-L1, D-L3), memcpy and memset events

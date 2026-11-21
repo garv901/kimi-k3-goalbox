@@ -1,5 +1,10 @@
 # B-C2-1: a trusted launch audit for remotely spawned candidates (decision analysis)
 
+**Status 2026-11-21: HOLD** (operator decision). Option C is a documented alternative only; neither it nor any
+change to the submission contract may be adopted without explicit approval from Garv and Kevin. The
+feasibility analysis that follows this document is `PROFILING-FEASIBILITY.md` (mechanisms M1 to M8, E4,
+the profiler's system-wide CUDA scope, decision matrix, revised GPU experiments).
+
 Prepared 2026-11-21, CPU-only (code inspection plus Nsight Systems experiments on rack 3 tray11, inside
 Docker containers with their own pid namespaces; no GPU, no cluster change). Decision recorded as L24.
 
@@ -58,7 +63,7 @@ advisory_only` in the verdict, the broker says so beside the verdict line).
 
 ## Recommendation
 
-- **Target design: C** (grader-launched kernel in a separate context). It is the only option in which the
+- **Target design (on HOLD, owners' decision): C** (grader-launched kernel in a separate context). It is the only option in which the
   launch count and the audit of record never pass through candidate-controlled memory, and it also removes
   the remaining export exposure (the kernel sees only what the grader maps). It needs a decision by the
   repository owners because it changes the GPU-phase submission contract; the real-weight validation must

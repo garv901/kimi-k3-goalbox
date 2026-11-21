@@ -14,3 +14,13 @@ Key readings: trace time = CLOCK_MONOTONIC minus the session's `systemClockNs` w
 the first mark, library warm-up); CLOCK_MONOTONIC_RAW is 23.7 s off; an untraced child is absent from the
 trace and its process list; a uid-1001 target under a uid-1000 profiler keeps the report unwritable but
 delivers no events (E3b, E3c). Analysis and recommendation: `sandbox/k8s/PROFILING-DECISION.md`; decision L24.
+
+## Added 2026-11-21 (later): feasibility analysis under the HOLD
+
+| file | what |
+|---|---|
+| `e4-and-cuda-trace-scope.txt` | the profiler's `--cuda-trace-scope` documentation (system-wide scope: same user, target environment variable) and the E4 run (collector container + runner container, same uid, separate pid namespaces, shared /tmp: no delivery) |
+| `nsys-help-excerpt.txt` | related switches (`--cuda-event-trace`, `--cuda-graph-trace`, `--gpu-metrics-devices`) from the same version |
+
+Also observed: the uid-drop helper fails under `no-new-privileges` (`setresuid: Operation not permitted`), the
+setting Kubernetes applies with `allowPrivilegeEscalation: false`. Analysis: `sandbox/k8s/PROFILING-FEASIBILITY.md`.

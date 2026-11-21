@@ -55,18 +55,12 @@ repository owners, or option B accepted by them as sufficient with its stated li
 fully pass, and real-weight validation stays unauthorized. Any failure in 2, 3, 6 or 10 is a blocker for
 GPU validation of real weights.
 
-### Step 8 in detail: selecting the profiling mechanism (20 min, synthetic 1-GPU case)
+### Step 8 in detail: selecting the profiling mechanism (30 min, 2 GPU-hours maximum, synthetic cases)
 
-Success criteria, each recorded as met or not met, no automatic escalation:
-1. the spawner-started profiler delivers the candidate process's events across the uid boundary in the pod
-   (if not: record the diagnostic; option B is then same-uid only and loses report protection);
-2. the oracle's kernels fall inside the evaluator's clock windows and `audit_windows` reports
-   `within_budget`; a two-kernel control reports `launch_budget_failed`;
-3. a control that starts an untraced subprocess is reported `audit_invalid` through the NVML process count
-   (or GPU accounting, if the operator enabled it), never as a pass;
-4. option C feasibility: the grader creates a second CUDA context, maps one input through the IPC path,
-   launches a trivial cubin with `cuLaunchKernel`, and its own trace shows exactly that kernel while the
-   reference tensors stay in the primary context.
+Experiments G1 to G5 and their success criteria are in `PROFILING-FEASIBILITY.md` section 8 (process-tree
+and system-wide profiler scopes run by the spawner, two-kernel and graph controls, untraced-subprocess
+control, 2-GPU NCCL case). Option C's feasibility probe is removed from C2 while the HOLD stands. No
+outcome escalates to real weights; the owners decide after the step.
 
 ## Blocker B-C2-1: launch audit of record in remote mode (analysis: PROFILING-DECISION.md, L24)
 

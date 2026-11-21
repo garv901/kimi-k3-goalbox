@@ -312,3 +312,16 @@ named by their tray number on rack 10 (Kubernetes) or rack 3 (Slurm, Docker).
   candidate under its own uid is a detective control, not the audit of record. (4) The grader-launched
   kernel in a separate CUDA context is the recommended authoritative design; its adoption changes the
   GPU-phase submission contract and is the repository owners' decision. D-L1 to D-L8 unchanged.
+
+## L25. HOLD on B-C2-1; detection, not enforcement, is what the contract requires
+
+- Decision (operator, 2026-11-21): option C and any change to the submission contract are on HOLD pending
+  explicit approval from both repository owners. D-L1 to D-L8 unchanged.
+- Finding: the contract requires complete, trustworthy detection with a fail-closed rule, not enforcement;
+  every profiler mechanism available (process-tree, system-wide CUDA scope, CUPTI) produces its events inside
+  the traced process, as the baseline design already did (the audit docstring's contrary claim is corrected).
+  Report-file ownership cannot be separated from the candidate's uid without losing event delivery (E3b,
+  E3c, E4), and the uid-drop helper is disabled by no_new_privs. The trustworthy parts are the spawner as
+  supervisor (pid 1, ptrace-immune, authenticated census) and the completeness rules of L24.
+- Plan: C2 step 8 runs G1 to G5 (30 min, 2 GPU-hours) to validate the spawner-run profiler as a detective
+  audit; the owners then decide whether its residual is acceptable. `sandbox/k8s/PROFILING-FEASIBILITY.md`.

@@ -1,0 +1,42 @@
+NVIDIA Nsight Systems version 2026.3.2.239-263238426747v0
+
+	--cuda-event-trace=
+
+	   Possible values are 'auto', 'true' or 'false'.
+	   Trace CUDA Event completion on the device side, and get better correlation
+	   support among CUDA Event APIs. Applicable only when CUDA tracing is enabled.
+	   Note that 'CUDA Event' refers to the synchronization mechanism (cudaEventRecord,
+	   cudaStreamWaitEvent etc.).
+	   Enabling this feature may increase runtime overhead and the likelihood of false
+	   dependencies across CUDA Streams, similar to CUDA Event's timing functionality
+	   when cudaEventDisableTiming is not disabled.
+	   'auto' will automatically turn off the trace if a target process has
+	   CUDA_DEVICE_MAX_CONNECTIONS set to 1.
+	   This switch requires CUDA driver 12.8 or higher. 
+	   Default is 'false'. Application scope.
+
+	--cuda-flush-interval=
+
+	   Set the interval, in milliseconds, when buffered CUDA data is automatically saved to
+	   storage. CUDA data buffer saves may cause profiler overhead. Buffer save behavior can be
+	   controlled with this switch.
+
+	   If the CUDA flush interval is set to 0 on systems running CUDA 11.0 or newer, buffers are
+	   saved when they fill. If a flush interval is set to a non-zero value on such systems, 
+== cuda trace / graph / injection related switches
+	--cuda-graph-trace=<granularity>[:<launch origin>][:<nvtx mode>]
+	--cuda-memory-usage=
+	--event-sample=
+	--gpu-metrics-devices=
+	--gpu-metrics-frequency=
+	--nic-metrics=
+
+	--gpu-metrics-devices=
+
+	   Collect GPU Metrics from the specified devices.
+	   Possible values are:
+	     'none', 'cuda-visible', 'all',
+	   or a comma separated list of GPU IDs reported by '--gpu-metrics-devices=help' switch.
+	   Default is 'none'. System scope.
+
+	--gpu-metrics-frequency=
