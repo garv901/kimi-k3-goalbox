@@ -355,12 +355,18 @@ def run_grade(rid: str, req: dict, out, deadline: float) -> tuple[int, str, dict
         state = str(record.get("status", "GRADER_FAILED"))[:40]
     verdict = {"rid": rid, "node": NODE, "case": case, "submission": str(submission), "graded_snapshot": snapshot,
                "harness_args": harness_args, "grader_exit": proc.returncode, "state": state, "utc": time.time(),
-               "record": record}
+               "record": record,
+               # B-C2-1: no trusted profiler trace of the remote candidate yet, so no launch audit of record.
+               # A grade with state ok_provisional is a TRANSPORT PASS, never a full pass (C2-GPU-SMOKE-PLAN.md).
+               "launch_audit": {"status": "advisory_only", "blocker": "B-C2-1",
+                                "note": "in-process counts from the candidate process are not authoritative"}}
     write_atomic(SPOOL / "verdict" / f"{rid}.json", json.dumps(verdict))
     if code is None:
         from_status = {"status": state}
         code = _exit_code_for(state)
     out.write(f"grader: verdict {state} (exit {code}); record at verdict/{rid}.json\n")
+    if state == "ok_provisional":
+        out.write("grader: TRANSPORT PASS only: launch audit of record not available in remote mode (B-C2-1)\n")
     return code, state, {"job": job, "verdict_sha256": hashlib.sha256(json.dumps(verdict).encode()).hexdigest(), **from_status}
 
 

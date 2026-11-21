@@ -61,12 +61,22 @@ def measure_candidate(candidate, inputs: dict, warmup: int, reps: int, *, rep_ti
         outputs, _ = candidate.run(inputs, rep_timeout_s)
     host_ms: list[float] = []
     event_ms: list[float | None] = []
+    windows: list[dict] = []
     for index in range(reps):
+        # The evaluator's own clock readings around each repetition: the trusted association between a
+        # profiler trace and the measurement phase (L24). CLOCK_MONOTONIC_RAW is shared by every process on
+        # the host, so a trace taken in another container can be aligned to these windows.
+        t0 = {"raw_ns": time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW), "mono_ns": time.monotonic_ns(),
+              "real_ns": time.time_ns()}
         outputs, timing = candidate.run(inputs, rep_timeout_s, timed=True,
                                         nvtx=f"{nvtx_prefix}:rep{index}" if nvtx_prefix else None)
+        t1 = {"raw_ns": time.clock_gettime_ns(time.CLOCK_MONOTONIC_RAW), "mono_ns": time.monotonic_ns(),
+              "real_ns": time.time_ns()}
+        windows.append({"rep": index, "start": t0, "end": t1})
         host_ms.append(timing["host_ms"])
         event_ms.append(timing["cuda_event_ms"])
     record = summarize(host_ms, event_ms)
+    record["windows"] = windows
     record["method"] = ("GPU time between the parent's events around the candidate's own interprocess events; "
                         "host time includes the pipe round trip to the candidate process")
     return record, outputs

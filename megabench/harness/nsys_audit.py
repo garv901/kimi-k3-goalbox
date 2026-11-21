@@ -143,6 +143,107 @@ def audit_trace(sqlite_path: Path, *, budget: int, device_of_rank: dict[int, int
     return result
 
 
+def session_base_ns(conn) -> int | None:
+    """Trace timestamps are nanoseconds since the session start; TARGET_INFO_SESSION_START_TIME.systemClockNs is
+    that instant on CLOCK_MONOTONIC (measured on rack 3 with Nsight Systems 2026.3: within 10 us after library
+    warm-up, while CLOCK_MONOTONIC_RAW drifts seconds away). The evaluator records its repetition windows on
+    the same clock (benchmark.measure_candidate), so a trace from another process or container can be aligned
+    without trusting anything inside it."""
+    if "TARGET_INFO_SESSION_START_TIME" not in _tables(conn):
+        return None
+    columns = _columns(conn, "TARGET_INFO_SESSION_START_TIME")
+    if "systemClockNs" not in columns:
+        return None
+    row = conn.execute("select systemClockNs from TARGET_INFO_SESSION_START_TIME").fetchone()
+    return int(row[0]) if row and row[0] is not None else None
+
+
+def audit_windows(sqlite_path: Path, *, windows: dict[int, list[dict]], budget: int, device_of_rank: dict[int, int],
+                  expected_pids: dict[int, set[int]] | None = None, slack_ns: int = 2_000_000) -> dict:
+    """Audit of record for remote candidates (L24). The measurement phases come from the evaluator's own clock
+    windows (`windows[rank]` = list of {"rep", "start": {"mono_ns"}, "end": {"mono_ns"}}), never from NVTX
+    ranges written inside the candidate process. For every rank and repetition the kernels on the rank's device
+    whose start lies in the window (with `slack_ns` on both sides for scheduling latency) are counted with the
+    D-L1..D-L8 rules. Any of these makes the audit INVALID rather than a pass (L22): no clock base in the trace,
+    a rank or repetition without a window, a window with no kernel, a window with kernels from a process not in
+    `expected_pids[rank]` (when given), overlapping windows across repetitions of one rank, or profiling that
+    stopped before the last window (truncated trace)."""
+    conn = sqlite3.connect(f"file:{sqlite_path}?mode=ro", uri=True)
+    try:
+        tables = _tables(conn)
+        base = session_base_ns(conn)
+        kernels = _events(conn, "CUPTI_ACTIVITY_KIND_KERNEL", ("shortName", "demangledName", "mangledName"))
+        copies = _events(conn, "CUPTI_ACTIVITY_KIND_MEMCPY")
+        memsets = _events(conn, "CUPTI_ACTIVITY_KIND_MEMSET")
+        runtime = _events(conn, "CUPTI_ACTIVITY_KIND_RUNTIME", ("nameId",))
+        graph_nodes = _events(conn, "CUDA_GRAPH_NODE_EVENTS") + _events(conn, "CUDA_GRAPH_EVENTS")
+        processes = {int(pid): name for _, pid, name in conn.execute("select globalPid, pid, name from PROCESSES")} \
+            if "PROCESSES" in tables else {}
+        stopped = None
+        if "DIAGNOSTIC_EVENT" in tables:
+            row = conn.execute("select max(timestamp) from DIAGNOSTIC_EVENT where text like 'Profiling has stopped%'").fetchone()
+            stopped = int(row[0]) if row and row[0] is not None else None
+    finally:
+        conn.close()
+    result = {"status": "audit_invalid", "max_gpu_launches_per_rank": budget, "ranks": {}, "tables": sorted(tables),
+              "clock": "CLOCK_MONOTONIC, aligned through TARGET_INFO_SESSION_START_TIME.systemClockNs",
+              "counting_rule": "device kernels (compute + NCCL) starting inside the evaluator's repetition window on the "
+                               "rank's device; memcpy/memset reported, not counted; any cudaGraphLaunch or graph node in the "
+                               "window fails; a window without a kernel, with kernels from an unexpected process, or outside "
+                               "the trace makes the audit invalid", "invalid_reasons": []}
+    if base is None:
+        result["invalid_reasons"].append("no session clock base in the trace")
+        return result
+    graph_calls = [r for r in runtime if "graphlaunch" in (r.get("name") or "").lower()]
+    failed = False
+    for rank in sorted(device_of_rank):
+        device = device_of_rank[rank]
+        rank_windows = sorted(windows.get(rank, []), key=lambda w: w["rep"])
+        rank_record = {"device_id": device, "reps": []}
+        if not rank_windows:
+            result["invalid_reasons"].append(f"rank {rank}: no repetition windows")
+        spans = [(w["start"]["mono_ns"] - base - slack_ns, w["end"]["mono_ns"] - base + slack_ns) for w in rank_windows]
+        if any(spans[i][1] > spans[i + 1][0] + 2 * slack_ns for i in range(len(spans) - 1)):
+            result["invalid_reasons"].append(f"rank {rank}: repetition windows overlap")
+        for w, (start, end) in zip(rank_windows, spans):
+            if stopped is not None and end > stopped:
+                result["invalid_reasons"].append(f"rank {rank} rep {w['rep']}: window ends after profiling stopped (truncated trace)")
+
+            def inside(event, same_device=True):
+                if same_device and device is not None and event.get("deviceId") is not None and event["deviceId"] != device:
+                    return False
+                return start <= event["start"] <= end
+
+            in_kernels = [k for k in kernels if inside(k)]
+            pids = {int(k["globalPid"]) & 0xFFFFFF for k in in_kernels if k.get("globalPid") is not None}
+            foreign = sorted(pids - expected_pids[rank]) if expected_pids and rank in expected_pids else []
+            if foreign:
+                result["invalid_reasons"].append(f"rank {rank} rep {w['rep']}: kernels from unexpected process(es) {foreign}")
+            if not in_kernels:
+                result["invalid_reasons"].append(f"rank {rank} rep {w['rep']}: no kernel in the window")
+            in_graphs = [g for g in graph_calls if start <= g["start"] <= end]
+            in_nodes = [g for g in graph_nodes if inside(g)]
+            nccl = [k for k in in_kernels if "nccl" in (k.get("name") or "").lower()]
+            count = len(in_kernels)
+            ok = 1 <= count <= budget and not in_graphs and not in_nodes
+            failed |= not ok
+            rank_record["reps"].append({
+                "rep": w["rep"], "window_ms": (end - start - 2 * slack_ns) / 1e6, "device_kernels": count,
+                "nccl_kernels": len(nccl), "memcpy_events": sum(1 for c in copies if inside(c)),
+                "memset_events": sum(1 for m in memsets if inside(m)), "graph_launches": len(in_graphs),
+                "graph_node_events": len(in_nodes), "processes": sorted(pids), "within_budget": ok,
+                "gpu_span_ms": ((max(k["end"] for k in in_kernels) - min(k["start"] for k in in_kernels)) / 1e6) if in_kernels else None,
+                "kernel_names": sorted({k.get("name") or "?" for k in in_kernels})[:16]})
+        rank_record["within_budget"] = bool(rank_record["reps"]) and all(r["within_budget"] for r in rank_record["reps"])
+        result["ranks"][str(rank)] = rank_record
+    result["traced_processes"] = processes
+    if result["invalid_reasons"]:
+        result["status"] = "audit_invalid"
+    else:
+        result["status"] = "launch_budget_failed" if failed else "within_budget"
+    return result
+
+
 def main(argv=None) -> int:
     import argparse
 

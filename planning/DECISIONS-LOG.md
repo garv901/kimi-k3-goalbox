@@ -296,3 +296,19 @@ named by their tray number on rack 10 (Kubernetes) or rack 3 (Slurm, Docker).
 - Observed: the nsys audit of record traces the evaluator's process tree, which no longer contains the
   candidate. Blocker B-C2-1 (C2-GPU-SMOKE-PLAN.md); until resolved the launch-budget verdict in remote mode
   is advisory and labelled so.
+
+## L24. Launch audit for remote candidates: trusted phase windows, detective profiler, grader-launched target
+
+- Observed (CPU experiments, 2026-11-21): Nsight Systems timestamps align to CLOCK_MONOTONIC through the
+  session clock base within 10 us; a child started with an emptied environment is invisible to the trace;
+  a uid change under the profiler protects the report file but the injection does not deliver events across
+  it in the version at hand; in-process event streams are produced inside the traced process.
+- Decision: (1) the evaluator records its own CLOCK_MONOTONIC window around every timed repetition and the
+  audit (`nsys_audit.audit_windows`) associates kernels with repetitions through those windows, never through
+  NVTX ranges from the candidate process; a window without a kernel, kernels from an unexpected process, a
+  missing clock base, a missing rank or a trace that stopped early make the audit `audit_invalid`, never a
+  pass (L22 applied to the audit). (2) In remote mode the verdict carries `launch_audit.status` and a
+  passing grade is a TRANSPORT PASS until an audit of record exists. (3) A spawner-run profiler with the
+  candidate under its own uid is a detective control, not the audit of record. (4) The grader-launched
+  kernel in a separate CUDA context is the recommended authoritative design; its adoption changes the
+  GPU-phase submission contract and is the repository owners' decision. D-L1 to D-L8 unchanged.

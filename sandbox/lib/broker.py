@@ -214,6 +214,9 @@ def k8s_state(rid):
                     rec = v.get("record") or {}
                     out.write(f"----- verdict: {v.get('state')} {('- ' + str(rec.get('reason'))) if rec.get('reason') else ''}"
                               f" (graded snapshot sha256 {str(v.get('graded_snapshot', {}).get('sha256', '?'))[:16]})\n")
+                    audit = v.get("launch_audit") or {}
+                    if audit.get("status") != "within_budget":
+                        out.write(f"----- launch audit: {audit.get('status', 'none')}; a passing verdict is a TRANSPORT PASS only\n")
                 except (OSError, ValueError):
                     out.write("----- verdict file unreadable\n")
     code = max(int(r["exit"]) for r in records)

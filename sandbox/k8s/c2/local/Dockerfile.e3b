@@ -1,0 +1,11 @@
+# Experiment image for E3b only (not the deployed image): adds a file-capability helper that switches a
+# traced target to an unprivileged uid, so the profiler report stays owned by the spawner's uid.
+ARG BASE=goalbox-k3:dev
+FROM ${BASE}
+USER root
+COPY dropuid.c /tmp/dropuid.c
+RUN gcc -O2 -Wall -o /usr/local/bin/dropuid /tmp/dropuid.c && rm /tmp/dropuid.c \
+ && chown root:1000 /usr/local/bin/dropuid && chmod 0750 /usr/local/bin/dropuid \
+ && (command -v setcap >/dev/null || (apt-get update -qq && apt-get install -y -qq libcap2-bin >/dev/null && rm -rf /var/lib/apt/lists/*)) \
+ && /usr/sbin/setcap cap_setuid,cap_setgid+ep /usr/local/bin/dropuid && /usr/sbin/getcap /usr/local/bin/dropuid
+USER 1000

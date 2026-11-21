@@ -1,0 +1,21 @@
+=== E1/E2 (profexp e12): traced parent + child with emptied environment
+session base: systemClockNs=7558727487112065 utcEpochNs=1795301318830896411
+  exp:parent:mark0 trace_ns=3008671521 {'monotonic_ns': 198884, 'boottime_ns': 196516, 'realtime_ns': 198116} raw-vs-mono offset s: 23.697
+  exp:parent:mark1 trace_ns=3208811335 {'monotonic_ns': 23843, 'boottime_ns': 21603, 'realtime_ns': 22755} raw-vs-mono offset s: 23.697
+  exp:parent:mark2 trace_ns=3409013326 {'monotonic_ns': 7683, 'boottime_ns': 6947, 'realtime_ns': 7139} raw-vs-mono offset s: 23.697
+  parent LD_PRELOAD set: True | child ran: True | child LD_PRELOAD set: False
+  marks in trace: ['exp:parent:mark0', 'exp:parent:mark1', 'exp:parent:mark2']
+  PROCESSES known to the session: [(30, '/opt/goalbox/venv/bin/python'), (8, 'tail'), (1, 'bash'), (7, 'nsys'), (21, 'nsys'), (29, 'nsys-launcher'), (31, 'nsys-tee'), (139, 'python')] | child pid: 139
+=== E3b: nsys uid 1000, target uid 1001 (own group), report dir 0700
+  marks: []
+  PROCESSES: [(32, 'bash'), (33, 'nsys-tee'), (1, 'bash'), (8, 'nsys'), (23, 'nsys'), (9, 'grep'), (31, 'nsys-launcher'), (10, 'tail')]
+  diag: ['Common injection library initialized successfully.', 'OS runtime libraries injection initialized successfully.', 'Not all NVTX events might have been collected.', 'No NVTX events collected. Does the process use NVTX?']
+=== E3c: nsys uid 1000 umask 007, target uid 1001 gid 1000
+Traceback (most recent call last):
+  File "<stdin>", line 26, in <module>
+  File "<stdin>", line 3, in marks_of
+sqlite3.OperationalError: unable to open database file
+=== E3c: nsys uid 1000 umask 007, target uid 1001 gid 1000
+  marks: []
+  PROCESSES: [(32, 'bash'), (33, 'nsys-tee'), (1, 'bash'), (8, 'nsys'), (23, 'nsys'), (9, 'grep'), (31, 'nsys-launcher'), (10, 'tail')]
+  diag: ['Common injection library initialized successfully.', 'OS runtime libraries injection initialized successfully.', 'Common injection library initialized successfully.', 'OS runtime libraries injection initialized successfully.', 'Not all NVTX events might have been collected.', 'No NVTX events collected. Does the process use NVTX?', 'Not all NVTX events might have been collected.', 'No NVTX events collected. Does the process use NVTX?']

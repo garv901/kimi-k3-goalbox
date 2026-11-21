@@ -46,10 +46,29 @@ Everything else is `kubectl exec` into a container or a broker request through t
 | 9 | contamination controls: GPU health counters recorded before and after each grade; a grade run while a second harmless kernel loop occupies one GPU from the grader container | 15 min | the interfered grade is `CONTAMINATED` (exit 9) with no `candidate_timing`; clean grades carry `gpu_health` and process samples |
 | 10 | candidate-authored files cannot set the verdict: compare every verdict file's content with the grader log and the broker's view; confirm the runner wrote nothing under `/ctl-results` | 10 min | the verdict record equals the grader's private result; `candidate/<rid>/` holds only stderr copies |
 
-C2 passes when steps 0 to 7, 9 and 10 pass within the lease. Step 8 is informational. Any failure in 2, 3,
-6 or 10 is a blocker for GPU validation of real weights.
+**TRANSPORT PASS**: steps 0 to 7, 9 and 10 pass within the lease. It proves the verdict channel, the
+isolation boundary, the export audit and the contamination controls on real GPUs. It does not make any grade
+a full pass, because the launch-budget audit of record is still advisory (B-C2-1).
+**FULL C2 PASS**: a TRANSPORT PASS plus a launch audit of record accepted under L24 (`PROFILING-DECISION.md`):
+either the grader-launched design (option C) demonstrated by the step 8 feasibility probe and adopted by the
+repository owners, or option B accepted by them as sufficient with its stated limits. Until then C2 cannot
+fully pass, and real-weight validation stays unauthorized. Any failure in 2, 3, 6 or 10 is a blocker for
+GPU validation of real weights.
 
-## Blocker B-C2-1: launch audit of record in remote mode
+### Step 8 in detail: selecting the profiling mechanism (20 min, synthetic 1-GPU case)
+
+Success criteria, each recorded as met or not met, no automatic escalation:
+1. the spawner-started profiler delivers the candidate process's events across the uid boundary in the pod
+   (if not: record the diagnostic; option B is then same-uid only and loses report protection);
+2. the oracle's kernels fall inside the evaluator's clock windows and `audit_windows` reports
+   `within_budget`; a two-kernel control reports `launch_budget_failed`;
+3. a control that starts an untraced subprocess is reported `audit_invalid` through the NVML process count
+   (or GPU accounting, if the operator enabled it), never as a pass;
+4. option C feasibility: the grader creates a second CUDA context, maps one input through the IPC path,
+   launches a trivial cubin with `cuLaunchKernel`, and its own trace shows exactly that kernel while the
+   reference tensors stay in the primary context.
+
+## Blocker B-C2-1: launch audit of record in remote mode (analysis: PROFILING-DECISION.md, L24)
 
 `nsys_candidate` and the audit of record trace the evaluator's process tree. In the two-container design
 the candidate's kernels run in the runner, so a trace taken in the grader has no candidate kernels, and a

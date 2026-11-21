@@ -169,3 +169,13 @@ Conditional GO for C1 received after commit 361a053 was accepted. Done locally (
 - C1b operator command file `reports/gb300/C1B-OPERATOR-COMMANDS.md`; C1 script and manifests confirmed
   unchanged since the review (rendered hashes identical). C2 plan `sandbox/k8s/C2-GPU-SMOKE-PLAN.md`:
   tray15, 4 GPUs, 4 h maximum lease, 11 steps with pass criteria.
+
+## 2026-11-21: B-C2-1 profiling analysis, CPU-only
+
+- Experiments E1/E2/E3b/E3c on rack 3 tray11 (Docker, own pid namespaces, no GPU): clock mapping, injection
+  escape, uid separation with a file-capability helper, shared-group variant. Evidence
+  `reports/gb300/profiling-decision-20261121/`; analysis and recommendation `sandbox/k8s/PROFILING-DECISION.md`.
+- Code: evaluator clock windows per timed repetition; `nsys_audit.audit_windows` (invalid unless complete);
+  verdicts carry `launch_audit.status`; broker marks passing grades as TRANSPORT PASS. 37 CPU tests OK.
+- C2 plan: TRANSPORT PASS vs FULL C2 PASS, step 8 detailed with four success criteria. L24 recorded.
+- C1b: waiting for the operator's evidence; script and manifests unchanged since the review.

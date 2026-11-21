@@ -159,8 +159,18 @@ class EventClassificationTests(unittest.TestCase):
 
 
 class NsysAuditTests(unittest.TestCase):
-    def make_db(self, path: Path, kernels, ranges, runtime=(), copies=()):
+    def make_db(self, path: Path, kernels, ranges, runtime=(), copies=(), base_ns=None, processes=(), stopped_ns=None):
         conn = sqlite3.connect(path)
+        if base_ns is not None:
+            conn.executescript("""
+                create table TARGET_INFO_SESSION_START_TIME (utcEpochNs integer, utcTime text, localTime text, systemClockNs integer);
+                create table PROCESSES (globalPid integer, pid integer, name text);
+                create table DIAGNOSTIC_EVENT (timestamp integer, timestampType integer, source integer, severity integer, text text, globalPid integer);
+            """)
+            conn.execute("insert into TARGET_INFO_SESSION_START_TIME values (?, 'x', 'x', ?)", (1_795_000_000_000_000_000, base_ns))
+            if stopped_ns is not None:
+                conn.execute("insert into DIAGNOSTIC_EVENT values (?, 1, 3, 1, 'Profiling has stopped.', 0)", (stopped_ns,))
+            conn.executemany("insert into PROCESSES values (?, ?, ?)", [((pid << 24) | 0x1000000000000, pid, name) for pid, name in processes])
         conn.executescript("""
             create table StringIds (id integer primary key, value text not null);
             create table NVTX_EVENTS (start integer not null, end integer, eventType integer not null, text text,
@@ -175,8 +185,8 @@ class NsysAuditTests(unittest.TestCase):
         for name in [k[3] for k in kernels] + [r[2] for r in runtime]:
             names.setdefault(name, len(names) + 1)
         conn.executemany("insert into StringIds values (?, ?)", [(i, n) for n, i in names.items()])
-        conn.executemany("insert into CUPTI_ACTIVITY_KIND_KERNEL values (?, ?, ?, 1, 7, 0, 1, ?, ?)",
-                         [(s, e, dev, names[n], names[n]) for s, e, dev, n in kernels])
+        conn.executemany("insert into CUPTI_ACTIVITY_KIND_KERNEL values (?, ?, ?, 1, 7, 0, ?, ?, ?)",
+                         [(k[0], k[1], k[2], (k[4] if len(k) > 4 else 1), names[k[3]], names[k[3]]) for k in kernels])
         conn.executemany("insert into NVTX_EVENTS values (?, ?, 59, ?, 1, null, 0)", ranges)
         conn.executemany("insert into CUPTI_ACTIVITY_KIND_RUNTIME values (?, ?, 1, 0, ?)", [(s, e, names[n]) for s, e, n in runtime])
         conn.executemany("insert into CUPTI_ACTIVITY_KIND_MEMCPY values (?, ?, ?, 1024, 8)", copies)
@@ -219,6 +229,39 @@ class NsysAuditTests(unittest.TestCase):
             self.make_db(db3, kernels=[(100, 200, 0, "mega")], ranges=[(90, 210, "other:range")])
             self.assertEqual(nsys_audit.audit_trace(db3, budget=1, device_of_rank={0: 0})["status"], "unverified")
 
+
+    def test_window_audit_is_invalid_unless_complete(self):
+        """L24: the audit of record for remote candidates uses the evaluator's own clock windows. Complete and
+        within budget -> within_budget; two kernels -> launch_budget_failed; a window without a kernel, a kernel
+        from an unexpected process, no clock base, or a missing rank -> audit_invalid, never a pass."""
+        from megabench.harness.nsys_audit import audit_windows
+        base = 5_000_000_000_000
+        w = lambda rank, rep, s, e: {"rep": rep, "start": {"mono_ns": base + s}, "end": {"mono_ns": base + e}}
+        windows = {0: [w(0, 0, 10_000_000, 20_000_000), w(0, 1, 30_000_000, 40_000_000)]}
+        with tempfile.TemporaryDirectory() as d:
+            db = Path(d) / "w.sqlite"
+            self.make_db(db, kernels=[(12_000_000, 13_000_000, 0, "mega", 77), (33_000_000, 34_000_000, 0, "mega", 77)],
+                         ranges=[], base_ns=base, processes=[(77, "python")])
+            r = audit_windows(db, windows=windows, budget=1, device_of_rank={0: 0}, expected_pids={0: {77}})
+            self.assertEqual(r["status"], "within_budget", r); self.assertEqual([x["device_kernels"] for x in r["ranks"]["0"]["reps"]], [1, 1])
+            self.assertEqual(audit_windows(db, windows=windows, budget=1, device_of_rank={0: 0}, expected_pids={0: {78}})["status"], "audit_invalid")
+            self.assertEqual(audit_windows(db, windows={0: windows[0], 1: []}, budget=1, device_of_rank={0: 0, 1: 1})["status"], "audit_invalid")
+            db2 = Path(d) / "two.sqlite"
+            self.make_db(db2, kernels=[(12_000_000, 13_000_000, 0, "a", 77), (14_000_000, 15_000_000, 0, "b", 77),
+                                       (33_000_000, 34_000_000, 0, "a", 77)], ranges=[], base_ns=base)
+            self.assertEqual(audit_windows(db2, windows=windows, budget=1, device_of_rank={0: 0})["status"], "launch_budget_failed")
+            db3 = Path(d) / "gap.sqlite"
+            self.make_db(db3, kernels=[(12_000_000, 13_000_000, 0, "a", 77)], ranges=[], base_ns=base)   # rep 1 has no kernel
+            r = audit_windows(db3, windows=windows, budget=1, device_of_rank={0: 0})
+            self.assertEqual(r["status"], "audit_invalid"); self.assertTrue(any("no kernel" in x for x in r["invalid_reasons"]))
+            db4 = Path(d) / "nobase.sqlite"
+            self.make_db(db4, kernels=[(12_000_000, 13_000_000, 0, "a", 77)], ranges=[])
+            self.assertEqual(audit_windows(db4, windows=windows, budget=1, device_of_rank={0: 0})["status"], "audit_invalid")
+            db5 = Path(d) / "truncated.sqlite"
+            self.make_db(db5, kernels=[(12_000_000, 13_000_000, 0, "mega", 77), (33_000_000, 34_000_000, 0, "mega", 77)],
+                         ranges=[], base_ns=base, stopped_ns=35_000_000)                      # profiler stopped inside rep 1
+            r = audit_windows(db5, windows=windows, budget=1, device_of_rank={0: 0})
+            self.assertEqual(r["status"], "audit_invalid"); self.assertTrue(any("truncated" in x for x in r["invalid_reasons"]))
 
 class TopologyTests(unittest.TestCase):
     def test_single_host_and_two_trays(self):
