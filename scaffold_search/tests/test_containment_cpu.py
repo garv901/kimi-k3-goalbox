@@ -1,7 +1,7 @@
 """CPU, no GPU, no root: detection-only containment demonstration.
 
 A process tree of the (simulated) run user appears as a GPU compute process WITHOUT SS_LEASE_ID in its
-environment (nvidia-smi is mocked). The sampler must flag it as `bypass`; run_arm's Runner.contain
+environment and outside every active lease (nvidia-smi and the lease daemon are mocked). The sampler must flag it as `bypass`; run_arm's Runner.contain
 must SIGKILL it with every descendant, record the event and mark the run failed; rescore must then
 score the run as failed (primary score None, source 'failed: ...').
 
@@ -37,22 +37,94 @@ def _smi_mock(bypass_pid):
     return _smi
 
 
+def _sample_twice(s, smi, active, env=None):
+    """two consecutive samples with the daemon status `active` (list / None = daemon down) and environ `env`"""
+    with mock.patch.object(telemetry, '_smi', smi), mock.patch.object(telemetry, 'lease_active', lambda: active), \
+         mock.patch.object(telemetry, 'lease_env_id', lambda pid: env):
+        return s.sample(), s.sample()
+
+
 def test_sampler_flags_unleased_gpu_process_of_the_run_user():
-    p = _tree()
+    """environ unreadable (None, as for root without CAP_SYS_PTRACE in the container): classification comes
+    from the lease daemon's active holders; a bypass needs two consecutive samples."""
+    p = _tree(); kid = telemetry.descendants([p.pid])[0]      # deepest descendant: the 'GPU process'
+    uid = os.getuid()
     try:
         d = tempfile.mkdtemp(); os.makedirs(f'{d}/logs')
-        s = telemetry.GpuSampler(d, os.getuid())
-        with mock.patch.object(telemetry, '_smi', _smi_mock(p.pid)), \
-             mock.patch.object(telemetry, 'has_lease_env', lambda pid: False):
-            rec = s.sample()
-        assert rec['bypass'] == [p.pid] and rec['mine'] == [2] and s.last_bypass == [p.pid]
-        assert rec['gpus'][2]['uids'] == [os.getuid()]
-        # a leased process (SS_LEASE_ID in its environment) is not a bypass
-        with mock.patch.object(telemetry, '_smi', _smi_mock(p.pid)), \
-             mock.patch.object(telemetry, 'has_lease_env', lambda pid: True):
-            assert s.sample()['bypass'] == []
+        s = telemetry.GpuSampler(d, uid)
+        r1, r2 = _sample_twice(s, _smi_mock(kid), [], env=None)         # no lease at all
+        assert r1['unleased'] == [kid] and r1['bypass'] == [] and r1['mine'] == [2] and r1['lease_daemon']
+        assert r2['bypass'] == [kid] and s.last_bypass == [kid] and s.first_seen[kid] <= r1['t'] + 0.01
+        assert r1['gpus'][2]['uids'] == [uid]
+        # covered by an active lease of this uid whose holder is the tree leader -> not a bypass (environ unreadable)
+        s = telemetry.GpuSampler(d, uid)
+        r1, r2 = _sample_twice(s, _smi_mock(kid), [{'id': 'L1', 'uid': uid, 'pid': p.pid}], env=None)
+        assert r1['unleased'] == [] and r2['bypass'] == [] and s.last_bypass == [] and r2['leases'] == ['L1']
+        # an active lease of this uid held by an unrelated tree does not cover it
+        q = _tree()
+        try:
+            s = telemetry.GpuSampler(d, uid)
+            _, r2 = _sample_twice(s, _smi_mock(kid), [{'id': 'L2', 'uid': uid, 'pid': q.pid}], env=None)
+            assert r2['bypass'] == [kid]
+            # ... unless its (readable) environment names that active lease id; an expired id does not count
+            s = telemetry.GpuSampler(d, uid)
+            _, r2 = _sample_twice(s, _smi_mock(kid), [{'id': 'L2', 'uid': uid, 'pid': q.pid}], env='L2')
+            assert r2['bypass'] == []
+            s = telemetry.GpuSampler(d, uid)
+            _, r2 = _sample_twice(s, _smi_mock(kid), [{'id': 'L2', 'uid': uid, 'pid': q.pid}], env='L0-expired')
+            assert r2['bypass'] == [kid]
+        finally:
+            telemetry.kill_tree([q.pid])
+        # a lease of this uid granted but not yet spawned (pid None): unknown, nothing is flagged
+        s = telemetry.GpuSampler(d, uid)
+        _, r2 = _sample_twice(s, _smi_mock(kid), [{'id': 'L3', 'uid': uid, 'pid': None}], env=None)
+        assert r2['bypass'] == [] and r2['unleased'] == []
+        # another uid's lease is irrelevant; daemon unreachable -> no lease can be active -> flagged
+        s = telemetry.GpuSampler(d, uid)
+        _, r2 = _sample_twice(s, _smi_mock(kid), [{'id': 'L4', 'uid': uid + 1, 'pid': p.pid}], env=None)
+        assert r2['bypass'] == [kid]
+        s = telemetry.GpuSampler(d, uid)
+        _, r2 = _sample_twice(s, _smi_mock(kid), None, env=None)
+        assert r2['bypass'] == [kid] and r2['lease_daemon'] is False
     finally:
         telemetry.kill_tree([p.pid])
+
+
+def test_bypass_needs_two_consecutive_samples():
+    p = _tree(); kid = telemetry.descendants([p.pid])[0]; uid = os.getuid()
+    try:
+        d = tempfile.mkdtemp(); os.makedirs(f'{d}/logs')
+        s = telemetry.GpuSampler(d, uid)
+        none = _smi_mock(2 ** 22)                                     # a pid that does not exist
+        with mock.patch.object(telemetry, 'lease_active', lambda: []), mock.patch.object(telemetry, 'lease_env_id', lambda pid: None):
+            with mock.patch.object(telemetry, '_smi', _smi_mock(kid)):
+                assert s.sample()['bypass'] == []
+            with mock.patch.object(telemetry, '_smi', none):          # gone in between: not confirmed
+                assert s.sample()['bypass'] == [] and s.pending == set()
+            with mock.patch.object(telemetry, '_smi', _smi_mock(kid)):
+                assert s.sample()['bypass'] == []
+                assert s.sample()['bypass'] == [kid]
+    finally:
+        telemetry.kill_tree([p.pid])
+
+
+def test_leased_membership_rules():
+    """holder pid, its session/process group (new session per lease), its descendants; nothing else."""
+    uid = os.getuid()
+    p = _tree(); q = _tree()
+    try:
+        kid = telemetry.descendants([p.pid])[0]
+        act = [{'id': 'L', 'uid': uid, 'pid': p.pid}]
+        with mock.patch.object(telemetry, 'lease_env_id', lambda pid: None):
+            assert telemetry.leased(p.pid, uid, act) is True
+            assert telemetry.leased(kid, uid, act) is True
+            assert telemetry.leased(q.pid, uid, act) is False
+            assert telemetry.leased(kid, uid, []) is False
+            assert telemetry.leased(kid, uid, [{'id': 'L', 'uid': uid, 'pid': None}]) is None
+        # /proc/<pid>/stat is readable for any pid; the sid of a tree started with start_new_session is its leader
+        assert telemetry._proc_ids(kid)[2] == p.pid
+    finally:
+        telemetry.kill_tree([p.pid, q.pid])
 
 
 def test_containment_kills_tree_records_and_fails_the_run():

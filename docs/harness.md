@@ -52,8 +52,11 @@ command in the "Operations" section; both are needed by every run.
   tarballs to `snapshots/NNN-<id>.tgz` (+ sha256, `index.jsonl`), logs every check in
   `checks.jsonl` (unfinished ones as `incomplete` at teardown), copies reports, and pushes branch
   `run/<run_id>-<arm>` (ws without .git/build/.so/>50 MB, plus transcript, telemetry, indices).
-- **telemetry.py** — 1 Hz nvidia-smi sampler (util/mem per GPU, owning uids, `bypass` = GPU
-  process of the run uid without `SS_LEASE_ID`), lease slice, transcript stats (tool counts incl.
+- **telemetry.py** — 1 Hz nvidia-smi sampler (util/mem per GPU, owning uids, `unleased` = GPU
+  process of the run uid that no active lease of the gpu_lease daemon covers — holder pid, its
+  session or its descendants; `bypass` once seen in two consecutive samples; `/proc/<pid>/environ`
+  is unreadable for root without CAP_SYS_PTRACE, so `SS_LEASE_ID` is only an extra accept path),
+  lease slice, transcript stats (tool counts incl.
   Skill/Task, tokens, cost, rate-limit events, stall minutes from line timestamps), snapshots.
 - **rescore.py + review.py** — see "Outcome computation".
 - **Conditional small-lease cap**: while an

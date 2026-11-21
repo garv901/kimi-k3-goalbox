@@ -130,7 +130,7 @@ mismatch.
 | overlays/A3 (tree) | 8f9d929153cdaf177bbdc147fe3feffafad03e60ae584c6ce5a671e26cfc49fb |
 | scaffold_search/harness_files (tree) | 2f18b46dddf41e7c7d34419ad7837e041b100e5ed3ca87ae1088ddc0dd33ce59 |
 | scaffold_search/rescore.py | 921e06cb82ff6f94c914fb8bd672546a656b48d58f56dc38fb834b0382f4efc8 |
-| scaffold_search/gpu_lease.py | 7db8ac6991522135892fc2342f093cd69ccc193e48e7f65f3a9bd45a25e81804 |
+| scaffold_search/gpu_lease.py | 87f2989874ea718ab723cbfd327c9952a40b0b333d5e4ab864cd2b035ce2bcfb |
 | Claude Code / model | 2.1.326 / claude-opus-5-5 |
 
 Tree hash = sha256 over the sorted lines `relpath\0sha256(file)\n`. The benchmark commit is

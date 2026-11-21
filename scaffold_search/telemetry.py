@@ -1,9 +1,12 @@
 """Run telemetry (root).
 
 - `GpuSampler(run_dir, uid)`: 1 Hz nvidia-smi sampler -> logs/gpu_samples.jsonl: per GPU util/mem
-  and the uids owning its compute processes; flags processes of the run uid without a lease
-  (no SS_LEASE_ID in their environment) as `bypass`. run_arm reads `sampler.last_bypass` every
-  tick and contains: `kill_tree(descendants(bypass))`, the run is marked failed (containment).
+  and the uids owning its compute processes; flags processes of the run uid that no active lease
+  covers (not the holder pid / its session / its descendants per the gpu_lease daemon's status) as
+  `unleased`, and as `bypass` once seen in two consecutive samples. run_arm reads `sampler.last_bypass`
+  every tick and contains: `kill_tree(descendants(bypass))`, the run is marked failed (containment).
+  /proc/<pid>/environ (SS_LEASE_ID) is NOT the primary test: root in the docker container has no
+  CAP_SYS_PTRACE and cannot read a run user's environ (found in the GPU containment test ctest1).
 - `summarize(run_dir, run_id)` -> logs/telemetry.json: GPU-busy fraction, lease slice of
   /srv/ss/lease.jsonl (waits/holds), transcript stats from logs/agent*.jsonl (+ .times line
   timestamps written by run_arm): turns, tool counts incl. Skill/Task, tokens, cost, rate-limit
@@ -40,11 +43,64 @@ def cmdline(pid):
         return None
 
 
-def has_lease_env(pid):
+def lease_env_id(pid):
+    """SS_LEASE_ID of pid's environment: the id, '' if absent, None if /proc/<pid>/environ is unreadable.
+    Root WITHOUT CAP_SYS_PTRACE (the default docker capability set) cannot read another uid's environ, so
+    in the container this is None for every run-user process: never the primary leased/unleased test."""
     try:
-        return b'SS_LEASE_ID=' in open(f'/proc/{pid}/environ', 'rb').read()
+        env = open(f'/proc/{pid}/environ', 'rb').read()
     except OSError:
         return None
+    for kv in env.split(b'\0'):
+        if kv.startswith(b'SS_LEASE_ID='):
+            return kv[12:].decode('utf-8', 'replace')
+    return ''
+
+
+def _proc_ids(pid):
+    """(ppid, pgid, sid) of pid from /proc/<pid>/stat (readable without ptrace rights), or None."""
+    try:
+        stat = open(f'/proc/{pid}/stat').read()
+        f = stat[stat.rindex(')') + 2:].split()
+        return int(f[1]), int(f[2]), int(f[3])
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def lease_active():
+    """Active leases of the gpu_lease daemon ({id, run, uid, pid, gpus, ...}); None if it is unreachable."""
+    try:
+        from scaffold_search import gpu_lease
+        s = gpu_lease.connect()
+        try:
+            gpu_lease.send_msg(s, {'op': 'status'})
+            return gpu_lease.recv_msg(s).get('active', [])
+        finally:
+            s.close()
+    except Exception:
+        return None
+
+
+def leased(pid, uid, active):
+    """Is compute process `pid` of `uid` covered by an active lease (list from lease_active())?
+    The daemon spawns a leased command as a new session, so a leased process is the holder pid, a member of
+    the holder's session or process group, or a descendant of it: the same membership rule gpu_lease uses to
+    kill a lease's processes. An SS_LEASE_ID naming an active lease of this uid is an extra accept path when
+    the environment happens to be readable; an expired id is not. Returns None (unknown: do not flag) while
+    a lease of this uid has no holder pid yet, i.e. in the instant between grant and spawn."""
+    own = [l for l in active if l.get('uid') == uid]
+    if any(not l.get('pid') for l in own):
+        return None
+    holders = [l['pid'] for l in own]
+    if pid in holders:
+        return True
+    ids = _proc_ids(pid)
+    if ids and (ids[1] in holders or ids[2] in holders):
+        return True
+    if holders and pid in descendants(holders):
+        return True
+    env_id = lease_env_id(pid)
+    return bool(env_id) and env_id in {l['id'] for l in own}
 
 
 def descendants(pids):
@@ -105,7 +161,8 @@ class GpuSampler(threading.Thread):
         self.uid, self.interval = uid, interval
         self.stop_ev = threading.Event()
         self.last_bypass = []
-        self.first_seen = {}     # bypass pid -> time of the sample that first showed it
+        self.first_seen = {}     # unleased pid -> time of the sample that first showed it
+        self.pending = set()     # unleased pids of the previous sample (a bypass is confirmed by two samples)
 
     def sample(self):
         gpus = []
@@ -114,7 +171,11 @@ class GpuSampler(threading.Thread):
             i, bus, u, m = [x.strip() for x in line.split(',')]
             bus2idx[bus] = int(i)
             gpus.append({'i': int(i), 'util': int(u), 'mem_mib': int(m), 'uids': []})
-        mine, bypass = [], []
+        active = lease_active()
+        daemon_up = active is not None
+        if not daemon_up:
+            active = []          # no daemon -> no lease can be active: every GPU process of the run uid is unleased
+        mine, unleased = [], []
         for line in _smi(['--query-compute-apps=pid,gpu_bus_id']):
             try:
                 pid, bus = [x.strip() for x in line.split(',')]
@@ -127,14 +188,18 @@ class GpuSampler(threading.Thread):
                 gpus[gi]['uids'].append(uid)
             if uid == self.uid:
                 mine.append(gi)
-                if has_lease_env(pid) is False:
-                    bypass.append(pid)
-        self.last_bypass = bypass
+                if leased(pid, self.uid, active) is False:
+                    unleased.append(pid)
         now = time.time()
-        for pid in bypass:
+        for pid in unleased:
             self.first_seen.setdefault(pid, now)
+        # a bypass is an unleased pid seen in two consecutive samples (never kill on one stale lease status)
+        bypass = [p for p in unleased if p in self.pending]
+        self.pending = set(unleased)
+        self.last_bypass = bypass
         return {'t': round(now, 2), 'gpus': gpus, 'mine': sorted(set(x for x in mine if x is not None)),
-                'bypass': bypass}
+                'bypass': bypass, 'unleased': unleased, 'leases': [l.get('id') for l in active],
+                'lease_daemon': daemon_up}
 
     def run(self):
         with open(self.path, 'a') as f:

@@ -244,6 +244,8 @@ def test_kill_run_kills_active_lease():
         marker = os.path.join(E.dir, 'c.pid')
         p = E.run('X', 1, f'echo $$ > {marker}; sleep 300')
         cpid = _wait_pid(marker)
+        st = json.loads(subprocess.run([PY, GL, 'status'], env=E.env, capture_output=True, text=True).stdout)
+        assert [l['pid'] for l in st['active']] == [cpid], st   # status names the holder pid (telemetry.leased)
         t0 = time.time()
         k = subprocess.run([PY, GL, 'kill-run', 'X'], env=E.env, capture_output=True, text=True)
         assert '"killed": 1' in k.stdout, k.stdout

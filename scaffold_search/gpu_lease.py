@@ -253,7 +253,7 @@ class Daemon:
             if op == 'status':
                 with self.cv:
                     st = {'free': sorted(self.free),
-                          'active': [{k: l[k] for k in ('id', 'run', 'uid', 'n', 'gpus', 'cmd')} |
+                          'active': [{k: l[k] for k in ('id', 'run', 'uid', 'n', 'gpus', 'cmd', 'pid')} |
                                      {'held_s': round(time.time() - l['t_grant'], 1)} for l in self.active.values()],
                           'queue': [{k: q[k] for k in ('id', 'run', 'uid', 'n', 'cmd')} |
                                     {'waited_s': round(time.time() - q['t_req'], 1)} for q in self.queue]}
