@@ -1,0 +1,8 @@
+== evaluator option check: --trials 0 is rejected ("trials, reps, timeout must be positive"); controls need a controls-only flag
+== import and two CPU calls of each control (tiny synthetic inputs)
+  one_kernel_control: build + 2 runs ok, outputs ['cache_length', 'conv_state', 'expert_ids']..., 0.2s
+  two_kernel_control: build + 2 runs ok, outputs ['cache_length', 'conv_state', 'expert_ids']..., 0.2s
+  graph_control: build + 2 runs ok, outputs ['cache_length', 'conv_state', 'expert_ids']..., 0.2s
+  untraced_subprocess_control: build + 2 runs ok, outputs ['cache_length', 'conv_state', 'expert_ids']..., 0.2s
+  scan one_kernel_control: fail rules_hit=['oracle_import']
+  scan graph_control: fail rules_hit=['cuda_graph', 'oracle_import']

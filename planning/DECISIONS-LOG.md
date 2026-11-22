@@ -325,3 +325,17 @@ named by their tray number on rack 10 (Kubernetes) or rack 3 (Slurm, Docker).
   supervisor (pid 1, ptrace-immune, authenticated census) and the completeness rules of L24.
 - Plan: C2 step 8 runs G1 to G5 (30 min, 2 GPU-hours) to validate the spawner-run profiler as a detective
   audit; the owners then decide whether its residual is acceptable. `sandbox/k8s/PROFILING-FEASIBILITY.md`.
+
+## L26. C2 profiling experiment prepared; three pass levels; decision request to the owners
+
+- Prepared 2026-11-22 (not authorized to run): `sandbox/k8s/C2-PROFILING-TEST-MATRIX.md` (tests P1 to P10,
+  30 minutes, 2 GPU-hours maximum, controls-only harness options with `--trials 0 --no-scan`, every control
+  verdict `incorrect`), control candidates `one_kernel_control`, `two_kernel_control`, `graph_control`,
+  `untraced_subprocess_control`, and `reports/gb300/DECISION-REQUEST-B-C2-1.md`.
+- Pass levels kept distinct: TRANSPORT PASS (channel and isolation on GPUs), PROFILING FEASIBILITY PASS
+  (events delivered, aligned, counted; suppression by an extra process detected by presence evidence),
+  AUTHORITATIVE AUDIT PASS (not claimable while candidate-controlled instrumentation can drop records
+  without reliable detection). Census of processes or contexts is presence evidence, never a launch count.
+- Rules unchanged: D-L1 to D-L8, tolerances, grading contract, C2 stop conditions. Open: the evaluator rejects
+  `--trials 0`, so the one-/two-kernel, graph, untraced and overhead controls need a controls-only
+  `--mechanism-test` flag (never a pass); proposed, not implemented, awaiting the owners' GO.

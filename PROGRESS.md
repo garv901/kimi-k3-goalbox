@@ -187,3 +187,9 @@ Conditional GO for C1 received after commit 361a053 was accepted. Done locally (
   detection, decision matrix, option C impact on the programming model and TP8, GPU experiments G1 to G5.
 - Found the profiler's `--cuda-trace-scope=system-wide` (same uid, target environment variable required).
 - Corrected the audit docstring's claim that CUPTI records events outside the candidate's control. L25.
+
+## 2026-11-22: C2 profiling experiment prepared (read-only, CPU-checked)
+
+- Test matrix P1 to P10 with expected observations, artifacts, supervisor evidence, PASS/FAIL/INCONCLUSIVE
+  and what each establishes (`sandbox/k8s/C2-PROFILING-TEST-MATRIX.md`); four control candidates; decision
+  request for the owners (`reports/gb300/DECISION-REQUEST-B-C2-1.md`). L26. Nothing executed on a GPU.

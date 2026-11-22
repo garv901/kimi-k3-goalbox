@@ -57,7 +57,8 @@ GPU validation of real weights.
 
 ### Step 8 in detail: selecting the profiling mechanism (30 min, 2 GPU-hours maximum, synthetic cases)
 
-Experiments G1 to G5 and their success criteria are in `PROFILING-FEASIBILITY.md` section 8 (process-tree
+The exact test matrix (P1 to P10, artifacts, supervisor evidence, PASS/FAIL/INCONCLUSIVE) is
+`C2-PROFILING-TEST-MATRIX.md`; the experiments G1 to G5 it refines are in `PROFILING-FEASIBILITY.md` section 8 (process-tree
 and system-wide profiler scopes run by the spawner, two-kernel and graph controls, untraced-subprocess
 control, 2-GPU NCCL case). Option C's feasibility probe is removed from C2 while the HOLD stands. No
 outcome escalates to real weights; the owners decide after the step.
